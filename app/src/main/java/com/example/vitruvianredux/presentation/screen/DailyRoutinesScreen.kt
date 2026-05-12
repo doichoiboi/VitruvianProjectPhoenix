@@ -31,11 +31,6 @@ fun DailyRoutinesScreen(
     val weightUnit by viewModel.weightUnit.collectAsState()
     val enableVideoPlayback by viewModel.enableVideoPlayback.collectAsState()
 
-    // Set global title
-    LaunchedEffect(Unit) {
-        viewModel.updateTopBarTitle("Daily Routines")
-    }
-
     // Determine actual theme (matching Theme.kt logic)
     val useDarkColors = when (themeMode) {
         com.example.vitruvianredux.ui.theme.ThemeMode.SYSTEM -> isSystemInDarkTheme()

@@ -8,7 +8,6 @@ import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.filled.*
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
@@ -36,8 +35,6 @@ import java.util.*
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun ConnectionLogsScreen(
-    onNavigateBack: () -> Unit,
-    mainViewModel: com.example.vitruvianredux.presentation.viewmodel.MainViewModel,
     viewModel: ConnectionLogsViewModel = hiltViewModel()
 ) {
     val filteredLogs by viewModel.filteredLogs.collectAsState()
@@ -50,11 +47,6 @@ fun ConnectionLogsScreen(
 
     var showClearDialog by remember { mutableStateOf(false) }
     var showExportDialog by remember { mutableStateOf(false) }
-
-    // Set global title
-    LaunchedEffect(Unit) {
-        mainViewModel.updateTopBarTitle("Connection Logs")
-    }
 
     Column(
         modifier = Modifier

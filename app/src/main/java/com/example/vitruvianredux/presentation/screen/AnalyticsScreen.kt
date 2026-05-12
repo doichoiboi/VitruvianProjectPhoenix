@@ -52,11 +52,6 @@ fun AnalyticsScreen(
     val personalRecords by viewModel.allPersonalRecords.collectAsState()
     val weightUnit by viewModel.weightUnit.collectAsState()
 
-    // Set global title
-    LaunchedEffect(Unit) {
-        viewModel.updateTopBarTitle("Analytics")
-    }
-
     // Pager state for swipe gestures
     val pagerState = rememberPagerState(pageCount = { 3 })
     var showExportMenu by remember { mutableStateOf(false) }

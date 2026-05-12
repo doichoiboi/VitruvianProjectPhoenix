@@ -44,11 +44,6 @@ fun WeeklyProgramsScreen(
     val activeProgram by viewModel.activeProgram.collectAsState()
     val routines by viewModel.routines.collectAsState()
 
-    // Set global title
-    LaunchedEffect(Unit) {
-        viewModel.updateTopBarTitle("Weekly Programs")
-    }
-
     // Determine actual theme (matching Theme.kt logic)
     val useDarkColors = when (themeMode) {
         com.example.vitruvianredux.ui.theme.ThemeMode.SYSTEM -> isSystemInDarkTheme()

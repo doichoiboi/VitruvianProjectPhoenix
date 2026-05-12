@@ -143,11 +143,6 @@ fun JustLiftScreen(
         viewModel.updateWorkoutParameters(updatedParameters)
     }
 
-    // Set global title
-    LaunchedEffect(Unit) {
-        viewModel.updateTopBarTitle("Just Lift")
-    }
-
     Scaffold(
         // No local topBar needed
     ) { padding ->

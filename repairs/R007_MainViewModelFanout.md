@@ -44,3 +44,27 @@ This is still a transitional shape because `EnhancedMainScreen` is using
 `MainViewModel` as the shell source. The important improvement is that the
 overlay is now owned by one shell surface instead of being duplicated across
 every route.
+
+## Third Slice
+
+Move static app-bar title ownership into the shell:
+
+- `EnhancedMainScreen` derives static app-bar titles from the current route.
+- `AppNavigationHub` now centralizes route metadata: static title, analytics
+  name, workout-section grouping, bottom-bar visibility, top-level/back-button
+  behavior, and dynamic-title eligibility.
+- `AppDestination` is a sealed destination contract so route metadata remains
+  a closed app model instead of loose config rows.
+- Static screens no longer call `MainViewModel.updateTopBarTitle(...)` just to
+  set route names.
+- `SettingsTab` and `ConnectionLogsScreen` no longer receive title callbacks.
+- Dynamic title routes are still explicitly allowed for now:
+  `ActiveWorkoutScreen` and `ProgramBuilderScreen`.
+- `EnhancedMainScreen` no longer calls `hiltViewModel<MainViewModel>()` a
+  second time just to access `exerciseRepository`; it uses the already-created
+  shell ViewModel as the temporary provider.
+
+This avoids both callback plumbing and feature ViewModels mutating shell chrome
+for static titles. It does not solve dynamic app-bar actions yet; those still
+need a proper shell presenter/controller before `ProgramBuilderScreen` and
+`ActiveWorkoutScreen` can stop reaching into `MainViewModel`.

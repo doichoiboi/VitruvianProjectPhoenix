@@ -83,11 +83,6 @@ fun HomeScreen(
         )
     }
 
-    // Clear title to allow global branding to show
-    LaunchedEffect(Unit) {
-        viewModel.updateTopBarTitle("")
-    }
-
     // Detect orientation for grid layout
     val configuration = LocalConfiguration.current
     val isLandscape = configuration.orientation == Configuration.ORIENTATION_LANDSCAPE

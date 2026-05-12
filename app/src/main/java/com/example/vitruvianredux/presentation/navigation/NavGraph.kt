@@ -204,17 +204,13 @@ fun NavGraph(
                 showImportResultDialog = showImportResultDialog,
                 onExportData = { viewModel.exportAllData() },
                 onImportData = { uri -> viewModel.importFromUri(uri) },
-                onDismissImportResult = { viewModel.dismissImportResult() },
-                onSetTitle = { viewModel.updateTopBarTitle(it) }
+                onDismissImportResult = { viewModel.dismissImportResult() }
             )
         }
 
         // Connection Logs screen - debug BLE connections
         composable(NavigationRoutes.ConnectionLogs.route) {
-            ConnectionLogsScreen(
-                onNavigateBack = { navController.popBackStack() },
-                mainViewModel = viewModel
-            )
+            ConnectionLogsScreen()
         }
 
         // Protocol Tester screen - diagnostic tool for BLE protocol testing

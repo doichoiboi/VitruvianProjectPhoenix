@@ -799,7 +799,6 @@ fun SettingsTab(
     onExportData: () -> Unit = {},
     onImportData: (Uri) -> Unit = {},
     onDismissImportResult: () -> Unit = {},
-    onSetTitle: (String) -> Unit,
     modifier: Modifier = Modifier
 ) {
     var showDeleteAllDialog by remember { mutableStateOf(false) }
@@ -807,11 +806,6 @@ fun SettingsTab(
     var localWeightUnit by remember(weightUnit) { mutableStateOf(weightUnit) }
     // Track selected LED color scheme (defaults to Blue = 0)
     var selectedColorSchemeIndex by remember { mutableStateOf(0) }
-
-    // Set global title
-    LaunchedEffect(Unit) {
-        onSetTitle("Settings")
-    }
 
     // Context for opening URLs
     val context = LocalContext.current

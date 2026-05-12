@@ -89,11 +89,6 @@ fun SingleExerciseScreen(
         exerciseRepository.importExercises()
     }
 
-    // Set global title
-    LaunchedEffect(Unit) {
-        viewModel.updateTopBarTitle("Single Exercise")
-    }
-
     Scaffold(
         // No local topBar needed
     ) { padding ->

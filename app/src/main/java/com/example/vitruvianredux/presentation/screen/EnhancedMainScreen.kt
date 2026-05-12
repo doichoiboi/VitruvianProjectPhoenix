@@ -27,7 +27,9 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
 import androidx.navigation.compose.rememberNavController
+import com.example.vitruvianredux.data.repository.ExerciseRepository
 import com.example.vitruvianredux.domain.model.ConnectionState
+import com.example.vitruvianredux.presentation.navigation.AppNavigationHub
 import com.example.vitruvianredux.presentation.navigation.NavGraph
 import com.example.vitruvianredux.presentation.navigation.NavigationRoutes
 import com.example.vitruvianredux.presentation.viewmodel.MainViewModel
@@ -42,7 +44,7 @@ import com.example.vitruvianredux.presentation.viewmodel.ThemeViewModel
 @Composable
 fun EnhancedMainScreen(
     viewModel: MainViewModel = hiltViewModel(),
-    exerciseRepository: com.example.vitruvianredux.data.repository.ExerciseRepository = hiltViewModel<MainViewModel>().exerciseRepository
+    exerciseRepository: ExerciseRepository = viewModel.exerciseRepository
 ) {
     val connectionState by viewModel.connectionState.collectAsState()
     val connectionLostDuringWorkout by viewModel.connectionLostDuringWorkout.collectAsState()
@@ -91,15 +93,8 @@ fun EnhancedMainScreen(
 
     val permissionState = rememberMultiplePermissionsState(permissions)
 
-    // Helper function to determine if current route is a "Workouts" route
     val isWorkoutsRoute = remember(currentRoute) {
-        currentRoute == NavigationRoutes.Home.route ||
-        currentRoute == NavigationRoutes.JustLift.route ||
-        currentRoute == NavigationRoutes.SingleExercise.route ||
-        currentRoute == NavigationRoutes.DailyRoutines.route ||
-        currentRoute == NavigationRoutes.ActiveWorkout.route ||
-        currentRoute == NavigationRoutes.WeeklyPrograms.route ||
-        currentRoute.startsWith(NavigationRoutes.ProgramBuilder.route.replace("/{programId}", ""))
+        AppNavigationHub.isWorkoutSection(currentRoute)
     }
 
     // Determine if we should show the TopBar
@@ -108,27 +103,22 @@ fun EnhancedMainScreen(
         true
     }
 
+    val appBarTitle = remember(currentRoute, topBarTitle) {
+        AppNavigationHub.appBarTitle(currentRoute, topBarTitle)
+    }
+
     // Determine if we should show the BottomBar
     // Show only for main tabs AND when permissions are granted (NavGraph exists)
     // Using derivedStateOf for proper reactivity when permission state changes
     val shouldShowBottomBar by remember {
         derivedStateOf {
-            permissionState.allPermissionsGranted && (
-                currentRoute == NavigationRoutes.Home.route ||
-                currentRoute == NavigationRoutes.DailyRoutines.route ||
-                currentRoute == NavigationRoutes.WeeklyPrograms.route ||
-                currentRoute == NavigationRoutes.Analytics.route ||
-                currentRoute == NavigationRoutes.Settings.route
-            )
+            permissionState.allPermissionsGranted &&
+                AppNavigationHub.isBottomBarDestination(currentRoute)
         }
     }
 
-    // Determine if we should show the Back button
-    // Show back button for all screens except Home, Analytics, and Settings (main tabs)
     val showBackButton = remember(currentRoute) {
-        currentRoute != NavigationRoutes.Home.route &&
-        currentRoute != NavigationRoutes.Analytics.route &&
-        currentRoute != NavigationRoutes.Settings.route
+        AppNavigationHub.showsBackButton(currentRoute)
     }
 
     Scaffold(
@@ -143,7 +133,7 @@ fun EnhancedMainScreen(
                         ) {
                             // Main title - either dynamic or default
                             Text(
-                                text = if (!topBarTitle.isNullOrEmpty()) topBarTitle ?: "" else getScreenTitle(currentRoute),
+                                text = appBarTitle,
                                 style = MaterialTheme.typography.titleMedium,
                                 fontWeight = FontWeight.Bold,
                                 color = MaterialTheme.colorScheme.onSurface,
@@ -601,21 +591,3 @@ fun DeviceSelectorDialog(
     )
 }
 
-/**
- * Get the screen title based on the current route.
- */
-private fun getScreenTitle(route: String): String {
-    return when {
-        route == NavigationRoutes.Home.route -> "Choose Your Workout"
-        route == NavigationRoutes.Analytics.route -> "Analytics"
-        route == NavigationRoutes.Settings.route -> "Settings"
-        route == NavigationRoutes.JustLift.route -> "Just Lift"
-        route == NavigationRoutes.SingleExercise.route -> "Single Exercise"
-        route == NavigationRoutes.DailyRoutines.route -> "Daily Routines"
-        route == NavigationRoutes.WeeklyPrograms.route -> "Weekly Programs"
-        route == NavigationRoutes.ActiveWorkout.route -> "Active Workout"
-        route == NavigationRoutes.ConnectionLogs.route -> "Connection Logs"
-        route.startsWith("program_builder") -> "Program Builder"
-        else -> "Choose Your Workout"
-    }
-}
