@@ -51,8 +51,6 @@ fun AnalyticsScreen(
     val allWorkoutSessions by viewModel.allWorkoutSessions.collectAsState()
     val personalRecords by viewModel.allPersonalRecords.collectAsState()
     val weightUnit by viewModel.weightUnit.collectAsState()
-    val isAutoConnecting by viewModel.isAutoConnecting.collectAsState()
-    val connectionError by viewModel.connectionError.collectAsState()
 
     // Set global title
     LaunchedEffect(Unit) {
@@ -222,20 +220,6 @@ fun AnalyticsScreen(
                 )
             }
         }
-        }
-
-        // Auto-connect UI overlays (same as other screens)
-        if (isAutoConnecting) {
-            com.example.vitruvianredux.presentation.components.ConnectingOverlay(
-                onCancel = { viewModel.cancelAutoConnecting() }
-            )
-        }
-
-        connectionError?.let { error ->
-            com.example.vitruvianredux.presentation.components.ConnectionErrorDialog(
-                message = error,
-                onDismiss = { viewModel.clearConnectionError() }
-            )
         }
 
         // Export FAB - Material 3 Expressive

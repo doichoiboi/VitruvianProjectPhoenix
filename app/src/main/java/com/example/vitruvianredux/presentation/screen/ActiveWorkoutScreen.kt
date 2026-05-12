@@ -39,8 +39,6 @@ fun ActiveWorkoutScreen(
     val bodyweightTimerState by viewModel.bodyweightTimerState.collectAsState()
     val hapticEvents = viewModel.hapticEvents
     val connectionState by viewModel.connectionState.collectAsState()
-    val isAutoConnecting by viewModel.isAutoConnecting.collectAsState()
-    val connectionError by viewModel.connectionError.collectAsState()
     val userPreferences by viewModel.userPreferences.collectAsState()
 
     // State for confirmation dialog
@@ -205,20 +203,6 @@ fun ActiveWorkoutScreen(
                     Text("Cancel")
                 }
             }
-        )
-    }
-
-    // Auto-connect UI overlays (same as other screens)
-    if (isAutoConnecting) {
-        com.example.vitruvianredux.presentation.components.ConnectingOverlay(
-            onCancel = { viewModel.cancelAutoConnecting() }
-        )
-    }
-
-    connectionError?.let { error ->
-        com.example.vitruvianredux.presentation.components.ConnectionErrorDialog(
-            message = error,
-            onDismiss = { viewModel.clearConnectionError() }
         )
     }
 

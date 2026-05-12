@@ -58,8 +58,6 @@ fun JustLiftScreen(
     val repCount by viewModel.repCount.collectAsState()
     val autoStopState by viewModel.autoStopState.collectAsState()
     val weightUnit by viewModel.weightUnit.collectAsState()
-    val isAutoConnecting by viewModel.isAutoConnecting.collectAsState()
-    val connectionError by viewModel.connectionError.collectAsState()
 
     var selectedMode by remember { mutableStateOf(workoutParameters.workoutType.toWorkoutMode()) }
     // Initialize to match the picker's default: 1 lb = 0.453592 kg
@@ -467,19 +465,6 @@ fun JustLiftScreen(
                 }
             }
 
-            // Auto-connect UI overlays
-            if (isAutoConnecting) {
-                com.example.vitruvianredux.presentation.components.ConnectingOverlay(
-                    onCancel = { viewModel.cancelAutoConnecting() }
-                )
-            }
-
-            connectionError?.let { error ->
-                com.example.vitruvianredux.presentation.components.ConnectionErrorDialog(
-                    message = error,
-                    onDismiss = { viewModel.clearConnectionError() }
-                )
-            }
         }
     }
 }

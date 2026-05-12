@@ -44,10 +44,6 @@ fun WeeklyProgramsScreen(
     val activeProgram by viewModel.activeProgram.collectAsState()
     val routines by viewModel.routines.collectAsState()
 
-    val isAutoConnecting by viewModel.isAutoConnecting.collectAsState()
-    val connectionError by viewModel.connectionError.collectAsState()
-
-
     // Set global title
     LaunchedEffect(Unit) {
         viewModel.updateTopBarTitle("Weekly Programs")
@@ -222,19 +218,6 @@ fun WeeklyProgramsScreen(
             }
         }
 
-        // Auto-connect UI overlays
-        if (isAutoConnecting) {
-            com.example.vitruvianredux.presentation.components.ConnectingOverlay(
-                onCancel = { viewModel.cancelAutoConnecting() }
-            )
-        }
-
-        connectionError?.let { error ->
-            com.example.vitruvianredux.presentation.components.ConnectionErrorDialog(
-                message = error,
-                onDismiss = { viewModel.clearConnectionError() }
-            )
-        }
     }
 }
 

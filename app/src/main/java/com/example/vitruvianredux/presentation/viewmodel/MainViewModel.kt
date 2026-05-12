@@ -15,6 +15,7 @@ import com.example.vitruvianredux.data.repository.PersonalRecordRepository
 import com.example.vitruvianredux.data.repository.WorkoutRepository
 import com.example.vitruvianredux.domain.model.*
 import com.example.vitruvianredux.domain.usecase.RepCounterFromMachine
+import com.example.vitruvianredux.domain.weight.WeightFormatter
 import com.example.vitruvianredux.service.WorkoutForegroundService
 import com.example.vitruvianredux.util.DataBackupManager
 import com.example.vitruvianredux.util.ImportResult
@@ -2536,21 +2537,19 @@ class MainViewModel @Inject constructor(
      * Convert weight from KG to display unit
      */
     fun kgToDisplay(kg: Float, unit: WeightUnit): Float =
-        if (unit == WeightUnit.LB) kg * 2.20462f else kg
+        WeightFormatter.kgToDisplay(kg, unit)
 
     /**
      * Convert weight from display unit to KG
      */
     fun displayToKg(display: Float, unit: WeightUnit): Float =
-        if (unit == WeightUnit.LB) display / 2.20462f else display
+        WeightFormatter.displayToKg(display, unit)
 
     /**
      * Format weight for display with unit suffix
      */
-    fun formatWeight(kg: Float, unit: WeightUnit): String {
-        val displayValue = kgToDisplay(kg, unit)
-        return "%.1f %s".format(displayValue, unit.name.lowercase())
-    }
+    fun formatWeight(kg: Float, unit: WeightUnit): String =
+        WeightFormatter.format(kg, unit)
 
     // Feature 3: Reset for New Workout
     /**
@@ -2901,4 +2900,3 @@ data class ScannedDevice(
     val address: String,
     val rssi: Int = 0
 )
-

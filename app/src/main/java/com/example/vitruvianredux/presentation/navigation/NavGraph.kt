@@ -178,8 +178,6 @@ fun NavGraph(
         ) {
             val weightUnit by viewModel.weightUnit.collectAsState()
             val userPreferences by viewModel.userPreferences.collectAsState()
-            val isAutoConnecting by viewModel.isAutoConnecting.collectAsState()
-            val connectionError by viewModel.connectionError.collectAsState()
             val isExporting by viewModel.isExporting.collectAsState()
             val isImporting by viewModel.isImporting.collectAsState()
             val importResult by viewModel.importResult.collectAsState()
@@ -207,10 +205,6 @@ fun NavGraph(
                 onExportData = { viewModel.exportAllData() },
                 onImportData = { uri -> viewModel.importFromUri(uri) },
                 onDismissImportResult = { viewModel.dismissImportResult() },
-                isAutoConnecting = isAutoConnecting,
-                connectionError = connectionError,
-                onClearConnectionError = { viewModel.clearConnectionError() },
-                onCancelAutoConnecting = { viewModel.cancelAutoConnecting() },
                 onSetTitle = { viewModel.updateTopBarTitle(it) }
             )
         }

@@ -799,10 +799,6 @@ fun SettingsTab(
     onExportData: () -> Unit = {},
     onImportData: (Uri) -> Unit = {},
     onDismissImportResult: () -> Unit = {},
-    isAutoConnecting: Boolean = false,
-    connectionError: String? = null,
-    onClearConnectionError: () -> Unit = {},
-    onCancelAutoConnecting: () -> Unit = {},
     onSetTitle: (String) -> Unit,
     modifier: Modifier = Modifier
 ) {
@@ -1550,20 +1546,6 @@ fun SettingsTab(
                     )
                 }
             }
-        )
-    }
-
-    // Auto-connect UI overlays (same as other screens)
-    if (isAutoConnecting) {
-        com.example.vitruvianredux.presentation.components.ConnectingOverlay(
-            onCancel = onCancelAutoConnecting
-        )
-    }
-
-    connectionError?.let { error ->
-        com.example.vitruvianredux.presentation.components.ConnectionErrorDialog(
-            message = error,
-            onDismiss = onClearConnectionError
         )
     }
 

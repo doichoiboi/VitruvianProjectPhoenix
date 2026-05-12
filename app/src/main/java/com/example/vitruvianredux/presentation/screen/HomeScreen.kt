@@ -53,10 +53,6 @@ fun HomeScreen(
     val completedWorkouts by viewModel.completedWorkouts.collectAsState()
     val progressPercentage by viewModel.progressPercentage.collectAsState()
 
-    // Collect connection state
-    val isAutoConnecting by viewModel.isAutoConnecting.collectAsState()
-    val connectionError by viewModel.connectionError.collectAsState()
-
     // Collect active program and routines for Active Program Widget
     val activeProgram by viewModel.activeProgram.collectAsState()
     val routines by viewModel.routines.collectAsState()
@@ -182,19 +178,6 @@ fun HomeScreen(
             }
         }
 
-        // Auto-connect UI overlays (same as exercise start screens)
-        if (isAutoConnecting) {
-            com.example.vitruvianredux.presentation.components.ConnectingOverlay(
-                onCancel = { viewModel.cancelAutoConnecting() }
-            )
-        }
-
-        connectionError?.let { error ->
-            com.example.vitruvianredux.presentation.components.ConnectionErrorDialog(
-                message = error,
-                onDismiss = { viewModel.clearConnectionError() }
-            )
-        }
     }
 }
 

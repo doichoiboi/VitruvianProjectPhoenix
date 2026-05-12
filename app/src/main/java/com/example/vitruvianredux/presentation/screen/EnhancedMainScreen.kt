@@ -46,6 +46,8 @@ fun EnhancedMainScreen(
 ) {
     val connectionState by viewModel.connectionState.collectAsState()
     val connectionLostDuringWorkout by viewModel.connectionLostDuringWorkout.collectAsState()
+    val isAutoConnecting by viewModel.isAutoConnecting.collectAsState()
+    val connectionError by viewModel.connectionError.collectAsState()
     val topBarTitle by viewModel.topBarTitle.collectAsState()
     val topBarActions by viewModel.topBarActions.collectAsState()
     val topBarBackAction by viewModel.topBarBackAction.collectAsState()
@@ -403,6 +405,19 @@ fun EnhancedMainScreen(
             onDismiss = {
                 viewModel.dismissConnectionLostAlert()
             }
+        )
+    }
+
+    if (isAutoConnecting) {
+        com.example.vitruvianredux.presentation.components.ConnectingOverlay(
+            onCancel = { viewModel.cancelAutoConnecting() }
+        )
+    }
+
+    connectionError?.let { error ->
+        com.example.vitruvianredux.presentation.components.ConnectionErrorDialog(
+            message = error,
+            onDismiss = { viewModel.clearConnectionError() }
         )
     }
 }

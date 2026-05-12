@@ -18,9 +18,6 @@ import androidx.navigation.NavController
 import com.example.vitruvianredux.data.preferences.SingleExerciseDefaults
 import com.example.vitruvianredux.data.repository.ExerciseRepository
 import com.example.vitruvianredux.domain.model.*
-import com.example.vitruvianredux.presentation.components.ConnectingOverlay
-import com.example.vitruvianredux.presentation.components.ConnectionErrorDialog
-import com.example.vitruvianredux.presentation.components.ExercisePickerDialog
 import com.example.vitruvianredux.presentation.navigation.NavigationRoutes
 import com.example.vitruvianredux.presentation.viewmodel.MainViewModel
 import com.example.vitruvianredux.presentation.viewmodel.MainViewModel.Companion.TEMP_SINGLE_EXERCISE_PREFIX
@@ -39,8 +36,6 @@ fun SingleExerciseScreen(
 ) {
     val weightUnit by viewModel.weightUnit.collectAsState()
     val enableVideoPlayback by viewModel.enableVideoPlayback.collectAsState()
-    val isAutoConnecting by viewModel.isAutoConnecting.collectAsState()
-    val connectionError by viewModel.connectionError.collectAsState()
     val sessionEccentricLoad by viewModel.sessionEccentricLoad.collectAsState()
 
     var exerciseToConfig by remember { mutableStateOf<RoutineExercise?>(null) }
@@ -246,17 +241,5 @@ fun SingleExerciseScreen(
             }
         }
 
-        if (isAutoConnecting) {
-            ConnectingOverlay(
-                onCancel = { viewModel.cancelAutoConnecting() }
-            )
-        }
-
-        connectionError?.let { error ->
-            ConnectionErrorDialog(
-                message = error,
-                onDismiss = { viewModel.clearConnectionError() }
-            )
-        }
     }
 }

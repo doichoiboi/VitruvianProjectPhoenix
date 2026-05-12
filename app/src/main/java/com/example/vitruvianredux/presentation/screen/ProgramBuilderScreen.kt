@@ -46,8 +46,6 @@ fun ProgramBuilderScreen(
     themeMode: com.example.vitruvianredux.ui.theme.ThemeMode
 ) {
     val routines by viewModel.routines.collectAsState()
-    val isAutoConnecting by viewModel.isAutoConnecting.collectAsState()
-    val connectionError by viewModel.connectionError.collectAsState()
 
     var programName by remember { mutableStateOf("New Program") }
     var showRoutinePicker by remember { mutableStateOf(false) }
@@ -395,19 +393,6 @@ fun ProgramBuilderScreen(
             )
         }
 
-        // Auto-connect UI overlays (same as other screens)
-        if (isAutoConnecting) {
-            com.example.vitruvianredux.presentation.components.ConnectingOverlay(
-                onCancel = { viewModel.cancelAutoConnecting() }
-            )
-        }
-
-        connectionError?.let { error ->
-            com.example.vitruvianredux.presentation.components.ConnectionErrorDialog(
-                message = error,
-                onDismiss = { viewModel.clearConnectionError() }
-            )
-        }
     }
 }
 
