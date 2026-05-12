@@ -180,4 +180,6 @@ Review follow-up:
   `MainViewModel` lifetime for long-running import/export jobs.
 - Export share delivery is state-backed through `pendingExportUri` so route
   recreation cannot drop the chooser request after the cache file is written.
-- `B-004` tracks the pre-existing importer atomicity issue separately.
+- `B-004` was repaired after review: backup import now runs in a single Room
+  transaction and child-row imports can restore missing metrics/exercises/days
+  for existing parent records on retry.

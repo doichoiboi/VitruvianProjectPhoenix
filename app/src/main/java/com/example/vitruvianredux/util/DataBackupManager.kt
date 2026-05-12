@@ -7,6 +7,7 @@ import android.os.Build
 import android.os.Environment
 import android.provider.MediaStore
 import androidx.core.content.FileProvider
+import androidx.room.withTransaction
 import com.example.vitruvianredux.BuildConfig
 import com.example.vitruvianredux.data.local.*
 import dagger.hilt.android.qualifiers.ApplicationContext
@@ -53,6 +54,7 @@ data class ImportResult(
 @Singleton
 class DataBackupManager @Inject constructor(
     @ApplicationContext private val context: Context,
+    private val database: WorkoutDatabase,
     private val workoutDao: WorkoutDao,
     private val personalRecordDao: PersonalRecordDao
 ) {
@@ -200,115 +202,7 @@ class DataBackupManager @Inject constructor(
                 Timber.w("Backup version ${backup.version} is newer than supported (1)")
             }
 
-            // Get existing IDs for duplicate detection
-            val existingSessionIds = workoutDao.getAllSessionIds().toSet()
-            val existingRoutineIds = workoutDao.getAllRoutineIds().toSet()
-            val existingProgramIds = workoutDao.getAllProgramIds().toSet()
-            val existingPRIds = personalRecordDao.getAllPRIds().toSet()
-
-            // Import sessions (skip existing)
-            var sessionsImported = 0
-            var sessionsSkipped = 0
-            backup.data.workoutSessions.forEach { session ->
-                if (session.id !in existingSessionIds) {
-                    workoutDao.insertSessionIgnore(session.toEntity())
-                    sessionsImported++
-                } else {
-                    sessionsSkipped++
-                }
-            }
-
-            // Import metrics (only for imported sessions)
-            var metricsImported = 0
-            val importedSessionIds = backup.data.workoutSessions
-                .filter { it.id !in existingSessionIds }
-                .map { it.id }
-                .toSet()
-
-            backup.data.workoutMetrics.forEach { metric ->
-                if (metric.sessionId in importedSessionIds) {
-                    workoutDao.insertMetricIgnore(metric.toEntity())
-                    metricsImported++
-                }
-            }
-
-            // Import routines (skip existing)
-            var routinesImported = 0
-            var routinesSkipped = 0
-            backup.data.routines.forEach { routine ->
-                if (routine.id !in existingRoutineIds) {
-                    workoutDao.insertRoutineIgnore(routine.toEntity())
-                    routinesImported++
-                } else {
-                    routinesSkipped++
-                }
-            }
-
-            // Import routine exercises (only for imported routines)
-            var routineExercisesImported = 0
-            val importedRoutineIds = backup.data.routines
-                .filter { it.id !in existingRoutineIds }
-                .map { it.id }
-                .toSet()
-
-            backup.data.routineExercises.forEach { exercise ->
-                if (exercise.routineId in importedRoutineIds) {
-                    workoutDao.insertRoutineExerciseIgnore(exercise.toEntity())
-                    routineExercisesImported++
-                }
-            }
-
-            // Import weekly programs (skip existing)
-            var programsImported = 0
-            var programsSkipped = 0
-            backup.data.weeklyPrograms.forEach { program ->
-                if (program.id !in existingProgramIds) {
-                    workoutDao.insertProgramIgnore(program.toEntity())
-                    programsImported++
-                } else {
-                    programsSkipped++
-                }
-            }
-
-            // Import program days (only for imported programs)
-            var programDaysImported = 0
-            val importedProgramIds = backup.data.weeklyPrograms
-                .filter { it.id !in existingProgramIds }
-                .map { it.id }
-                .toSet()
-
-            backup.data.programDays.forEach { day ->
-                if (day.programId in importedProgramIds) {
-                    workoutDao.insertProgramDayIgnore(day.toEntity())
-                    programDaysImported++
-                }
-            }
-
-            // Import personal records (skip existing)
-            var personalRecordsImported = 0
-            var personalRecordsSkipped = 0
-            backup.data.personalRecords.forEach { pr ->
-                if (pr.id !in existingPRIds) {
-                    personalRecordDao.insertPRIgnore(pr.toEntity())
-                    personalRecordsImported++
-                } else {
-                    personalRecordsSkipped++
-                }
-            }
-
-            val result = ImportResult(
-                sessionsImported = sessionsImported,
-                sessionsSkipped = sessionsSkipped,
-                metricsImported = metricsImported,
-                routinesImported = routinesImported,
-                routinesSkipped = routinesSkipped,
-                routineExercisesImported = routineExercisesImported,
-                programsImported = programsImported,
-                programsSkipped = programsSkipped,
-                programDaysImported = programDaysImported,
-                personalRecordsImported = personalRecordsImported,
-                personalRecordsSkipped = personalRecordsSkipped
-            )
+            val result = importBackupData(backup)
 
             Timber.d("Import complete: $result")
             Result.success(result)
@@ -316,5 +210,102 @@ class DataBackupManager @Inject constructor(
             Timber.e(e, "Failed to import backup")
             Result.failure(e)
         }
+    }
+
+    internal suspend fun importBackupData(backup: BackupData): ImportResult = database.withTransaction {
+        val existingSessionIds = workoutDao.getAllSessionIds().toSet()
+        val existingRoutineIds = workoutDao.getAllRoutineIds().toSet()
+        val existingProgramIds = workoutDao.getAllProgramIds().toSet()
+
+        var sessionsImported = 0
+        var sessionsSkipped = 0
+        backup.data.workoutSessions.forEach { session ->
+            val insertedId = workoutDao.insertSessionIgnore(session.toEntity())
+            if (insertedId == -1L) {
+                sessionsSkipped++
+            } else {
+                sessionsImported++
+            }
+        }
+
+        var metricsImported = 0
+        val restorableSessionIds = existingSessionIds + backup.data.workoutSessions.map { it.id }
+        backup.data.workoutMetrics.forEach { metric ->
+            if (metric.sessionId in restorableSessionIds) {
+                val insertedId = workoutDao.insertMetricIgnore(metric.toEntity())
+                if (insertedId != -1L) {
+                    metricsImported++
+                }
+            }
+        }
+
+        var routinesImported = 0
+        var routinesSkipped = 0
+        backup.data.routines.forEach { routine ->
+            val insertedId = workoutDao.insertRoutineIgnore(routine.toEntity())
+            if (insertedId == -1L) {
+                routinesSkipped++
+            } else {
+                routinesImported++
+            }
+        }
+
+        var routineExercisesImported = 0
+        val restorableRoutineIds = existingRoutineIds + backup.data.routines.map { it.id }
+        backup.data.routineExercises.forEach { exercise ->
+            if (exercise.routineId in restorableRoutineIds) {
+                val insertedId = workoutDao.insertRoutineExerciseIgnore(exercise.toEntity())
+                if (insertedId != -1L) {
+                    routineExercisesImported++
+                }
+            }
+        }
+
+        var programsImported = 0
+        var programsSkipped = 0
+        backup.data.weeklyPrograms.forEach { program ->
+            val insertedId = workoutDao.insertProgramIgnore(program.toEntity())
+            if (insertedId == -1L) {
+                programsSkipped++
+            } else {
+                programsImported++
+            }
+        }
+
+        var programDaysImported = 0
+        val restorableProgramIds = existingProgramIds + backup.data.weeklyPrograms.map { it.id }
+        backup.data.programDays.forEach { day ->
+            if (day.programId in restorableProgramIds) {
+                val insertedId = workoutDao.insertProgramDayIgnore(day.toEntity())
+                if (insertedId != -1L) {
+                    programDaysImported++
+                }
+            }
+        }
+
+        var personalRecordsImported = 0
+        var personalRecordsSkipped = 0
+        backup.data.personalRecords.forEach { pr ->
+            val insertedId = personalRecordDao.insertPRIgnore(pr.toEntity())
+            if (insertedId == -1L) {
+                personalRecordsSkipped++
+            } else {
+                personalRecordsImported++
+            }
+        }
+
+        ImportResult(
+            sessionsImported = sessionsImported,
+            sessionsSkipped = sessionsSkipped,
+            metricsImported = metricsImported,
+            routinesImported = routinesImported,
+            routinesSkipped = routinesSkipped,
+            routineExercisesImported = routineExercisesImported,
+            programsImported = programsImported,
+            programsSkipped = programsSkipped,
+            programDaysImported = programDaysImported,
+            personalRecordsImported = personalRecordsImported,
+            personalRecordsSkipped = personalRecordsSkipped
+        )
     }
 }
