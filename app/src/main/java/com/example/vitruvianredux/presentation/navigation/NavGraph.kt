@@ -174,8 +174,7 @@ fun NavGraph(
             exitTransition = { fadeOut(animationSpec = tween(200)) }
         ) {
             SettingsRoute(
-                navController = navController,
-                viewModel = viewModel
+                navController = navController
             )
         }
 

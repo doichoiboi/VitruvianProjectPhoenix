@@ -3,9 +3,6 @@ package com.example.vitruvianredux.presentation.viewmodel
 import android.annotation.SuppressLint
 import android.app.Application
 import android.content.Context
-import android.content.Intent
-import android.net.Uri
-import androidx.core.content.FileProvider
 import androidx.lifecycle.AndroidViewModel
 import androidx.lifecycle.viewModelScope
 import com.example.vitruvianredux.data.preferences.PreferencesManager
@@ -19,8 +16,6 @@ import com.example.vitruvianredux.domain.workout.WorkoutEngine
 import com.example.vitruvianredux.domain.workout.WorkoutEngineAction
 import com.example.vitruvianredux.domain.weight.WeightFormatter
 import com.example.vitruvianredux.service.WorkoutForegroundService
-import com.example.vitruvianredux.util.DataBackupManager
-import com.example.vitruvianredux.util.ImportResult
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.delay
@@ -76,8 +71,7 @@ class MainViewModel @Inject constructor(
     val exerciseRepository: ExerciseRepository,
     val personalRecordRepository: PersonalRecordRepository,
     private val repCounter: RepCounterFromMachine,
-    private val preferencesManager: PreferencesManager,
-    private val dataBackupManager: DataBackupManager
+    private val preferencesManager: PreferencesManager
 ) : AndroidViewModel(application) {
 
     // Use application context directly instead of storing it
@@ -150,19 +144,6 @@ class MainViewModel @Inject constructor(
     val enableVideoPlayback: StateFlow<Boolean> = userPreferences
         .map { it.enableVideoPlayback }
         .stateIn(viewModelScope, SharingStarted.Eagerly, true)
-
-    // Data Export/Import State
-    private val _isExporting = MutableStateFlow(false)
-    val isExporting: StateFlow<Boolean> = _isExporting.asStateFlow()
-
-    private val _isImporting = MutableStateFlow(false)
-    val isImporting: StateFlow<Boolean> = _isImporting.asStateFlow()
-
-    private val _importResult = MutableStateFlow<ImportResult?>(null)
-    val importResult: StateFlow<ImportResult?> = _importResult.asStateFlow()
-
-    private val _showImportResultDialog = MutableStateFlow(false)
-    val showImportResultDialog: StateFlow<Boolean> = _showImportResultDialog.asStateFlow()
 
     // Feature 4: Routine Management
     private val _routines = MutableStateFlow<List<Routine>>(emptyList())
@@ -2269,143 +2250,9 @@ class MainViewModel @Inject constructor(
         Timber.d("Saved workout session: $sessionId with ${collectedMetrics.size} metrics")
     }
 
-    fun setColorScheme(schemeIndex: Int) {
-        viewModelScope.launch {
-            bleRepository.setColorScheme(schemeIndex)
-        }
-    }
-
     fun deleteWorkout(sessionId: String) {
         viewModelScope.launch {
             workoutRepository.deleteWorkout(sessionId)
-        }
-    }
-
-    fun deleteAllWorkouts() {
-        viewModelScope.launch {
-            workoutRepository.deleteAllWorkouts()
-        }
-    }
-
-    // Data Export/Import Functions
-    fun exportAllData() {
-        viewModelScope.launch {
-            _isExporting.value = true
-            try {
-                val backup = dataBackupManager.exportAllData()
-                val uriResult = dataBackupManager.saveToCache(backup)
-
-                uriResult.onSuccess { uri ->
-                    // Create share intent
-                    val context = getContext()
-                    val shareIntent = Intent(Intent.ACTION_SEND).apply {
-                        type = "application/json"
-                        putExtra(Intent.EXTRA_STREAM, uri)
-                        addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION)
-                        addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
-                    }
-
-                    val chooserIntent = Intent.createChooser(shareIntent, "Export Workout Data")
-                        .addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
-                    context.startActivity(chooserIntent)
-
-                    Timber.d("Export successful: ${backup.data.workoutSessions.size} sessions, ${backup.data.routines.size} routines")
-                }.onFailure { e ->
-                    Timber.e(e, "Failed to save backup file")
-                }
-            } catch (e: Exception) {
-                Timber.e(e, "Failed to export data")
-            } finally {
-                _isExporting.value = false
-            }
-        }
-    }
-
-    fun importFromUri(uri: Uri) {
-        viewModelScope.launch {
-            _isImporting.value = true
-            try {
-                val result = dataBackupManager.importFromUri(uri)
-
-                result.onSuccess { importResult ->
-                    _importResult.value = importResult
-                    _showImportResultDialog.value = true
-
-                    Timber.d("Import successful: ${importResult.sessionsImported} sessions, ${importResult.routinesImported} routines")
-
-                    // Workout history will automatically refresh via Flow collection
-                }.onFailure { e ->
-                    Timber.e(e, "Failed to import data")
-                    _importResult.value = ImportResult(
-                        sessionsImported = 0,
-                        sessionsSkipped = 0,
-                        metricsImported = 0,
-                        routinesImported = 0,
-                        routinesSkipped = 0,
-                        routineExercisesImported = 0,
-                        programsImported = 0,
-                        programsSkipped = 0,
-                        programDaysImported = 0,
-                        personalRecordsImported = 0,
-                        personalRecordsSkipped = 0
-                    )
-                    _showImportResultDialog.value = true
-                }
-            } catch (e: Exception) {
-                Timber.e(e, "Failed to import data")
-                _importResult.value = ImportResult(
-                    sessionsImported = 0,
-                    sessionsSkipped = 0,
-                    metricsImported = 0,
-                    routinesImported = 0,
-                    routinesSkipped = 0,
-                    routineExercisesImported = 0,
-                    programsImported = 0,
-                    programsSkipped = 0,
-                    programDaysImported = 0,
-                    personalRecordsImported = 0,
-                    personalRecordsSkipped = 0
-                )
-                _showImportResultDialog.value = true
-            } finally {
-                _isImporting.value = false
-            }
-        }
-    }
-
-    fun dismissImportResult() {
-        _showImportResultDialog.value = false
-        _importResult.value = null
-    }
-
-    // Feature 2: Weight Unit Management
-    fun setWeightUnit(unit: WeightUnit) {
-        viewModelScope.launch {
-            preferencesManager.setWeightUnit(unit)
-        }
-    }
-
-    fun setAutoplayEnabled(enabled: Boolean) {
-        viewModelScope.launch {
-            preferencesManager.setAutoplayEnabled(enabled)
-        }
-    }
-
-    fun setStopAtTop(enabled: Boolean) {
-        viewModelScope.launch {
-            preferencesManager.setStopAtTop(enabled)
-        }
-    }
-
-    fun setEnableVideoPlayback(enabled: Boolean) {
-        viewModelScope.launch {
-            preferencesManager.setEnableVideoPlayback(enabled)
-        }
-    }
-
-    fun setBeepsEnabled(enabled: Boolean) {
-        viewModelScope.launch {
-            preferencesManager.setBeepsEnabled(enabled)
         }
     }
 

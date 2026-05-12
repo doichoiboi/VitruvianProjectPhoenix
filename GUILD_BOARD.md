@@ -8,7 +8,7 @@
 
 | ID | Title | Owner | File / Note |
 |---|---|---|---|
-| R-007 | Reduce MainViewModel Fan-Out | Spanner -> Sightline | `repairs/R007_MainViewModelFanout.md`; continue route/presenter extraction after shell chrome and test-lane stabilization |
+| R-007 | Reduce MainViewModel Fan-Out | Spanner -> Sightline | `repairs/R007_MainViewModelFanout.md`; settings route owner extracted; continue route/presenter extraction with another low-risk screen before active workout |
 
 ---
 
