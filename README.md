@@ -12,7 +12,7 @@
 | **Type** | Mobile App |
 | **Platform** | Android |
 | **Stack** | Kotlin, Jetpack Compose, Material 3, Hilt, Room, DataStore, Coroutines/Flow, Nordic BLE, Kable, Timber |
-| **Repo / Location** | `campaigns/VitruvianProjectPhoenix` / `https://github.com/DasBluEyedDevil/VitruvianProjectPhoenix` |
+| **Repo / Location** | `campaigns/VitruvianProjectPhoenix`; active fork `https://github.com/doichoiboi/VitruvianProjectPhoenix`; upstream source `https://github.com/9thLevelSoftware/VitruvianProjectPhoenix` |
 | **Naming Status** | Temporary import name; Daniel plans a rework and rename |
 
 ---

@@ -68,7 +68,7 @@ class AppNavigationHubTest {
     fun `analytics route names come from destination metadata`() {
         assertEquals("analytics", AppNavigationHub.analyticsName(NavigationRoutes.Analytics.route))
         assertEquals("program_builder", AppNavigationHub.analyticsName("program_builder/new"))
-        assertEquals("home", AppNavigationHub.analyticsName("unknown"))
+        assertEquals("unknown", AppNavigationHub.analyticsName("unknown"))
     }
 
     @Test
@@ -76,5 +76,13 @@ class AppNavigationHubTest {
         assertSame(AppDestination.Home, AppNavigationHub.destinationFor(NavigationRoutes.Home.route))
         assertSame(AppDestination.ProgramBuilder, AppNavigationHub.destinationFor("program_builder/abc"))
         assertSame(AppDestination.Home, AppNavigationHub.destinationFor(null))
+    }
+
+    @Test
+    fun `unknown concrete routes do not inherit home shell behavior`() {
+        assertSame(AppDestination.Unknown, AppNavigationHub.destinationFor("missing_route"))
+        assertEquals("Vitruvian Project Phoenix", AppNavigationHub.appBarTitle("missing_route", "Stale"))
+        assertFalse(AppNavigationHub.isBottomBarDestination("missing_route"))
+        assertTrue(AppNavigationHub.showsBackButton("missing_route"))
     }
 }

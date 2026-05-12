@@ -27,6 +27,7 @@ fun ActiveWorkoutScreen(
 ) {
     val workoutState by viewModel.workoutState.collectAsState()
     val appChrome = LocalAppChrome.current
+    val chromeOwner = remember { "ActiveWorkoutScreen" }
     val currentMetric by viewModel.currentMetric.collectAsState()
     val currentHeuristicKgMax by viewModel.currentHeuristicKgMax.collectAsState()
     val workoutParameters by viewModel.workoutParameters.collectAsState()
@@ -64,12 +65,12 @@ fun ActiveWorkoutScreen(
     }
 
     // Set global title
-    LaunchedEffect(appChrome, screenTitle) {
-        appChrome.setDynamicTitle(screenTitle)
+    LaunchedEffect(appChrome, chromeOwner, screenTitle) {
+        appChrome.setDynamicTitle(chromeOwner, screenTitle)
     }
 
     // Handle Back Button (System + Top Bar)
-    LaunchedEffect(appChrome) {
+    LaunchedEffect(appChrome, chromeOwner) {
         val onBack: () -> Unit = {
             // Show confirmation if workout is active
             if (viewModel.workoutState.value is WorkoutState.Active ||
@@ -81,14 +82,13 @@ fun ActiveWorkoutScreen(
                 navController.navigateUp()
             }
         }
-        appChrome.setBackAction(onBack)
+        appChrome.setBackAction(chromeOwner, onBack)
     }
 
     // Clean up back action
-    DisposableEffect(appChrome) {
+    DisposableEffect(appChrome, chromeOwner) {
         onDispose {
-            appChrome.clearBackAction()
-            appChrome.clearDynamicTitle()
+            appChrome.clearChrome(chromeOwner)
         }
     }
 

@@ -20,31 +20,51 @@ data class AppChromeState(
 
 class AppChromeController {
     private val _state = MutableStateFlow(AppChromeState())
+    private var ownerKey: String? = null
     val state: StateFlow<AppChromeState> = _state.asStateFlow()
 
-    fun setDynamicTitle(title: String) {
+    fun setDynamicTitle(ownerKey: String, title: String) {
+        claim(ownerKey)
         _state.value = _state.value.copy(dynamicTitle = title)
     }
 
-    fun clearDynamicTitle() {
+    fun clearDynamicTitle(ownerKey: String) {
+        if (!isOwner(ownerKey)) return
         _state.value = _state.value.copy(dynamicTitle = null)
     }
 
-    fun setTopBarActions(actions: List<TopBarAction>) {
+    fun setTopBarActions(ownerKey: String, actions: List<TopBarAction>) {
+        claim(ownerKey)
         _state.value = _state.value.copy(topBarActions = actions)
     }
 
-    fun clearTopBarActions() {
+    fun clearTopBarActions(ownerKey: String) {
+        if (!isOwner(ownerKey)) return
         _state.value = _state.value.copy(topBarActions = emptyList())
     }
 
-    fun setBackAction(action: () -> Unit) {
+    fun setBackAction(ownerKey: String, action: () -> Unit) {
+        claim(ownerKey)
         _state.value = _state.value.copy(backAction = action)
     }
 
-    fun clearBackAction() {
+    fun clearBackAction(ownerKey: String) {
+        if (!isOwner(ownerKey)) return
         _state.value = _state.value.copy(backAction = null)
     }
+
+    fun clearChrome(ownerKey: String) {
+        if (!isOwner(ownerKey)) return
+        this.ownerKey = null
+        _state.value = AppChromeState()
+    }
+
+    private fun claim(ownerKey: String) {
+        this.ownerKey = ownerKey
+    }
+
+    private fun isOwner(ownerKey: String): Boolean =
+        this.ownerKey == ownerKey
 }
 
 val LocalAppChrome = staticCompositionLocalOf<AppChromeController> {

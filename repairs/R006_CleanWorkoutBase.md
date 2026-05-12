@@ -43,7 +43,9 @@ small tested slices after the boundary exists.
   reflection into the BLE manager.
 - Existing app compile still passes.
 - No broad Gradle module split is introduced in this repair.
-- Existing full-suite failures are recorded as baseline debt, not hidden.
+- Historical note: this repair originally recorded full-suite failures as
+  baseline debt. R-007 later stabilized `:app:testProductionDebugUnitTest`;
+  use the newer R-007 validation note for current unit-lane status.
 
 ## Follow-Up Repairs
 
@@ -51,8 +53,9 @@ small tested slices after the boundary exists.
 - Extract protocol frame generation/parsing from BLE manager into testable pure
   Kotlin protocol classes.
 - Split `WorkoutTab` into route, stateful screen, and dumb content components.
-- Triage stale legacy tests before relying on the full unit suite as a release
-  gate.
+- Keep stale legacy tests triaged as they appear; as of R-007 the full
+  production-debug unit lane is green and can be used as a local regression
+  signal.
 
 ## Research Notes
 

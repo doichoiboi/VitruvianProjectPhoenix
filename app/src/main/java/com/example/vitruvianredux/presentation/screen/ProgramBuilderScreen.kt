@@ -48,6 +48,7 @@ fun ProgramBuilderScreen(
 ) {
     val routines by viewModel.routines.collectAsState()
     val appChrome = LocalAppChrome.current
+    val chromeOwner = remember(programId) { "ProgramBuilderScreen:$programId" }
 
     var programName by remember { mutableStateOf("New Program") }
     var showRoutinePicker by remember { mutableStateOf(false) }
@@ -91,13 +92,14 @@ fun ProgramBuilderScreen(
     }
 
     // Setup Top Bar
-    LaunchedEffect(appChrome, programId) {
-        appChrome.setDynamicTitle(if (programId == "new") "New Program" else "Edit Program")
+    LaunchedEffect(appChrome, chromeOwner, programId) {
+        appChrome.setDynamicTitle(chromeOwner, if (programId == "new") "New Program" else "Edit Program")
     }
 
     // Setup Save Action
-    LaunchedEffect(appChrome, programName, dailyRoutines) {
+    LaunchedEffect(appChrome, chromeOwner, programName, dailyRoutines) {
         appChrome.setTopBarActions(
+            chromeOwner,
             listOf(
                 TopBarAction(
                     icon = Icons.Default.Done,
@@ -138,10 +140,9 @@ fun ProgramBuilderScreen(
     }
 
     // Clean up actions on dispose
-    DisposableEffect(appChrome) {
+    DisposableEffect(appChrome, chromeOwner) {
         onDispose {
-            appChrome.clearTopBarActions()
-            appChrome.clearDynamicTitle()
+            appChrome.clearChrome(chromeOwner)
         }
     }
 

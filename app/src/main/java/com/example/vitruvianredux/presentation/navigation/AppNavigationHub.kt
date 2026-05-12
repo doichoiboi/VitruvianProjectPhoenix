@@ -98,6 +98,12 @@ sealed class AppDestination(
         title = "Protocol Tester",
         analyticsName = "protocol_tester"
     )
+
+    data object Unknown : AppDestination(
+        route = "__unknown__",
+        title = "Vitruvian Project Phoenix",
+        analyticsName = "unknown"
+    )
 }
 
 object AppNavigationHub {
@@ -116,8 +122,8 @@ object AppNavigationHub {
     )
 
     fun destinationFor(route: String?): AppDestination {
-        val normalizedRoute = route ?: NavigationRoutes.Home.route
-        return destinations.firstOrNull { it.matches(normalizedRoute) } ?: AppDestination.Home
+        val normalizedRoute = route ?: return AppDestination.Home
+        return destinations.firstOrNull { it.matches(normalizedRoute) } ?: AppDestination.Unknown
     }
 
     fun appBarTitle(route: String?, dynamicTitle: String?): String {
@@ -140,5 +146,4 @@ object AppNavigationHub {
 
     fun analyticsName(route: String?): String =
         destinationFor(route).analyticsName
-
 }

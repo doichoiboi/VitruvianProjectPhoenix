@@ -8,7 +8,7 @@
 
 | ID | Title | Owner | File / Note |
 |---|---|---|---|
-| R-006 | Forge the Clean Workout Base | Spanner -> Sightline | `repairs/R006_CleanWorkoutBase.md`; create a debuggable Moyo-style boundary before visual redesign work |
+| R-007 | Reduce MainViewModel Fan-Out | Spanner -> Sightline | `repairs/R007_MainViewModelFanout.md`; continue route/presenter extraction after shell chrome and test-lane stabilization |
 
 ---
 
@@ -45,4 +45,6 @@
 
 ## Completed Repairs
 
-_None logged in Forge yet._
+| ID | Title | Owner | File / Note |
+|---|---|---|---|
+| R-006 | Forge the Clean Workout Base | Spanner -> Sightline | `repairs/R006_CleanWorkoutBase.md`; workout engine/parser boundary established |

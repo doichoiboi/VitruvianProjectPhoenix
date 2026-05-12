@@ -132,3 +132,23 @@ Restore the full production-debug unit lane:
   `Nothing` values.
 
 Validation: `:app:testProductionDebugUnitTest` is green after this slice.
+
+## Review-Fix Slice
+
+Address follow-up review findings before adding more shell work:
+
+- `AppChromeController` now requires an owner key for all dynamic chrome
+  updates and only clears chrome for the current owner. This prevents outgoing
+  animated routes from clearing chrome already claimed by the incoming route.
+- `AppNavigationHub` now returns `AppDestination.Unknown` for unknown concrete
+  routes instead of inheriting Home metadata. Null route still maps to Home for
+  startup behavior.
+- R-006, the board, and README were synced with the current fork branch and
+  validation state.
+
+Deferred workout follow-ups:
+
+- Decide and repair the `stopAtTop` contract. Current modern rep-counter logic
+  stores `stopAtTop` but does not use it when confirming working reps.
+- Strengthen or rename the AMRAP "saves actual reps" test so it asserts saved
+  rep counts instead of only AMRAP parameter loading.
