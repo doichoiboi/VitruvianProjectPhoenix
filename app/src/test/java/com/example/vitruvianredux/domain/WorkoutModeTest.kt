@@ -163,7 +163,7 @@ class WorkoutModeTest {
 
     @Test
     fun `Modern mode - pending top rep waits for machine confirmation`() {
-        initHandler(warmupTarget = 3, workingTarget = 5, isJustLift = false, stopAtTop = true)
+        initHandler(warmupTarget = 3, workingTarget = 5, isJustLift = false, stopAtTop = false)
         
         completeWarmup()
 
@@ -228,13 +228,6 @@ class WorkoutModeTest {
         // Next rep
         handler.process(repsRomCount = 2, repsSetCount = 0, up = 2, down = 2)
         assertEquals(2, handler.getRepCount().warmupReps)
-    }
-
-    @Test
-    fun `Invalid data - too short`() {
-        // This test is no longer applicable since we're not parsing ByteArray
-        // The parsing happens in BleManager, not in RepCounterFromMachine
-        // Test removed - counters are always valid Ints
     }
 
     @Test

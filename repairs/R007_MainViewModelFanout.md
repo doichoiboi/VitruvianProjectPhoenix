@@ -148,7 +148,9 @@ Address follow-up review findings before adding more shell work:
 
 Deferred workout follow-ups:
 
-- Decide and repair the `stopAtTop` contract. Current modern rep-counter logic
-  stores `stopAtTop` but does not use it when confirming working reps.
-- Strengthen or rename the AMRAP "saves actual reps" test so it asserts saved
-  rep counts instead of only AMRAP parameter loading.
+- `B-002`: decide and repair the `stopAtTop` contract. This is a discovered
+  pre-existing issue: current modern rep-counter logic stores `stopAtTop` but
+  does not use it when confirming working reps.
+- `B-003`: add AMRAP manual-save coverage. Current tests verify AMRAP parameter
+  loading and auto-stop behavior, but do not prove manual stop saves actual
+  completed reps.
