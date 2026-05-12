@@ -183,6 +183,7 @@ dependencies {
     testImplementation(libs.kotlinx.coroutines.test)
     testImplementation(libs.turbine)
     testImplementation(libs.truth)
+    testImplementation(libs.androidx.test.core)
     testImplementation(kotlin("test"))
     testImplementation(libs.mockito.core)
     testImplementation(libs.mockito.inline)

@@ -29,6 +29,7 @@ materialIconsExtended = "1.7.8"
 mockitoCore = "5.20.0"
 mockitoInline = "5.2.0"
 robolectric = "4.16"
+androidxTestCore = "1.6.1"
 ksp = "2.2.21-2.0.4"
 vico = "2.3.6"
 composeCharts = "0.2.0"
@@ -114,6 +115,7 @@ androidx-compose-material-icons-extended = { group = "androidx.compose.material"
 mockito-core = { group = "org.mockito", name = "mockito-core", version.ref = "mockitoCore" }
 mockito-inline = { group = "org.mockito", name = "mockito-inline", version.ref = "mockitoInline" }
 robolectric = { group = "org.robolectric", name = "robolectric", version.ref = "robolectric" }
+androidx-test-core = { group = "androidx.test", name = "core", version.ref = "androidxTestCore" }
 
 [plugins]
 android-application = { id = "com.android.application", version.ref = "agp" }

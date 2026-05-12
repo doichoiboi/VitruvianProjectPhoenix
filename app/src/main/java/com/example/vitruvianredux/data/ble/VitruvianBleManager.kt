@@ -1452,31 +1452,15 @@ class VitruvianBleManager(
                 return
             }
 
-            if (bytes.size < 16) {
+            val parsedPacket = MonitorPacketParser.parse(bytes)
+            if (parsedPacket == null) {
                 Timber.w("Monitor data too short: ${bytes.size} bytes")
                 return
             }
 
-            val buffer = ByteBuffer.wrap(bytes).order(ByteOrder.LITTLE_ENDIAN)
-
-            // BLE packet parsing - official app format
-            // Format: u16[0-1]=ticks_lo, u16[2-3]=ticks_hi, s16[4-5]=posA*10, u16[8-9]=loadA*100,
-            //         s16[10-11]=posB*10, u16[14-15]=loadB*100
-            val ticksLo = buffer.getShort(0).toInt() and 0xFFFF    // Offset 0-1 (unsigned)
-            val ticksHi = buffer.getShort(2).toInt() and 0xFFFF    // Offset 2-3 (unsigned)
-            val posARaw = buffer.getShort(4)                       // Offset 4-5 (SIGNED - position)
-            val loadARaw = buffer.getShort(8).toInt() and 0xFFFF   // Offset 8-9 (unsigned - load*100)
-            val posBRaw = buffer.getShort(10)                      // Offset 10-11 (SIGNED - position)
-            val loadBRaw = buffer.getShort(14).toInt() and 0xFFFF  // Offset 14-15 (unsigned - load*100)
-
-            // Reconstruct 32-bit tick counter
-            val ticks = ticksLo + (ticksHi shl 16)
-
-            // Position values - signed 16-bit with 0.1mm resolution, scale to mm
-            // Per official app: position = buffer.getShort() / 10.0
-            // Valid range after scaling: -1000.0 to +1000.0 mm
-            var positionA = posARaw / 10.0f
-            var positionB = posBRaw / 10.0f
+            val ticks = parsedPacket.ticks
+            var positionA = parsedPacket.positionA
+            var positionB = parsedPacket.positionB
 
             // Validate position range and use last good value if invalid
             if (positionA !in WorkoutConstants.MIN_POSITION..WorkoutConstants.MAX_POSITION) {
@@ -1492,15 +1476,9 @@ class VitruvianBleManager(
                 lastGoodPosB = positionB
             }
 
-            // Load in kg (device sends kg * 100)
-            val loadA = loadARaw / 100.0f
-            val loadB = loadBRaw / 100.0f
-
-            // Status (Bytes 16-17) if available
-            var status = 0
-            if (bytes.size >= 18) {
-                status = buffer.getShort(16).toInt() and 0xFFFF
-            }
+            val loadA = parsedPacket.loadA
+            val loadB = parsedPacket.loadB
+            val status = parsedPacket.status
 
             Timber.v("Parsed ${bytes.size}-byte format: posA=$positionA, posB=$positionB, loadA=$loadA")
 

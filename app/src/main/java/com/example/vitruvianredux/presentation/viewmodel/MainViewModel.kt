@@ -15,6 +15,8 @@ import com.example.vitruvianredux.data.repository.PersonalRecordRepository
 import com.example.vitruvianredux.data.repository.WorkoutRepository
 import com.example.vitruvianredux.domain.model.*
 import com.example.vitruvianredux.domain.usecase.RepCounterFromMachine
+import com.example.vitruvianredux.domain.workout.WorkoutEngine
+import com.example.vitruvianredux.domain.workout.WorkoutEngineAction
 import com.example.vitruvianredux.domain.weight.WeightFormatter
 import com.example.vitruvianredux.service.WorkoutForegroundService
 import com.example.vitruvianredux.util.DataBackupManager
@@ -114,6 +116,7 @@ class MainViewModel @Inject constructor(
         )
     )
     val workoutParameters: StateFlow<WorkoutParameters> = _workoutParameters.asStateFlow()
+    private var workoutEngine = WorkoutEngine(_workoutParameters.value)
 
     private val _repCount = MutableStateFlow(RepCount())
     val repCount: StateFlow<RepCount> = _repCount.asStateFlow()
@@ -979,6 +982,33 @@ class MainViewModel @Inject constructor(
 
     private fun collectMetricForHistory(metric: WorkoutMetric) {
         collectedMetrics.add(metric)
+        workoutEngine.dispatch(WorkoutEngineAction.MetricReceived(metric))
+    }
+
+    private fun buildSetSummary(completedReps: Int): WorkoutState.SetSummary {
+        val result = workoutEngine.dispatch(WorkoutEngineAction.SetCompleted(repCount = completedReps))
+        val engineSummary = result.snapshot.state as? WorkoutState.SetSummary
+        if (engineSummary != null) {
+            return engineSummary
+        }
+
+        val peakPerCableKg = if (collectedMetrics.isNotEmpty()) {
+            collectedMetrics.maxOf { it.totalLoad } / 2f
+        } else {
+            _workoutParameters.value.weightPerCableKg
+        }
+        val averagePerCableKg = if (collectedMetrics.isNotEmpty()) {
+            collectedMetrics.map { it.totalLoad / 2f }.average().toFloat()
+        } else {
+            _workoutParameters.value.weightPerCableKg
+        }
+
+        return WorkoutState.SetSummary(
+            metrics = collectedMetrics.toList(),
+            peakPower = peakPerCableKg,
+            averagePower = averagePerCableKg,
+            repCount = completedReps
+        )
     }
 
     fun startScanning() {
@@ -1157,6 +1187,7 @@ class MainViewModel @Inject constructor(
         viewModelScope.launch {
             bleRepository.disconnect()
             _workoutState.value = WorkoutState.Idle
+            workoutEngine = WorkoutEngine(_workoutParameters.value)
             _currentMetric.value = null
             repCounter.reset()
             resetAutoStopState()
@@ -1166,6 +1197,9 @@ class MainViewModel @Inject constructor(
     fun updateWorkoutParameters(params: WorkoutParameters) {
         Timber.d("⚖️ updateWorkoutParameters: weight=${params.weightPerCableKg} kg (${params.weightPerCableKg * 2.20462f} lbs)")
         _workoutParameters.value = params
+        if (_workoutState.value is WorkoutState.Idle) {
+            workoutEngine.dispatch(WorkoutEngineAction.UpdateParameters(params))
+        }
 
         // Update session-level eccentric load for cross-exercise persistence
         val workoutType = params.workoutType
@@ -1217,6 +1251,31 @@ class MainViewModel @Inject constructor(
             val newWeight = _workoutParameters.value.weightPerCableKg
             Timber.d("⚖️ prepareForJustLift: AFTER - weight=$newWeight kg (${newWeight * 2.20462f} lbs)")
             Timber.d("Just Lift ready: State=Idle, AutoStart=enabled, waiting for handle grab")
+        }
+    }
+
+    private suspend fun runWorkoutEngineStart(params: WorkoutParameters, skipCountdown: Boolean) {
+        workoutEngine = WorkoutEngine(params)
+        var result = workoutEngine.dispatch(
+            WorkoutEngineAction.StartRequested(
+                parameters = params,
+                skipCountdown = skipCountdown
+            )
+        )
+
+        val initialState = result.snapshot.state
+        if (initialState !is WorkoutState.Countdown) {
+            return
+        }
+
+        _workoutState.value = initialState
+        while (result.snapshot.state is WorkoutState.Countdown) {
+            delay(1000)
+            result = workoutEngine.dispatch(WorkoutEngineAction.CountdownTick)
+            val nextState = result.snapshot.state
+            if (nextState is WorkoutState.Countdown) {
+                _workoutState.value = nextState
+            }
         }
     }
 
@@ -1286,14 +1345,10 @@ class MainViewModel @Inject constructor(
                 Timber.d(" Mode: ${params.workoutType.displayName}")
                 Timber.d(" Target: ${params.warmupReps} warmup + ${params.reps} working reps")
                 Timber.d("")
-
-                for (i in 5 downTo 1) {
-                    _workoutState.value = WorkoutState.Countdown(i)
-                    delay(1000)
-                }
             } else {
                 Timber.d(" SKIPPING COUNTDOWN - ${if (params.isJustLift) "Just Lift mode" else "Auto-advancing"}")
             }
+            runWorkoutEngineStart(params = params, skipCountdown = skipCountdown || params.isJustLift)
 
             Timber.d("")
             Timber.d(" COUNTDOWN COMPLETE")
@@ -1437,32 +1492,17 @@ class MainViewModel @Inject constructor(
                 // This mirrors handleSetCompletion() behavior for auto-stop
                 Timber.d("AMRAP mode: Manual finish - showing set summary for progression")
 
-                // Calculate metrics for summary BEFORE reset (per-cable load, not total)
-                val peakPerCableKg = if (collectedMetrics.isNotEmpty()) {
-                    collectedMetrics.maxOf { it.totalLoad } / 2f
-                } else {
-                    params.weightPerCableKg
-                }
-                val averagePerCableKg = if (collectedMetrics.isNotEmpty()) {
-                    collectedMetrics.map { it.totalLoad / 2f }.average().toFloat()
-                } else {
-                    params.weightPerCableKg
-                }
                 val completedReps = _repCount.value.workingReps
+                val summary = buildSetSummary(completedReps)
 
                 // Reset state after capturing metrics
                 repCounter.reset()
                 resetAutoStopState()
 
                 // Show set summary - user can click "Continue" to proceed to next set
-                _workoutState.value = WorkoutState.SetSummary(
-                    metrics = collectedMetrics.toList(),
-                    peakPower = peakPerCableKg,
-                    averagePower = averagePerCableKg,
-                    repCount = completedReps
-                )
+                _workoutState.value = summary
 
-                Timber.d("AMRAP set summary: peakPerCableKg=$peakPerCableKg, avgPerCableKg=$averagePerCableKg, reps=$completedReps")
+                Timber.d("AMRAP set summary: peakPerCableKg=${summary.peakPower}, avgPerCableKg=${summary.averagePower}, reps=$completedReps")
             } else {
                 // Reset state
                 repCounter.reset()
@@ -1529,30 +1569,13 @@ class MainViewModel @Inject constructor(
             // Save progress
             saveWorkoutSession()
 
-            // Calculate metrics for summary (per-cable load, not total load across both cables)
-            val peakPerCableKg = if (collectedMetrics.isNotEmpty()) {
-                collectedMetrics.maxOf { it.totalLoad } / 2f
-            } else {
-                params.weightPerCableKg
-            }
-
-            val averagePerCableKg = if (collectedMetrics.isNotEmpty()) {
-                collectedMetrics.map { it.totalLoad / 2f }.average().toFloat()
-            } else {
-                params.weightPerCableKg
-            }
-
             val completedReps = _repCount.value.workingReps
+            val summary = buildSetSummary(completedReps)
 
             // Show set summary for all modes
-            _workoutState.value = WorkoutState.SetSummary(
-                metrics = collectedMetrics.toList(),
-                peakPower = peakPerCableKg,
-                averagePower = averagePerCableKg,
-                repCount = completedReps
-            )
+            _workoutState.value = summary
 
-            Timber.d("Set summary: peakPerCableKg=$peakPerCableKg, avgPerCableKg=$averagePerCableKg, reps=$completedReps, metrics=${collectedMetrics.size}")
+            Timber.d("Set summary: peakPerCableKg=${summary.peakPower}, avgPerCableKg=${summary.averagePower}, reps=$completedReps, metrics=${summary.metrics.size}")
 
             // Just Lift mode: Auto-advance to next set after showing summary
             if (isJustLift) {
@@ -2558,6 +2581,7 @@ class MainViewModel @Inject constructor(
      */
     fun resetForNewWorkout() {
         _workoutState.value = WorkoutState.Idle
+        workoutEngine = WorkoutEngine(_workoutParameters.value)
         _repCount.value = RepCount()
         _repRanges.value = null
         _currentSetIndex.value = 0
