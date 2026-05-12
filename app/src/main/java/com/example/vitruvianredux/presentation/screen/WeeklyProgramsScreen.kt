@@ -18,11 +18,11 @@ import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
-import androidx.navigation.NavController
+import com.example.vitruvianredux.data.local.WeeklyProgramWithDays
+import com.example.vitruvianredux.domain.model.Routine
 import com.example.vitruvianredux.presentation.components.EmptyState
-import com.example.vitruvianredux.presentation.navigation.NavigationRoutes
-import com.example.vitruvianredux.presentation.viewmodel.MainViewModel
 import com.example.vitruvianredux.ui.theme.Spacing
+import com.example.vitruvianredux.ui.theme.ThemeMode
 import java.time.DayOfWeek
 import java.time.LocalDate
 import java.time.format.TextStyle
@@ -35,20 +35,22 @@ import java.util.*
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun WeeklyProgramsScreen(
-    navController: NavController,
-    viewModel: MainViewModel,
-    themeMode: com.example.vitruvianredux.ui.theme.ThemeMode
+    themeMode: ThemeMode,
+    programs: List<WeeklyProgramWithDays>,
+    activeProgram: WeeklyProgramWithDays?,
+    routines: List<Routine>,
+    onStartTodayWorkout: (String) -> Unit,
+    onCreateProgram: () -> Unit,
+    onEditProgram: (String) -> Unit,
+    onActivateProgram: (String) -> Unit,
+    onDeleteProgram: (String) -> Unit,
+    modifier: Modifier = Modifier
 ) {
-    // Get programs from ViewModel's database StateFlows
-    val programs by viewModel.weeklyPrograms.collectAsState()
-    val activeProgram by viewModel.activeProgram.collectAsState()
-    val routines by viewModel.routines.collectAsState()
-
     // Determine actual theme (matching Theme.kt logic)
     val useDarkColors = when (themeMode) {
-        com.example.vitruvianredux.ui.theme.ThemeMode.SYSTEM -> isSystemInDarkTheme()
-        com.example.vitruvianredux.ui.theme.ThemeMode.LIGHT -> false
-        com.example.vitruvianredux.ui.theme.ThemeMode.DARK -> true
+        ThemeMode.SYSTEM -> isSystemInDarkTheme()
+        ThemeMode.LIGHT -> false
+        ThemeMode.DARK -> true
     }
 
     val backgroundGradient = if (useDarkColors) {
@@ -70,7 +72,7 @@ fun WeeklyProgramsScreen(
     }
 
     Box(
-        modifier = Modifier
+        modifier = modifier
             .fillMaxSize()
             .background(backgroundGradient)
     ) {
@@ -91,19 +93,11 @@ fun WeeklyProgramsScreen(
                         program = activeProgram!!,
                         onStartTodayWorkout = {
                             todayRoutineId?.let { routineId ->
-                                viewModel.ensureConnection(
-                                    onConnected = {
-                                        viewModel.loadRoutineById(routineId)
-                                        viewModel.startWorkout()
-                                    },
-                                    onFailed = { /* Error shown via StateFlow */ }
-                                )
+                                onStartTodayWorkout(routineId)
                             }
                         },
                         onViewProgram = {
-                            navController.navigate(
-                                NavigationRoutes.ProgramBuilder.createRoute(activeProgram!!.program.id)
-                            )
+                            onEditProgram(activeProgram!!.program.id)
                         }
                     )
                 }
@@ -156,9 +150,7 @@ fun WeeklyProgramsScreen(
                         fontWeight = FontWeight.Bold
                     )
                     OutlinedButton(
-                        onClick = {
-                            navController.navigate(NavigationRoutes.ProgramBuilder.createRoute())
-                        },
+                        onClick = onCreateProgram,
                         modifier = Modifier
                             .fillMaxWidth()
                             .height(56.dp), // Material 3 Expressive: Taller button
@@ -183,9 +175,7 @@ fun WeeklyProgramsScreen(
                         title = "No Programs Yet",
                         message = "Create your first weekly program to follow a structured training schedule",
                         actionText = "Create Your First Program",
-                        onAction = {
-                            navController.navigate(NavigationRoutes.ProgramBuilder.createRoute())
-                        },
+                        onAction = onCreateProgram,
                         modifier = Modifier.fillMaxWidth()
                     )
                 }
@@ -198,15 +188,13 @@ fun WeeklyProgramsScreen(
                             routines.find { it.id == routineId }?.name ?: "Unknown Routine"
                         },
                         onClick = {
-                            navController.navigate(
-                                NavigationRoutes.ProgramBuilder.createRoute(program.program.id)
-                            )
+                            onEditProgram(program.program.id)
                         },
                         onActivate = {
-                            viewModel.activateProgram(program.program.id)
+                            onActivateProgram(program.program.id)
                         },
                         onDelete = {
-                            viewModel.deleteProgram(program.program.id)
+                            onDeleteProgram(program.program.id)
                         }
                     )
                 }
@@ -221,7 +209,7 @@ fun WeeklyProgramsScreen(
  */
 @Composable
 fun ActiveProgramCard(
-    program: com.example.vitruvianredux.data.local.WeeklyProgramWithDays,
+    program: WeeklyProgramWithDays,
     onStartTodayWorkout: () -> Unit,
     onViewProgram: () -> Unit
 ) {
@@ -338,7 +326,7 @@ fun ActiveProgramCard(
  */
 @Composable
 fun ProgramListItem(
-    program: com.example.vitruvianredux.data.local.WeeklyProgramWithDays,
+    program: WeeklyProgramWithDays,
     isActive: Boolean,
     routineNameLookup: (String) -> String,
     onClick: () -> Unit,

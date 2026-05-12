@@ -133,7 +133,7 @@ fun NavGraph(
 
         // Weekly Programs screen - view and manage programs
         composable(NavigationRoutes.WeeklyPrograms.route) {
-            WeeklyProgramsScreen(
+            WeeklyProgramsRoute(
                 navController = navController,
                 viewModel = viewModel,
                 themeMode = themeMode

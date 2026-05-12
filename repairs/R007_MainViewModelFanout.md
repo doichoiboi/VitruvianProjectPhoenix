@@ -199,3 +199,18 @@ This is still transitional because the home route starts active-program
 workouts through `MainViewModel`. It gives the home UI the same route/screen
 shape we can later migrate to a dedicated presenter without rewriting the
 visual composable again.
+
+## Ninth Slice
+
+Split the weekly-programs destination into route orchestration and a dumb
+screen:
+
+- `WeeklyProgramsRoute` now collects programs, active program, and routines
+  from `MainViewModel`.
+- `WeeklyProgramsRoute` owns Program Builder navigation plus active-program
+  workout-start orchestration.
+- `WeeklyProgramsScreen` no longer imports `NavController` or `MainViewModel`;
+  it receives render state and callbacks.
+
+This keeps program list rendering local while moving state collection and app
+navigation toward the same route boundary established for Home and Settings.
