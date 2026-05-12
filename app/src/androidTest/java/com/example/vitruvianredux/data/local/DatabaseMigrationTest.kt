@@ -4,7 +4,7 @@ import androidx.room.Room
 import androidx.sqlite.db.SupportSQLiteDatabase
 import androidx.test.ext.junit.runners.AndroidJUnit4
 import androidx.test.platform.app.InstrumentationRegistry
-import com.example.vitruvianredux.di.AppModule
+import com.example.vitruvianredux.di.DatabaseMigrations
 import com.google.common.truth.Truth.assertThat
 import org.junit.After
 import org.junit.Test
@@ -110,7 +110,7 @@ class DatabaseMigrationTest {
 
         // Step 2: Reopen with MIGRATION_16_17 to test migration
         database = Room.databaseBuilder(context, WorkoutDatabase::class.java, TEST_DB_NAME)
-            .addMigrations(AppModule.MIGRATION_16_17)
+            .addMigrations(DatabaseMigrations.MIGRATION_16_17)
             .build()
 
         // Access database to trigger migration
