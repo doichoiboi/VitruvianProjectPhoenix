@@ -10,7 +10,6 @@ import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
-import androidx.compose.material.icons.automirrored.filled.BluetoothSearching
 import androidx.compose.material.icons.automirrored.filled.KeyboardArrowRight
 import androidx.compose.material.icons.filled.*
 import androidx.compose.material.icons.outlined.*
@@ -24,13 +23,12 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
-import androidx.compose.ui.unit.sp
 import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
 import androidx.navigation.compose.rememberNavController
 import com.example.vitruvianredux.data.repository.ExerciseRepository
-import com.example.vitruvianredux.domain.model.ConnectionState
 import com.example.vitruvianredux.presentation.chrome.AppChromeController
 import com.example.vitruvianredux.presentation.chrome.LocalAppChrome
+import com.example.vitruvianredux.presentation.chrome.MachineConnectionButton
 import com.example.vitruvianredux.presentation.navigation.AppNavigationHub
 import com.example.vitruvianredux.presentation.navigation.NavGraph
 import com.example.vitruvianredux.presentation.navigation.NavigationRoutes
@@ -191,70 +189,16 @@ fun EnhancedMainScreen(
                         }
                     }
 
-                    // Connection status icon (Bluetooth) with text label
-                    Column(
-                        horizontalAlignment = Alignment.CenterHorizontally,
-                        verticalArrangement = Arrangement.Center,
-                        modifier = Modifier
-                            .padding(horizontal = 4.dp)
-                            .defaultMinSize(minWidth = 48.dp, minHeight = 48.dp) // Ensure 48dp touch target
-                            .clickable(
-                                onClick = {
-                                    if (connectionState is ConnectionState.Connected) {
-                                        viewModel.disconnect()
-                                    } else {
-                                        viewModel.ensureConnection(
-                                            onConnected = {},
-                                            onFailed = {}
-                                        )
-                                    }
-                                },
-                                role = androidx.compose.ui.semantics.Role.Button
+                    MachineConnectionButton(
+                        connectionState = connectionState,
+                        onConnect = {
+                            viewModel.ensureConnection(
+                                onConnected = {},
+                                onFailed = {}
                             )
-                    ) {
-                        Icon(
-                            imageVector = when (connectionState) {
-                                is ConnectionState.Connected -> Icons.Default.Bluetooth
-                                is ConnectionState.Connecting -> Icons.AutoMirrored.Filled.BluetoothSearching
-                                is ConnectionState.Disconnected -> Icons.Default.BluetoothDisabled
-                                is ConnectionState.Scanning -> Icons.AutoMirrored.Filled.BluetoothSearching
-                                is ConnectionState.Error -> Icons.Default.BluetoothDisabled
-                            },
-                            contentDescription = when (connectionState) {
-                                is ConnectionState.Connected -> "Connected to machine. Tap to disconnect"
-                                is ConnectionState.Connecting -> "Connecting to machine"
-                                is ConnectionState.Disconnected -> "Disconnected. Tap to connect"
-                                is ConnectionState.Scanning -> "Scanning for machine"
-                                is ConnectionState.Error -> "Connection error. Tap to retry"
-                            },
-                            tint = when (connectionState) {
-                                is ConnectionState.Connected -> Color(0xFF22C55E) // green-500
-                                is ConnectionState.Connecting -> Color(0xFFFBBF24) // yellow-400
-                                is ConnectionState.Disconnected -> Color(0xFFEF4444) // red-500
-                                is ConnectionState.Scanning -> Color(0xFF3B82F6) // blue-500
-                                is ConnectionState.Error -> Color(0xFFEF4444) // red-500
-                            },
-                            modifier = Modifier.size(20.dp)
-                        )
-                        Text(
-                            text = when (connectionState) {
-                                is ConnectionState.Connected -> "Connected"
-                                is ConnectionState.Connecting -> "Connecting"
-                                is ConnectionState.Disconnected -> "Disconnected"
-                                is ConnectionState.Scanning -> "Scanning"
-                                is ConnectionState.Error -> "Error"
-                            },
-                            style = MaterialTheme.typography.labelSmall.copy(fontSize = 9.sp),
-                            color = when (connectionState) {
-                                is ConnectionState.Connected -> Color(0xFF22C55E)
-                                is ConnectionState.Connecting -> Color(0xFFFBBF24)
-                                is ConnectionState.Disconnected -> Color(0xFFEF4444)
-                                is ConnectionState.Scanning -> Color(0xFF3B82F6)
-                                is ConnectionState.Error -> Color(0xFFEF4444)
-                            },
-                            maxLines = 1
-                        )
-                    }
+                        },
+                        onDisconnect = { viewModel.disconnect() }
+                    )
 
                     // Theme toggle
                     com.example.vitruvianredux.presentation.components.ThemeToggle(

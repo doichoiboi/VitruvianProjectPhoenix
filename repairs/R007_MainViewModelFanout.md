@@ -87,3 +87,18 @@ This keeps dynamic app chrome at the navigation shell boundary while leaving
 workout and program behavior unchanged. Remaining fan-out is now more clearly
 business/data related, especially workout execution, routine/program editing,
 device connection, and repository exposure.
+
+## Fifth Slice
+
+Extract the shell connection affordance:
+
+- `MachineConnectionChromeState` maps `ConnectionState` into render-ready
+  title, description, icon, and color data.
+- `MachineConnectionButton` renders the app-bar Bluetooth action and keeps the
+  connect/disconnect click policy outside `EnhancedMainScreen`.
+- Focused JVM tests pin the user-facing labels and affordances for connected,
+  disconnected, connecting, scanning, and error states.
+
+This does not change BLE behavior. It makes the shell easier to debug because
+connection display policy now has its own small owner instead of living inline
+inside the root screen.
