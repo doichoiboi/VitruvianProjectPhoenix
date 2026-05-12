@@ -24,10 +24,9 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
-import androidx.navigation.NavController
+import com.example.vitruvianredux.data.local.WeeklyProgramWithDays
+import com.example.vitruvianredux.domain.model.Routine
 import com.example.vitruvianredux.domain.model.WeightUnit
-import com.example.vitruvianredux.presentation.navigation.NavigationRoutes
-import com.example.vitruvianredux.presentation.viewmodel.MainViewModel
 import com.example.vitruvianredux.ui.theme.Spacing
 import com.example.vitruvianredux.ui.theme.ThemeMode
 import java.time.LocalDate
@@ -44,20 +43,19 @@ import androidx.compose.ui.platform.LocalConfiguration
  */
 @Composable
 fun HomeScreen(
-    navController: NavController,
-    viewModel: MainViewModel,
-    themeMode: ThemeMode
+    themeMode: ThemeMode,
+    activeProgram: WeeklyProgramWithDays?,
+    routines: List<Routine>,
+    weightUnit: WeightUnit,
+    formatWeight: (Float, WeightUnit) -> String,
+    kgToDisplay: (Float, WeightUnit) -> Float,
+    onStartRoutine: (String) -> Unit,
+    onNavigateToJustLift: () -> Unit,
+    onNavigateToSingleExercise: () -> Unit,
+    onNavigateToDailyRoutines: () -> Unit,
+    onNavigateToWeeklyPrograms: () -> Unit,
+    modifier: Modifier = Modifier
 ) {
-    // Collect stats from ViewModel
-    val workoutStreak by viewModel.workoutStreak.collectAsState()
-    val completedWorkouts by viewModel.completedWorkouts.collectAsState()
-    val progressPercentage by viewModel.progressPercentage.collectAsState()
-
-    // Collect active program and routines for Active Program Widget
-    val activeProgram by viewModel.activeProgram.collectAsState()
-    val routines by viewModel.routines.collectAsState()
-    val weightUnit by viewModel.weightUnit.collectAsState()
-
     // Determine actual theme (matching Theme.kt logic)
     val useDarkColors = when (themeMode) {
         ThemeMode.SYSTEM -> isSystemInDarkTheme()
@@ -89,7 +87,7 @@ fun HomeScreen(
     val gridColumns = if (isLandscape) 4 else 2
 
     Box(
-        modifier = Modifier
+        modifier = modifier
             .fillMaxSize()
             .background(backgroundGradient)
     ) {
@@ -107,18 +105,9 @@ fun HomeScreen(
                         program = activeProgram!!,
                         routines = routines,
                         weightUnit = weightUnit,
-                        formatWeight = viewModel::formatWeight,
-                        kgToDisplay = viewModel::kgToDisplay,
-                        onStartRoutine = { routineId ->
-                            viewModel.ensureConnection(
-                                onConnected = {
-                                    viewModel.loadRoutineById(routineId)
-                                    viewModel.startWorkout()
-                                    navController.navigate(NavigationRoutes.DailyRoutines.route)
-                                },
-                                onFailed = { /* Error shown via StateFlow */ }
-                            )
-                        }
+                        formatWeight = formatWeight,
+                        kgToDisplay = kgToDisplay,
+                        onStartRoutine = onStartRoutine
                     )
                 }
             }
@@ -132,7 +121,7 @@ fun HomeScreen(
                     gradient = Brush.linearGradient(
                         colors = listOf(Color(0xFF9333EA), Color(0xFF7E22CE)) // purple-500 to purple-700
                     ),
-                    onClick = { navController.navigate(NavigationRoutes.JustLift.route) }
+                    onClick = onNavigateToJustLift
                 )
             }
 
@@ -144,7 +133,7 @@ fun HomeScreen(
                     gradient = Brush.linearGradient(
                         colors = listOf(Color(0xFF8B5CF6), Color(0xFF9333EA)) // violet-500 to purple-600
                     ),
-                    onClick = { navController.navigate(NavigationRoutes.SingleExercise.route) }
+                    onClick = onNavigateToSingleExercise
                 )
             }
 
@@ -156,7 +145,7 @@ fun HomeScreen(
                     gradient = Brush.linearGradient(
                         colors = listOf(Color(0xFF6366F1), Color(0xFF8B5CF6)) // indigo-500 to violet-600
                     ),
-                    onClick = { navController.navigate(NavigationRoutes.DailyRoutines.route) }
+                    onClick = onNavigateToDailyRoutines
                 )
             }
 
@@ -168,7 +157,7 @@ fun HomeScreen(
                     gradient = Brush.linearGradient(
                         colors = listOf(Color(0xFF3B82F6), Color(0xFF6366F1)) // blue-500 to indigo-600
                     ),
-                    onClick = { navController.navigate(NavigationRoutes.WeeklyPrograms.route) }
+                    onClick = onNavigateToWeeklyPrograms
                 )
             }
         }
@@ -276,7 +265,7 @@ fun WorkoutCard(
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun HomeActiveProgramCard(
-    program: com.example.vitruvianredux.data.local.WeeklyProgramWithDays,
+    program: WeeklyProgramWithDays,
     routines: List<com.example.vitruvianredux.domain.model.Routine>,
     weightUnit: WeightUnit,
     formatWeight: (Float, WeightUnit) -> String,

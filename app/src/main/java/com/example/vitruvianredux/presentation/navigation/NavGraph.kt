@@ -35,7 +35,7 @@ fun NavGraph(
     ) {
         // Home screen - workout type selection
         composable(NavigationRoutes.Home.route) {
-            HomeScreen(
+            HomeRoute(
                 navController = navController,
                 viewModel = viewModel,
                 themeMode = themeMode

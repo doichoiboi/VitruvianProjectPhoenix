@@ -183,3 +183,19 @@ Review follow-up:
 - `B-004` was repaired after review: backup import now runs in a single Room
   transaction and child-row imports can restore missing metrics/exercises/days
   for existing parent records on retry.
+
+## Eighth Slice
+
+Split the home destination into route orchestration and a dumb screen:
+
+- `HomeRoute` now collects active-program state from `MainViewModel` and owns
+  the navigation/workout-start callbacks for the home destination.
+- `HomeScreen` no longer imports `NavController` or `MainViewModel`; it receives
+  render state and callbacks.
+- Unused home stat collections were removed from the landing screen until the
+  UI actually renders that data.
+
+This is still transitional because the home route starts active-program
+workouts through `MainViewModel`. It gives the home UI the same route/screen
+shape we can later migrate to a dedicated presenter without rewriting the
+visual composable again.
