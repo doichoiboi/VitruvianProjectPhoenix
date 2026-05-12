@@ -161,14 +161,23 @@ Extract the settings route owner:
 
 - `SettingsViewModel` now owns settings UI state, preference mutations, LED
   color selection, delete-all-workouts, and data import/export actions.
-- `SettingsRoute` collects a single `SettingsUiState` and handles the Android
-  share-sheet side effect from a `SettingsEffect.ShareExport` event.
+- `SettingsRoute` collects a single `SettingsUiState`, uses an Activity-scoped
+  `SettingsViewModel`, and handles pending export-share URIs from state.
 - `NavGraph` no longer passes `MainViewModel` into the settings destination.
 - `MainViewModel` no longer depends on `DataBackupManager` and no longer owns
   settings-only import/export state or preference setter methods.
 - Focused `SettingsViewModelTest` coverage pins preference state mapping,
-  settings actions, export share effects, import result dialog state, and
-  failure fallback behavior.
+  settings actions, durable pending export-share state, import result dialog
+  state, and failure fallback behavior.
 
-This gives the first route-local presenter pattern to repeat for other
+This gives the first feature-owner presenter pattern to repeat for other
 low-risk screens before touching active workout behavior.
+
+Review follow-up:
+
+- Settings import/export work stays in the settings owner but is scoped to the
+  Activity instead of the settings destination, matching the previous
+  `MainViewModel` lifetime for long-running import/export jobs.
+- Export share delivery is state-backed through `pendingExportUri` so route
+  recreation cannot drop the chooser request after the cache file is written.
+- `B-004` tracks the pre-existing importer atomicity issue separately.

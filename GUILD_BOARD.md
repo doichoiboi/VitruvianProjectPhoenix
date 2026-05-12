@@ -31,6 +31,7 @@
 | B-001 | Version drift between README and Gradle | Ledger -> Spanner | README says `0.6.0-beta`; Gradle production says `1.1.0`; beta flavor says `0.6.2-beta`. Confirm intended public version before release notes or APK distribution. |
 | B-002 | `stopAtTop` is ignored by modern rep counting | Spanner -> Sightline | Discovered pre-existing issue: `RepCounterFromMachine` stores `stopAtTop`, but modern `repsSetCount` completion does not use it. Decide intended firmware behavior before changing workout stop logic. |
 | B-003 | AMRAP manual-save coverage is incomplete | Sightline -> Spanner | Current tests verify AMRAP parameter loading and auto-stop behavior, but do not prove manual stop saves actual completed reps. Add a focused workout-flow test before changing AMRAP persistence. |
+| B-004 | Data import is not transaction-protected | Root -> Sightline | Discovered pre-existing issue: backup import writes sessions before related metrics/program data. Wrap import in a single Room transaction or idempotent recovery strategy before claiming restore is atomic. |
 
 ---
 

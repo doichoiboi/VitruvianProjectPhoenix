@@ -11,11 +11,9 @@ import com.example.vitruvianredux.domain.model.WeightUnit
 import com.example.vitruvianredux.util.DataBackupManager
 import com.example.vitruvianredux.util.ImportResult
 import dagger.hilt.android.lifecycle.HiltViewModel
-import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
-import kotlinx.coroutines.flow.asSharedFlow
 import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.launch
@@ -31,12 +29,17 @@ data class SettingsUiState(
     val isExporting: Boolean = false,
     val isImporting: Boolean = false,
     val importResult: ImportResult? = null,
-    val showImportResultDialog: Boolean = false
+    val showImportResultDialog: Boolean = false,
+    val pendingExportUri: Uri? = null
 )
 
-sealed interface SettingsEffect {
-    data class ShareExport(val uri: Uri) : SettingsEffect
-}
+private data class SettingsOperationState(
+    val isExporting: Boolean = false,
+    val isImporting: Boolean = false,
+    val importResult: ImportResult? = null,
+    val showImportResultDialog: Boolean = false,
+    val pendingExportUri: Uri? = null
+)
 
 @HiltViewModel
 class SettingsViewModel @Inject constructor(
@@ -50,27 +53,39 @@ class SettingsViewModel @Inject constructor(
     private val isImporting = MutableStateFlow(false)
     private val importResult = MutableStateFlow<ImportResult?>(null)
     private val showImportResultDialog = MutableStateFlow(false)
+    private val pendingExportUri = MutableStateFlow<Uri?>(null)
 
-    private val _effects = MutableSharedFlow<SettingsEffect>(extraBufferCapacity = 1)
-    val effects = _effects.asSharedFlow()
-
-    val uiState: StateFlow<SettingsUiState> = combine(
-        preferencesManager.preferencesFlow,
+    private val operationState = combine(
         isExporting,
         isImporting,
         importResult,
-        showImportResultDialog
-    ) { preferences, exporting, importing, result, showDialog ->
+        showImportResultDialog,
+        pendingExportUri
+    ) { exporting, importing, result, showDialog, exportUri ->
+        SettingsOperationState(
+            isExporting = exporting,
+            isImporting = importing,
+            importResult = result,
+            showImportResultDialog = showDialog,
+            pendingExportUri = exportUri
+        )
+    }
+
+    val uiState: StateFlow<SettingsUiState> = combine(
+        preferencesManager.preferencesFlow,
+        operationState
+    ) { preferences, operations ->
         SettingsUiState(
             weightUnit = preferences.weightUnit,
             autoplayEnabled = preferences.autoplayEnabled,
             stopAtTop = preferences.stopAtTop,
             enableVideoPlayback = preferences.enableVideoPlayback,
             beepsEnabled = preferences.beepsEnabled,
-            isExporting = exporting,
-            isImporting = importing,
-            importResult = result,
-            showImportResultDialog = showDialog
+            isExporting = operations.isExporting,
+            isImporting = operations.isImporting,
+            importResult = operations.importResult,
+            showImportResultDialog = operations.showImportResultDialog,
+            pendingExportUri = operations.pendingExportUri
         )
     }.stateIn(
         scope = viewModelScope,
@@ -128,7 +143,7 @@ class SettingsViewModel @Inject constructor(
                 val uriResult = dataBackupManager.saveToCache(backup)
 
                 uriResult.onSuccess { uri ->
-                    _effects.emit(SettingsEffect.ShareExport(uri))
+                    pendingExportUri.value = uri
                     Timber.d("Export successful: ${backup.data.workoutSessions.size} sessions, ${backup.data.routines.size} routines")
                 }.onFailure { e ->
                     Timber.e(e, "Failed to save backup file")
@@ -138,6 +153,12 @@ class SettingsViewModel @Inject constructor(
             } finally {
                 isExporting.value = false
             }
+        }
+    }
+
+    fun onExportShareHandled(uri: Uri) {
+        if (pendingExportUri.value == uri) {
+            pendingExportUri.value = null
         }
     }
 

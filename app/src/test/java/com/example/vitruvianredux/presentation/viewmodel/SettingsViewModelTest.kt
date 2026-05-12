@@ -19,8 +19,6 @@ import io.mockk.mockk
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.flow.MutableStateFlow
-import kotlinx.coroutines.flow.toList
-import kotlinx.coroutines.launch
 import kotlinx.coroutines.test.UnconfinedTestDispatcher
 import kotlinx.coroutines.test.advanceUntilIdle
 import kotlinx.coroutines.test.resetMain
@@ -123,25 +121,26 @@ class SettingsViewModelTest {
     }
 
     @Test
-    fun `export emits share effect and clears exporting state`() = runTest {
+    fun `export stores pending share uri until route handles it`() = runTest {
         val backup = BackupData(
             exportedAt = "2026-05-12T00:00:00Z",
             appVersion = "test",
             data = BackupContent()
         )
         val uri = Uri.parse("content://vitruvian/export.json")
-        val effects = mutableListOf<SettingsEffect>()
-        backgroundScope.launch(UnconfinedTestDispatcher(testScheduler)) {
-            viewModel.effects.toList(effects)
-        }
         coEvery { dataBackupManager.exportAllData() } returns backup
         coEvery { dataBackupManager.saveToCache(backup) } returns Result.success(uri)
 
         viewModel.exportAllData()
         advanceUntilIdle()
 
-        assertThat(effects).containsExactly(SettingsEffect.ShareExport(uri))
+        assertThat(viewModel.uiState.value.pendingExportUri).isEqualTo(uri)
         assertThat(viewModel.uiState.value.isExporting).isFalse()
+
+        viewModel.onExportShareHandled(uri)
+        advanceUntilIdle()
+
+        assertThat(viewModel.uiState.value.pendingExportUri).isNull()
     }
 
     @Test
