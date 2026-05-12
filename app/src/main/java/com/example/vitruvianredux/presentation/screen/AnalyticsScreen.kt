@@ -26,9 +26,11 @@ import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
+import com.example.vitruvianredux.data.repository.ExerciseRepository
+import com.example.vitruvianredux.domain.model.PersonalRecord
 import com.example.vitruvianredux.domain.model.WeightUnit
 import com.example.vitruvianredux.domain.model.WorkoutSession
-import com.example.vitruvianredux.presentation.viewmodel.MainViewModel
+import com.example.vitruvianredux.presentation.viewmodel.HistoryItem
 import com.example.vitruvianredux.ui.theme.Spacing
 import com.example.vitruvianredux.presentation.components.*
 import com.example.vitruvianredux.util.CsvExporter
@@ -36,6 +38,7 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 import kotlinx.coroutines.launch
 import androidx.compose.ui.platform.LocalContext
+import com.example.vitruvianredux.ui.theme.ThemeMode
 
 /**
  * Analytics screen with three tabs: Dashboard, Trends, and History.
@@ -43,15 +46,17 @@ import androidx.compose.ui.platform.LocalContext
  */
 @Composable
 fun AnalyticsScreen(
-    viewModel: MainViewModel,
-    themeMode: com.example.vitruvianredux.ui.theme.ThemeMode
+    themeMode: ThemeMode,
+    workoutHistory: List<WorkoutSession>,
+    groupedWorkoutHistory: List<HistoryItem>,
+    allWorkoutSessions: List<WorkoutSession>,
+    personalRecords: List<PersonalRecord>,
+    weightUnit: WeightUnit,
+    exerciseRepository: ExerciseRepository,
+    formatWeight: (Float, WeightUnit) -> String,
+    onDeleteWorkout: (String) -> Unit,
+    modifier: Modifier = Modifier
 ) {
-    val workoutHistory by viewModel.workoutHistory.collectAsState()
-    val groupedWorkoutHistory by viewModel.groupedWorkoutHistory.collectAsState()
-    val allWorkoutSessions by viewModel.allWorkoutSessions.collectAsState()
-    val personalRecords by viewModel.allPersonalRecords.collectAsState()
-    val weightUnit by viewModel.weightUnit.collectAsState()
-
     // Pager state for swipe gestures
     val pagerState = rememberPagerState(pageCount = { 3 })
     var showExportMenu by remember { mutableStateOf(false) }
@@ -65,7 +70,7 @@ fun AnalyticsScreen(
         // Update occurs when user swipes
     }
 
-    val backgroundGradient = if (themeMode == com.example.vitruvianredux.ui.theme.ThemeMode.DARK) {
+    val backgroundGradient = if (themeMode == ThemeMode.DARK) {
         Brush.verticalGradient(
             colors = listOf(
                 Color(0xFF0F172A), // slate-900
@@ -84,7 +89,7 @@ fun AnalyticsScreen(
     }
 
     Box(
-        modifier = Modifier
+        modifier = modifier
             .fillMaxSize()
             .background(backgroundGradient)
     ) {
@@ -191,26 +196,26 @@ fun AnalyticsScreen(
             when (page) {
                 0 -> ProgressionTab(
                     personalRecords = personalRecords,
-                    exerciseRepository = viewModel.exerciseRepository,
+                    exerciseRepository = exerciseRepository,
                     weightUnit = weightUnit,
-                    formatWeight = viewModel::formatWeight,
+                    formatWeight = formatWeight,
                     modifier = Modifier.fillMaxSize()
                 )
                 1 -> HistoryTab(
                     groupedWorkoutHistory = groupedWorkoutHistory,
                     weightUnit = weightUnit,
-                    formatWeight = viewModel::formatWeight,
-                    onDeleteWorkout = { viewModel.deleteWorkout(it) },
-                    exerciseRepository = viewModel.exerciseRepository,
+                    formatWeight = formatWeight,
+                    onDeleteWorkout = onDeleteWorkout,
+                    exerciseRepository = exerciseRepository,
                     onRefresh = { /* Workout history refreshes automatically via StateFlow */ },
                     modifier = Modifier.fillMaxSize()
                 )
                 2 -> InsightsTab(
                     prs = personalRecords,
                     workoutSessions = workoutHistory,
-                    exerciseRepository = viewModel.exerciseRepository,
+                    exerciseRepository = exerciseRepository,
                     weightUnit = weightUnit,
-                    formatWeight = viewModel::formatWeight,
+                    formatWeight = formatWeight,
                     modifier = Modifier.fillMaxSize()
                 )
             }
@@ -256,7 +261,7 @@ fun AnalyticsScreen(
                                 personalRecords.forEach { pr ->
                                     withContext(Dispatchers.IO) {
                                         try {
-                                            val exercise = viewModel.exerciseRepository.getExerciseById(pr.exerciseId)
+                                            val exercise = exerciseRepository.getExerciseById(pr.exerciseId)
                                             exercise?.let { exerciseNames[pr.exerciseId] = it.name }
                                         } catch (e: Exception) {
                                             exerciseNames[pr.exerciseId] = "Unknown Exercise"
@@ -269,7 +274,7 @@ fun AnalyticsScreen(
                                     personalRecords,
                                     exerciseNames,
                                     weightUnit,
-                                    viewModel::formatWeight
+                                    formatWeight
                                 )
 
                                 result.onSuccess { uri ->
@@ -309,7 +314,7 @@ fun AnalyticsScreen(
                                     session.exerciseId?.let { exerciseId ->
                                         withContext(Dispatchers.IO) {
                                             try {
-                                                val exercise = viewModel.exerciseRepository.getExerciseById(exerciseId)
+                                                val exercise = exerciseRepository.getExerciseById(exerciseId)
                                                 exercise?.let { exerciseNames[exerciseId] = it.name }
                                             } catch (e: Exception) {
                                                 exerciseNames[exerciseId] = "Unknown Exercise"
@@ -323,7 +328,7 @@ fun AnalyticsScreen(
                                     allWorkoutSessions,
                                     exerciseNames,
                                     weightUnit,
-                                    viewModel::formatWeight
+                                    formatWeight
                                 )
 
                                 result.onSuccess { uri ->
@@ -362,7 +367,7 @@ fun AnalyticsScreen(
                                 personalRecords.forEach { pr ->
                                     withContext(Dispatchers.IO) {
                                         try {
-                                            val exercise = viewModel.exerciseRepository.getExerciseById(pr.exerciseId)
+                                            val exercise = exerciseRepository.getExerciseById(pr.exerciseId)
                                             exercise?.let { exerciseNames[pr.exerciseId] = it.name }
                                         } catch (e: Exception) {
                                             exerciseNames[pr.exerciseId] = "Unknown Exercise"
@@ -375,7 +380,7 @@ fun AnalyticsScreen(
                                     personalRecords,
                                     exerciseNames,
                                     weightUnit,
-                                    viewModel::formatWeight
+                                    formatWeight
                                 )
 
                                 result.onSuccess { uri ->
@@ -469,17 +474,15 @@ fun AnalyticsScreen(
  */
 @Composable
 fun DashboardTab(
-    viewModel: MainViewModel,
-    personalRecords: List<com.example.vitruvianredux.domain.model.PersonalRecord>,
+    workoutStreak: Int?,
+    allWorkoutSessions: List<WorkoutSession>,
+    exerciseRepository: ExerciseRepository,
+    personalRecords: List<PersonalRecord>,
     workoutHistory: List<WorkoutSession>,
     weightUnit: WeightUnit,
     formatWeight: (Float, WeightUnit) -> String,
     modifier: Modifier = Modifier
 ) {
-    val workoutStreak by viewModel.workoutStreak.collectAsState()
-    val allWorkoutSessions by viewModel.allWorkoutSessions.collectAsState()
-    val exerciseRepository = viewModel.exerciseRepository
-
     // Fetch exercise names
     val exerciseNames = remember { mutableStateMapOf<String, String>() }
     LaunchedEffect(personalRecords) {

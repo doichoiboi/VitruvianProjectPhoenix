@@ -161,7 +161,7 @@ fun NavGraph(
             enterTransition = { fadeIn(animationSpec = tween(200)) },
             exitTransition = { fadeOut(animationSpec = tween(200)) }
         ) {
-            AnalyticsScreen(
+            AnalyticsRoute(
                 viewModel = viewModel,
                 themeMode = themeMode
             )

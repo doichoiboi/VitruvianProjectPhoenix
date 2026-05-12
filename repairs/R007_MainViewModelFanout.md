@@ -214,3 +214,20 @@ screen:
 
 This keeps program list rendering local while moving state collection and app
 navigation toward the same route boundary established for Home and Settings.
+
+## Tenth Slice
+
+Split the analytics destination into route collection and screen rendering:
+
+- `AnalyticsRoute` now collects workout history, grouped history, all workout
+  sessions, personal records, and weight unit from `MainViewModel`.
+- `AnalyticsRoute` passes the exercise repository, weight formatter, and delete
+  callback into the analytics UI.
+- `AnalyticsScreen` no longer imports `MainViewModel`; export and tab rendering
+  use explicit inputs.
+- The currently unused `DashboardTab` signature was also decoupled from
+  `MainViewModel` so the file no longer depends on the god ViewModel.
+
+This leaves CSV export behavior inside the screen for now. A later analytics
+owner can move export side effects into a presenter once route boundaries are
+stable.
