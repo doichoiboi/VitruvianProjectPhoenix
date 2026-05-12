@@ -1,216 +1,110 @@
-# Vitruvian Project Phoenix - Android Control App
+﻿# Project: Vitruvian Project Phoenix `#3`
 
-[![Latest Release](https://img.shields.io/github/v/release/DasBluEyedDevil/VitruvianProjectPhoenix?include_prereleases)](https://github.com/DasBluEyedDevil/VitruvianProjectPhoenix/releases)
-[![License](https://img.shields.io/badge/license-MIT-blue.svg)](LICENSE)
-[![Android](https://img.shields.io/badge/Android-8.0%2B-green.svg)](https://developer.android.com)
-
-A native Android application for controlling Vitruvian Trainer workout machines via Bluetooth Low Energy (BLE).
-
-## Support the Project
-
-If you find this app useful and want to support its continued development:
-
-**[☕ Buy Me a Coffee](https://buymeacoffee.com/vitruvianredux)**
-
-Your support helps keep the machines running and the code flowing!
+> *Created: 2026-04-11 | Grid Board: GUILD_BOARD.md*
 
 ---
 
-## Project Overview
+## Identity
 
-This app enables local control of Vitruvian Trainer machines after the company's bankruptcy. It's a community rescue project providing a native Android alternative to keep these machines functional and prevent them from becoming e-waste.
-
-## 🚀 Current Status
-
-**Version:** 0.6.0-beta
-**Last Updated:** November 25, 2025
-
-### What's Working
-✅ Full BLE device control and connection
-✅ All workout modes (Old School, Pump, TUT, TUT Beast, Eccentric, Echo)
-✅ Visual rep feedback (pending/completed states like official app)
-✅ Exercise library (200+ exercises)
-✅ Workout history and tracking
-✅ Personal records with automatic detection
-✅ Custom routines and program builder
-✅ Analytics dashboard with charts
-✅ Insights tab with volume tracking
-✅ Theme customization (Light/Dark/System)
-✅ Unit conversion (kg/lb)
-✅ Just Lift mode for quick single exercises
-✅ AMRAP (As Many Reps As Possible) support
-
-### Recent Updates (Beta 6)
-- **Visual Rep Feedback**: Rep numbers now appear grayed out at top of rep, colored when complete (matches official app)
-- **Total Volume History Chart**: New Insights card showing volume lifted over time
-- **Disconnect Confirmation**: Dialog prevents accidental disconnections
-- **Database v24**: Stores machine status flags for each metric sample
-- **50+ Warning Fixes**: Cleaner, more maintainable codebase
-
-## Features
-
-### Core Functionality
-- **BLE Connectivity**: Reliable connection to Vitruvian Trainer devices
-- **All Workout Modes**: Old School, Pump, TUT, TUT Beast, Eccentric-Only, Echo
-- **Real-time Monitoring**: Live load, position, velocity, and power metrics
-- **Rep Counting**: Accurate rep detection with visual feedback
-- **Auto-Stop**: Automatic workout termination based on rep targets
-
-### Enhanced Features
-- **Exercise Library**: 200+ pre-loaded exercises categorized by muscle group
-- **Personal Records**: Automatic PR detection and historical tracking
-- **Workout History**: Complete history with metrics stored locally
-- **Custom Routines**: Build and save your own workout routines
-- **Program Builder**: Create structured multi-exercise programs
-
-### Analytics & Insights
-- **Muscle Balance Radar**: Visual balance across muscle groups
-- **Consistency Gauge**: Monthly workout consistency tracking
-- **Volume vs Intensity**: Session comparison charts
-- **Total Volume History**: Track volume lifted over time
-- **Mode Distribution**: Workout mode usage breakdown
-
-### UI/UX
-- **Material 3 Design**: Modern, clean interface
-- **Theme Support**: Light, Dark, and System-follow modes
-- **Responsive Layout**: Adapts to device orientation
-- **Haptic Feedback**: Tactile response during workouts
-
-## Technology Stack
-
-| Category | Technology |
-|----------|------------|
-| **Language** | Kotlin 1.9+ |
-| **UI** | Jetpack Compose + Material 3 |
-| **Architecture** | MVVM + Clean Architecture |
-| **DI** | Hilt/Dagger |
-| **BLE** | Nordic BLE Library |
-| **Database** | Room (v24 schema) |
-| **Preferences** | DataStore |
-| **Charts** | Vico Charts + Custom Canvas |
-| **Async** | Coroutines + Flow |
-| **Logging** | Timber |
-
-## Installation
-
-### From Release
-1. Download the latest APK from [Releases](https://github.com/DasBluEyedDevil/VitruvianProjectPhoenix/releases)
-2. Enable "Install from unknown sources" in Android settings
-3. Install the APK
-4. Grant Bluetooth permissions when prompted
-
-### Building from Source
-```bash
-# Clone the repository
-git clone https://github.com/DasBluEyedDevil/VitruvianProjectPhoenix.git
-cd VitruvianProjectPhoenix
-
-# Build debug APK
-./gradlew assembleDebug
-
-# Install to connected device
-./gradlew installDebug
-```
-
-### Build Requirements
-- Android Studio Hedgehog or newer
-- JDK 17+
-- Android device with BLE support (API 26+)
-- Vitruvian Trainer machine for testing
-
-## Usage
-
-1. **Launch** the app
-2. **Scan** for devices (tap the connection button)
-3. **Connect** to your Vitruvian machine (devices starting with "Vee")
-4. **Configure** workout parameters (exercise, mode, weight, reps)
-5. **Start** your workout
-6. **Monitor** real-time metrics during exercise
-7. **Complete** - workout auto-stops or tap stop manually
-
-## Hardware Compatibility
-
-### Vitruvian V-Form Trainer (Euclid / VIT-200)
-- **Status:** ✅ Fully Supported
-- **Device Name:** `Vee_*`
-- **Max Resistance:** 200 kg (440 lbs)
-
-### Vitruvian Trainer+
-- **Status:** ✅ Supported (community verified)
-- **Max Resistance:** 220 kg (485 lbs)
-
-## Permissions Required
-
-| Permission | Purpose |
-|------------|---------|
-| `BLUETOOTH_SCAN` | Discover BLE devices (Android 12+) |
-| `BLUETOOTH_CONNECT` | Connect to machine (Android 12+) |
-| `ACCESS_FINE_LOCATION` | BLE scanning (older Android) |
-| `FOREGROUND_SERVICE` | Background workout tracking |
-| `POST_NOTIFICATIONS` | Workout status notifications |
-
-## Contributing
-
-This is an open-source community project. Contributions welcome!
-
-1. Fork the repository
-2. Create a feature branch (`git checkout -b feature/amazing-feature`)
-3. Make your changes
-4. Test with real hardware
-5. Submit a pull request
-
-## Testing
-
-```bash
-# Run unit tests
-./gradlew test
-
-# Run lint checks
-./gradlew lint
-
-# Run instrumented tests (requires device)
-./gradlew connectedAndroidTest
-```
-
-## Project Structure
-
-```
-app/src/main/java/com/example/vitruvianredux/
-├── data/
-│   ├── ble/              # BLE communication layer
-│   ├── local/            # Room database & DAOs
-│   ├── preferences/      # DataStore preferences
-│   └── repository/       # Repository implementations
-├── domain/
-│   ├── model/            # Domain models
-│   └── usecase/          # Business logic (rep counting, etc.)
-├── presentation/
-│   ├── screen/           # Compose screens
-│   ├── viewmodel/        # ViewModels
-│   ├── components/       # Reusable UI components
-│   └── ui/theme/         # Theme configuration
-├── service/              # Foreground service
-├── util/                 # Constants, protocol builder
-└── di/                   # Dependency injection
-```
-
-## License
-
-MIT License - See [LICENSE](LICENSE) file for details
-
-## Acknowledgments
-
-- Original web app developers for reverse-engineering the BLE protocol
-- Vitruvian machine owners community for testing and feedback
-- Nordic Semiconductor for the excellent BLE library
-- All contributors and supporters
-
-## Support
-
-- **Issues**: [GitHub Issues](https://github.com/DasBluEyedDevil/VitruvianProjectPhoenix/issues)
-- **Discussions**: [GitHub Discussions](https://github.com/DasBluEyedDevil/VitruvianProjectPhoenix/discussions)
-- **Support Development**: [Buy Me a Coffee](https://buymeacoffee.com/vitruvianredux)
+| | |
+|---|---|
+| **Project Name** | Vitruvian Project Phoenix |
+| **Type** | Mobile App |
+| **Platform** | Android |
+| **Stack** | Kotlin, Jetpack Compose, Material 3, Hilt, Room, DataStore, Coroutines/Flow, Nordic BLE, Kable, Timber |
+| **Repo / Location** | `campaigns/VitruvianProjectPhoenix` / `https://github.com/DasBluEyedDevil/VitruvianProjectPhoenix` |
+| **Naming Status** | Temporary import name; Daniel plans a rework and rename |
 
 ---
 
-*This app is a community rescue project to keep Vitruvian Trainer machines functional after the company's bankruptcy. It is not affiliated with or endorsed by Vitruvian.*
+## Mission
+
+**What does this project do?**
+Vitruvian Project Phoenix is a native Android control app for Vitruvian Trainer workout machines over Bluetooth Low Energy. It is a community rescue project: keep useful strength-training hardware operational after company instability, preserve local control, and give owners a maintained alternative to the official app path.
+
+**Success looks like:**
+- A Vitruvian owner can install a working APK and connect to a compatible machine over BLE.
+- Core workout modes remain usable: Old School, Pump, TUT, TUT Beast, Eccentric, Echo, Just Lift, and AMRAP.
+- Workout data stays useful locally: history, personal records, routines, programs, and analytics are reliable.
+- Contributors can build and test the project with clear setup, version, and release instructions.
+
+---
+
+## Constraints & Prior Decisions
+
+> Grid: respect these. Do not re-litigate without flagging to Rex first.
+
+- Android native app, not cross-platform.
+- Android API 26+ support is required.
+- BLE behavior should be tested against real Vitruvian hardware where possible.
+- The app is not affiliated with or endorsed by Vitruvian.
+- Daniel plans to rework and rename the app. Do not treat "Vitruvian Project Phoenix" as the final product name.
+- Preserve clear credit that the original work came from another developer/project. Rebrand work must not imply Daniel authored the original codebase from scratch.
+- Local control and owner rescue value are the core purpose. Avoid changes that make the app dependent on fragile external services unless Daniel explicitly chooses that path.
+- Current metadata needs review: README status says `0.6.0-beta`, Gradle production version says `1.1.0`, and beta flavor says `0.6.2-beta`.
+
+---
+
+## Key Files by Role
+
+### Product Vision
+> Product purpose, community value, owner trust, scope guardrails
+- `README.md` - this file; project overview, owner-facing purpose, and build context.
+- `BLUETOOTH_DEBUGGING_GUIDE.md` - hardware troubleshooting and BLE testing context.
+
+### Technical
+> Core logic, BLE protocol, data flow, architecture, build system
+- `app/src/main/java/com/example/vitruvianredux/data/ble/` - BLE communication layer.
+- `app/src/main/java/com/example/vitruvianredux/domain/` - domain models and business logic.
+- `app/src/main/java/com/example/vitruvianredux/data/local/` - Room database and DAOs.
+- `app/src/main/java/com/example/vitruvianredux/data/preferences/` - DataStore preferences.
+- `app/src/main/java/com/example/vitruvianredux/service/` - foreground service behavior.
+- `app/build.gradle.kts` - Android app config, flavors, signing, dependencies.
+
+### UX Strategy
+> Workout flows, safety-critical feedback, first-run clarity, permission paths
+- `app/src/main/java/com/example/vitruvianredux/presentation/screen/` - Compose screens.
+- `app/src/main/java/com/example/vitruvianredux/presentation/viewmodel/` - screen state and user actions.
+- `app/src/main/AndroidManifest.xml` - permissions and platform-facing behavior.
+
+### UX Build
+> Compose UI, components, theming, assets
+- `app/src/main/java/com/example/vitruvianredux/presentation/components/` - reusable UI components.
+- `app/src/main/java/com/example/vitruvianredux/ui/theme/` - theme configuration.
+- `app/src/main/res/` - Android resources.
+- `app/src/main/assets/` - bundled app assets.
+
+### Learning
+> Existing documentation, decision logs, contributor clarity
+- `README.md` - this file; project identity, constraints, and current architecture.
+- `DECISIONS.md` - Forge session log and durable notes.
+
+### Project
+> Grid Board and planning artifacts
+- `GUILD_BOARD.md` - active repairs, proposed work, bugs, and completed work.
+
+### Legal
+> Disclaimers, permissions, data handling, release risk
+- `README.md` - license, affiliation disclaimer, and support language.
+- `app/src/main/AndroidManifest.xml` - Bluetooth, location, foreground service, and notification permissions.
+
+---
+
+## Architecture Overview
+
+The app is a single-module native Android project. Compose screens and ViewModels drive the user workflow, Hilt wires dependencies, repositories coordinate data access, Room stores workout history and related records, and DataStore holds app preferences. BLE communication lives in the data layer and talks to Vitruvian hardware using Nordic BLE and Kable libraries, while a foreground service supports workout tracking that must continue reliably during active use.
+
+---
+
+## Glossary
+
+| Term | Meaning |
+|---|---|
+| Vitruvian Trainer | Strength-training hardware controlled over Bluetooth Low Energy |
+| BLE | Bluetooth Low Energy, the wireless protocol used to discover and control the machine |
+| V-Form Trainer / VIT-200 | Original Vitruvian model listed as fully supported in the imported docs |
+| Trainer+ | Later Vitruvian model listed as community verified |
+| Just Lift | Quick single-exercise workout mode |
+| AMRAP | As Many Reps As Possible, a supported workout mode |
+| Room | Android local database used for workout and history data |
+| DataStore | Android preferences storage used for app settings |
