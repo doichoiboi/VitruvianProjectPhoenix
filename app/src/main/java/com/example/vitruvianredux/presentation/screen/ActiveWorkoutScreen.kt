@@ -9,6 +9,7 @@ import androidx.compose.ui.Modifier
 import androidx.navigation.NavController
 import com.example.vitruvianredux.data.repository.ExerciseRepository
 import com.example.vitruvianredux.domain.model.*
+import com.example.vitruvianredux.presentation.chrome.LocalAppChrome
 import com.example.vitruvianredux.presentation.viewmodel.MainViewModel
 import com.example.vitruvianredux.ui.theme.Spacing
 import kotlinx.coroutines.delay
@@ -25,6 +26,7 @@ fun ActiveWorkoutScreen(
     exerciseRepository: ExerciseRepository
 ) {
     val workoutState by viewModel.workoutState.collectAsState()
+    val appChrome = LocalAppChrome.current
     val currentMetric by viewModel.currentMetric.collectAsState()
     val currentHeuristicKgMax by viewModel.currentHeuristicKgMax.collectAsState()
     val workoutParameters by viewModel.workoutParameters.collectAsState()
@@ -62,12 +64,12 @@ fun ActiveWorkoutScreen(
     }
 
     // Set global title
-    LaunchedEffect(screenTitle) {
-        viewModel.updateTopBarTitle(screenTitle)
+    LaunchedEffect(appChrome, screenTitle) {
+        appChrome.setDynamicTitle(screenTitle)
     }
 
     // Handle Back Button (System + Top Bar)
-    LaunchedEffect(Unit) {
+    LaunchedEffect(appChrome) {
         val onBack: () -> Unit = {
             // Show confirmation if workout is active
             if (viewModel.workoutState.value is WorkoutState.Active ||
@@ -79,13 +81,14 @@ fun ActiveWorkoutScreen(
                 navController.navigateUp()
             }
         }
-        viewModel.setTopBarBackAction(onBack)
+        appChrome.setBackAction(onBack)
     }
 
     // Clean up back action
-    DisposableEffect(Unit) {
+    DisposableEffect(appChrome) {
         onDispose {
-            viewModel.clearTopBarBackAction()
+            appChrome.clearBackAction()
+            appChrome.clearDynamicTitle()
         }
     }
 

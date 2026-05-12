@@ -25,8 +25,9 @@ import com.example.vitruvianredux.data.local.WeeklyProgramEntity
 import com.example.vitruvianredux.data.local.WeeklyProgramWithDays
 import com.example.vitruvianredux.data.repository.ExerciseRepository
 import com.example.vitruvianredux.domain.model.Routine
+import com.example.vitruvianredux.presentation.chrome.LocalAppChrome
+import com.example.vitruvianredux.presentation.chrome.TopBarAction
 import com.example.vitruvianredux.presentation.viewmodel.MainViewModel
-import com.example.vitruvianredux.presentation.viewmodel.TopBarAction
 import com.example.vitruvianredux.ui.theme.Spacing
 import java.time.DayOfWeek
 import java.time.format.TextStyle
@@ -46,6 +47,7 @@ fun ProgramBuilderScreen(
     themeMode: com.example.vitruvianredux.ui.theme.ThemeMode
 ) {
     val routines by viewModel.routines.collectAsState()
+    val appChrome = LocalAppChrome.current
 
     var programName by remember { mutableStateOf("New Program") }
     var showRoutinePicker by remember { mutableStateOf(false) }
@@ -89,13 +91,13 @@ fun ProgramBuilderScreen(
     }
 
     // Setup Top Bar
-    LaunchedEffect(programId) {
-        viewModel.updateTopBarTitle(if (programId == "new") "New Program" else "Edit Program")
+    LaunchedEffect(appChrome, programId) {
+        appChrome.setDynamicTitle(if (programId == "new") "New Program" else "Edit Program")
     }
 
     // Setup Save Action
-    LaunchedEffect(programName, dailyRoutines) {
-        viewModel.setTopBarActions(
+    LaunchedEffect(appChrome, programName, dailyRoutines) {
+        appChrome.setTopBarActions(
             listOf(
                 TopBarAction(
                     icon = Icons.Default.Done,
@@ -136,9 +138,10 @@ fun ProgramBuilderScreen(
     }
 
     // Clean up actions on dispose
-    DisposableEffect(Unit) {
+    DisposableEffect(appChrome) {
         onDispose {
-            viewModel.clearTopBarActions()
+            appChrome.clearTopBarActions()
+            appChrome.clearDynamicTitle()
         }
     }
 

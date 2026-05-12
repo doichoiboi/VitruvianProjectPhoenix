@@ -68,3 +68,22 @@ This avoids both callback plumbing and feature ViewModels mutating shell chrome
 for static titles. It does not solve dynamic app-bar actions yet; those still
 need a proper shell presenter/controller before `ProgramBuilderScreen` and
 `ActiveWorkoutScreen` can stop reaching into `MainViewModel`.
+
+## Fourth Slice
+
+Move dynamic app chrome ownership out of `MainViewModel`:
+
+- `AppChromeController` now owns transient dynamic title, top-bar actions, and
+  route-specific back actions.
+- `EnhancedMainScreen` provides the controller through `LocalAppChrome` and
+  renders the global app bar from shell-owned chrome state.
+- `ProgramBuilderScreen` registers its dynamic title and save action with the
+  shell controller instead of mutating `MainViewModel`.
+- `ActiveWorkoutScreen` registers its workout title and guarded back action
+  with the shell controller instead of mutating `MainViewModel`.
+- `MainViewModel` no longer contains app-bar title/action/back state.
+
+This keeps dynamic app chrome at the navigation shell boundary while leaving
+workout and program behavior unchanged. Remaining fan-out is now more clearly
+business/data related, especially workout execution, routine/program editing,
+device connection, and repository exposure.

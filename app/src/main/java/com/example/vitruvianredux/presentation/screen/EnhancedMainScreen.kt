@@ -29,6 +29,8 @@ import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
 import androidx.navigation.compose.rememberNavController
 import com.example.vitruvianredux.data.repository.ExerciseRepository
 import com.example.vitruvianredux.domain.model.ConnectionState
+import com.example.vitruvianredux.presentation.chrome.AppChromeController
+import com.example.vitruvianredux.presentation.chrome.LocalAppChrome
 import com.example.vitruvianredux.presentation.navigation.AppNavigationHub
 import com.example.vitruvianredux.presentation.navigation.NavGraph
 import com.example.vitruvianredux.presentation.navigation.NavigationRoutes
@@ -50,12 +52,11 @@ fun EnhancedMainScreen(
     val connectionLostDuringWorkout by viewModel.connectionLostDuringWorkout.collectAsState()
     val isAutoConnecting by viewModel.isAutoConnecting.collectAsState()
     val connectionError by viewModel.connectionError.collectAsState()
-    val topBarTitle by viewModel.topBarTitle.collectAsState()
-    val topBarActions by viewModel.topBarActions.collectAsState()
-    val topBarBackAction by viewModel.topBarBackAction.collectAsState()
 
     val themeViewModel: ThemeViewModel = hiltViewModel()
     val themeMode by themeViewModel.themeMode.collectAsState()
+    val appChrome = remember { AppChromeController() }
+    val chromeState by appChrome.state.collectAsState()
 
     // Determine if we're in dark mode for TopAppBar color
     val isDarkMode = when (themeMode) {
@@ -103,8 +104,8 @@ fun EnhancedMainScreen(
         true
     }
 
-    val appBarTitle = remember(currentRoute, topBarTitle) {
-        AppNavigationHub.appBarTitle(currentRoute, topBarTitle)
+    val appBarTitle = remember(currentRoute, chromeState.dynamicTitle) {
+        AppNavigationHub.appBarTitle(currentRoute, chromeState.dynamicTitle)
     }
 
     // Determine if we should show the BottomBar
@@ -121,6 +122,7 @@ fun EnhancedMainScreen(
         AppNavigationHub.showsBackButton(currentRoute)
     }
 
+    CompositionLocalProvider(LocalAppChrome provides appChrome) {
     Scaffold(
         contentWindowInsets = WindowInsets(0, 0, 0, 0), // Let components handle their own insets
         topBar = {
@@ -158,8 +160,8 @@ fun EnhancedMainScreen(
                     navigationIcon = {
                         if (showBackButton) {
                             IconButton(onClick = {
-                                if (topBarBackAction != null) {
-                                    topBarBackAction?.invoke()
+                                if (chromeState.backAction != null) {
+                                    chromeState.backAction?.invoke()
                                 } else {
                                     navController.navigateUp()
                                 }
@@ -179,7 +181,7 @@ fun EnhancedMainScreen(
                 ),
                 actions = {
                     // Dynamic Actions from Screens
-                    topBarActions.forEach { action ->
+                    chromeState.topBarActions.forEach { action ->
                         IconButton(onClick = action.onClick) {
                             Icon(
                                 imageVector = action.icon,
@@ -409,6 +411,7 @@ fun EnhancedMainScreen(
             message = error,
             onDismiss = { viewModel.clearConnectionError() }
         )
+    }
     }
 }
 
