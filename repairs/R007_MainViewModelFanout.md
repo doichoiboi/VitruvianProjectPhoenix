@@ -116,3 +116,19 @@ Separate the settings route from the navigation table:
 This is still transitional because `SettingsRoute` depends on `MainViewModel`.
 The improvement is that navigation no longer owns settings state collection,
 which gives a natural place to introduce a dedicated settings presenter later.
+
+## Test Stabilization Slice
+
+Restore the full production-debug unit lane:
+
+- Updated `WorkoutModeTest` to model the current rep-counter contract:
+  modern packets use ROM count for warmup reps and set count for working reps.
+- Kept wrap-around coverage on the legacy directional-counter path, where
+  counter deltas are still part of the implementation contract.
+- Updated AMRAP and integration tests to avoid mixing warmup and working
+  counters in the same packet stream.
+- Added explicit `BleRepository` and `PersonalRecordRepository` mock streams to
+  ViewModel tests so background init collectors do not fail from relaxed MockK
+  `Nothing` values.
+
+Validation: `:app:testProductionDebugUnitTest` is green after this slice.

@@ -35,8 +35,26 @@ class WorkoutModeTest {
      */
     private fun initHandler(warmupTarget: Int = 3, workingTarget: Int = 10, isJustLift: Boolean = false, stopAtTop: Boolean = false) {
         handler.configure(warmupTarget, workingTarget, isJustLift, stopAtTop)
-        // Send initial notification to establish baseline
-        handler.process(repsRomCount = 0, repsSetCount = 0)
+        // Send initial notification to establish directional-counter baseline.
+        handler.process(repsRomCount = 0, repsSetCount = 0, up = 0, down = 0)
+    }
+
+    private fun completeWarmup(count: Int = 3) {
+        for (i in 1..count) {
+            handler.process(repsRomCount = i, repsSetCount = 0, up = i, down = i)
+        }
+    }
+
+    private fun completeWorkingReps(count: Int, warmupTarget: Int = 3, firstDirectionCounter: Int = warmupTarget + 1) {
+        for (rep in 1..count) {
+            val directionCounter = firstDirectionCounter + rep - 1
+            handler.process(
+                repsRomCount = warmupTarget,
+                repsSetCount = rep,
+                up = directionCounter,
+                down = directionCounter
+            )
+        }
     }
 
     @Test
@@ -44,21 +62,19 @@ class WorkoutModeTest {
         initHandler(warmupTarget = 3, workingTarget = 10, isJustLift = false)
         
         // Simulate 3 warmup reps from machine
-        handler.process(repsRomCount = 1, repsSetCount = 1)
+        handler.process(repsRomCount = 1, repsSetCount = 0, up = 1, down = 1)
         assertEquals(1, handler.getRepCount().warmupReps)
         assertEquals(0, handler.getRepCount().workingReps)
         
-        handler.process(repsRomCount = 2, repsSetCount = 2)
+        handler.process(repsRomCount = 2, repsSetCount = 0, up = 2, down = 2)
         assertEquals(2, handler.getRepCount().warmupReps)
         
-        handler.process(repsRomCount = 3, repsSetCount = 3)
+        handler.process(repsRomCount = 3, repsSetCount = 0, up = 3, down = 3)
         assertEquals(3, handler.getRepCount().warmupReps)
         assertTrue(handler.getRepCount().isWarmupComplete)
         
         // Now 10 working reps
-        for (i in 4..13) {
-            handler.process(repsRomCount = i, repsSetCount = i)
-        }
+        completeWorkingReps(10)
         
         assertEquals(3, handler.getRepCount().warmupReps)
         assertEquals(10, handler.getRepCount().workingReps)
@@ -69,15 +85,10 @@ class WorkoutModeTest {
     fun `Pump mode - 3 warmup + 20 working reps`() {
         initHandler(warmupTarget = 3, workingTarget = 20, isJustLift = false)
         
-        // Complete warmups
-        for (i in 1..3) {
-            handler.process(repsRomCount = i, repsSetCount = i)
-        }
+        completeWarmup()
         
         // Complete 20 pump reps
-        for (i in 4..23) {
-            handler.process(repsRomCount = i, repsSetCount = i)
-        }
+        completeWorkingReps(20)
         
         assertEquals(20, handler.getRepCount().workingReps)
         assertTrue(handler.shouldStopWorkout())
@@ -87,15 +98,10 @@ class WorkoutModeTest {
     fun `TUT mode - 3 warmup + 6 working reps`() {
         initHandler(warmupTarget = 3, workingTarget = 6, isJustLift = false)
         
-        // Warmups
-        for (i in 1..3) {
-            handler.process(repsRomCount = i, repsSetCount = i)
-        }
+        completeWarmup()
         
         // Working reps (TUT typically has fewer reps but longer time under tension)
-        for (i in 4..9) {
-            handler.process(repsRomCount = i, repsSetCount = i)
-        }
+        completeWorkingReps(6)
         
         assertEquals(6, handler.getRepCount().workingReps)
         assertTrue(handler.shouldStopWorkout())
@@ -105,15 +111,10 @@ class WorkoutModeTest {
     fun `TUT Beast mode - 3 warmup + 3 working reps`() {
         initHandler(warmupTarget = 3, workingTarget = 3, isJustLift = false)
         
-        // Warmups
-        for (i in 1..3) {
-            handler.process(repsRomCount = i, repsSetCount = i)
-        }
+        completeWarmup()
         
         // Working reps (Beast mode is very low reps with maximum intensity)
-        for (i in 4..6) {
-            handler.process(repsRomCount = i, repsSetCount = i)
-        }
+        completeWorkingReps(3)
         
         assertEquals(3, handler.getRepCount().workingReps)
         assertTrue(handler.shouldStopWorkout())
@@ -123,15 +124,10 @@ class WorkoutModeTest {
     fun `Eccentric Only mode - 3 warmup + 8 working reps`() {
         initHandler(warmupTarget = 3, workingTarget = 8, isJustLift = false)
         
-        // Warmups
-        for (i in 1..3) {
-            handler.process(repsRomCount = i, repsSetCount = i)
-        }
+        completeWarmup()
         
         // Eccentric reps
-        for (i in 4..11) {
-            handler.process(repsRomCount = i, repsSetCount = i)
-        }
+        completeWorkingReps(8)
         
         assertEquals(8, handler.getRepCount().workingReps)
         assertTrue(handler.shouldStopWorkout())
@@ -141,15 +137,10 @@ class WorkoutModeTest {
     fun `Echo mode - 3 warmup + 12 working reps`() {
         initHandler(warmupTarget = 3, workingTarget = 12, isJustLift = false)
         
-        // Warmups
-        for (i in 1..3) {
-            handler.process(repsRomCount = i, repsSetCount = i)
-        }
+        completeWarmup()
         
         // Echo reps
-        for (i in 4..15) {
-            handler.process(repsRomCount = i, repsSetCount = i)
-        }
+        completeWorkingReps(12)
         
         assertEquals(12, handler.getRepCount().workingReps)
         assertTrue(handler.shouldStopWorkout())
@@ -159,14 +150,11 @@ class WorkoutModeTest {
     fun `Just Lift mode - never auto-stops`() {
         initHandler(warmupTarget = 3, workingTarget = 0, isJustLift = true)
         
-        // Warmups
-        for (i in 1..3) {
-            handler.process(repsRomCount = i, repsSetCount = i)
-        }
+        completeWarmup()
         
         // Keep going indefinitely
-        for (i in 4..100) {
-            handler.process(repsRomCount = i, repsSetCount = i)
+        for (rep in 1..97) {
+            handler.process(repsRomCount = 3, repsSetCount = rep, up = 3 + rep, down = 3 + rep)
             assertFalse("Just Lift should never auto-stop", handler.shouldStopWorkout())
         }
         
@@ -174,53 +162,54 @@ class WorkoutModeTest {
     }
 
     @Test
-    fun `Stop At Top option - completes when reaching top of final rep`() {
+    fun `Modern mode - pending top rep waits for machine confirmation`() {
         initHandler(warmupTarget = 3, workingTarget = 5, isJustLift = false, stopAtTop = true)
         
-        // Complete warmups (both top and bottom counters increment together)
-        for (i in 1..3) {
-            handler.process(repsRomCount = i, repsSetCount = i, posA = 500f, posB = 500f)
-        }
+        completeWarmup()
 
         // Do 4 complete working reps
-        for (i in 4..7) {
-            handler.process(repsRomCount = i, repsSetCount = i, posA = 500f, posB = 500f)
-        }
+        completeWorkingReps(4)
 
         assertEquals(4, handler.getRepCount().workingReps)
 
-        // On 5th rep, top counter increments (reached top of movement)
-        // but bottom counter hasn't incremented yet (not at bottom)
-        handler.process(repsRomCount = 8, repsSetCount = 7, posA = 800f, posB = 800f)
+        // Top movement previews the final rep, but modern mode waits for the
+        // machine set counter before confirming the rep or stopping.
+        handler.process(repsRomCount = 3, repsSetCount = 4, up = 8, down = 7, posA = 800f, posB = 800f)
         
-        // Should complete at top, not bottom
-        assertTrue("Should stop at top of final rep", handler.shouldStopWorkout())
-        assertEquals(5, handler.getRepCount().workingReps) // 5 reps counted (top counter reached 5th rep)
+        assertFalse("Pending top rep should not stop before machine confirmation", handler.shouldStopWorkout())
+        assertEquals(4, handler.getRepCount().workingReps)
+        assertTrue(handler.getRepCount().hasPendingRep)
+
+        handler.process(repsRomCount = 3, repsSetCount = 5, up = 8, down = 8, posA = 500f, posB = 500f)
+
+        assertTrue("Should stop when machine confirms final rep", handler.shouldStopWorkout())
+        assertEquals(5, handler.getRepCount().workingReps)
     }
 
     @Test
     fun `Counter wrap-around at 65535`() {
-        initHandler(warmupTarget = 0, workingTarget = 100, isJustLift = false)
+        handler.configure(warmupTarget = 0, workingTarget = 100, isJustLift = false, stopAtTop = false)
+        handler.process(repsRomCount = 0, repsSetCount = 0, up = 65532, down = 65532, isLegacyFormat = true)
         
         // Start near max u16 value
-        handler.process(repsRomCount = 65533, repsSetCount = 65533)
+        handler.process(repsRomCount = 0, repsSetCount = 0, up = 65533, down = 65533, isLegacyFormat = true)
         assertEquals(1, handler.getRepCount().workingReps)
         
-        handler.process(repsRomCount = 65534, repsSetCount = 65534)
+        handler.process(repsRomCount = 0, repsSetCount = 0, up = 65534, down = 65534, isLegacyFormat = true)
         assertEquals(2, handler.getRepCount().workingReps)
         
-        handler.process(repsRomCount = 65535, repsSetCount = 65535)
+        handler.process(repsRomCount = 0, repsSetCount = 0, up = 65535, down = 65535, isLegacyFormat = true)
         assertEquals(3, handler.getRepCount().workingReps)
         
         // Wrap to 0
-        handler.process(repsRomCount = 0, repsSetCount = 0)
+        handler.process(repsRomCount = 0, repsSetCount = 0, up = 0, down = 0, isLegacyFormat = true)
         assertEquals(4, handler.getRepCount().workingReps)
         
         // Continue after wrap
-        handler.process(repsRomCount = 1, repsSetCount = 1)
+        handler.process(repsRomCount = 0, repsSetCount = 0, up = 1, down = 1, isLegacyFormat = true)
         assertEquals(5, handler.getRepCount().workingReps)
         
-        handler.process(repsRomCount = 2, repsSetCount = 2)
+        handler.process(repsRomCount = 0, repsSetCount = 0, up = 2, down = 2, isLegacyFormat = true)
         assertEquals(6, handler.getRepCount().workingReps)
     }
 
@@ -229,15 +218,15 @@ class WorkoutModeTest {
         initHandler(warmupTarget = 3, workingTarget = 10, isJustLift = false)
         
         // First rep
-        handler.process(repsRomCount = 1, repsSetCount = 1)
+        handler.process(repsRomCount = 1, repsSetCount = 0, up = 1, down = 1)
         assertEquals(1, handler.getRepCount().warmupReps)
         
         // Same notification again (BLE retransmission)
-        handler.process(repsRomCount = 1, repsSetCount = 1)
+        handler.process(repsRomCount = 1, repsSetCount = 0, up = 1, down = 1)
         assertEquals(1, handler.getRepCount().warmupReps) // Should still be 1
         
         // Next rep
-        handler.process(repsRomCount = 2, repsSetCount = 2)
+        handler.process(repsRomCount = 2, repsSetCount = 0, up = 2, down = 2)
         assertEquals(2, handler.getRepCount().warmupReps)
     }
 
@@ -254,13 +243,13 @@ class WorkoutModeTest {
         
         // During warmup, machine sends notifications AND app tracks positions
         // Warmup rep 1
-        handler.process(repsRomCount = 1, repsSetCount = 1, posA = 850f, posB = 850f)
+        handler.process(repsRomCount = 1, repsSetCount = 0, up = 1, down = 1, posA = 850f, posB = 850f)
 
         // Warmup rep 2
-        handler.process(repsRomCount = 2, repsSetCount = 2, posA = 830f, posB = 830f)
+        handler.process(repsRomCount = 2, repsSetCount = 0, up = 2, down = 2, posA = 830f, posB = 830f)
 
         // Warmup rep 3
-        handler.process(repsRomCount = 3, repsSetCount = 3, posA = 840f, posB = 840f)
+        handler.process(repsRomCount = 3, repsSetCount = 0, up = 3, down = 3, posA = 840f, posB = 840f)
 
         // Range should be calibrated from warmup (average ~840)
         val range = handler.getCalibratedTopPosition()
@@ -288,17 +277,13 @@ class WorkoutModeTest {
         handler.onRepEvent = { event -> lastEvent = event }
         
         // Phase 1: Warmup
-        for (i in 1..3) {
-            handler.process(repsRomCount = i, repsSetCount = i)
-        }
+        completeWarmup()
         assertTrue(handler.getRepCount().isWarmupComplete)
         assertNotNull(lastEvent)
         assertEquals(RepType.WARMUP_COMPLETE, lastEvent?.type)
         
         // Phase 2: Working reps
-        for (i in 4..13) {
-            handler.process(repsRomCount = i, repsSetCount = i)
-        }
+        completeWorkingReps(10)
         
         // Phase 3: Auto-complete at target
         assertTrue(handler.shouldStopWorkout())

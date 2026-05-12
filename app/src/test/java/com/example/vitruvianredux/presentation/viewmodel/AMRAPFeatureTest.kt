@@ -72,9 +72,11 @@ class AMRAPFeatureTest {
 
         every { bleRepository.connectionState } returns MutableStateFlow(ConnectionState.Disconnected)
         every { bleRepository.monitorData } returns emptyFlow()
+        every { bleRepository.heuristicData } returns MutableStateFlow(null)
         every { bleRepository.repEvents } returns emptyFlow()
         every { bleRepository.scannedDevices } returns emptyFlow()
         every { bleRepository.handleState } returns MutableStateFlow(com.example.vitruvianredux.data.ble.HandleState.Released)
+        every { bleRepository.deloadOccurredEvents } returns emptyFlow()
 
         every { workoutRepository.getRecentSessions(any()) } returns flowOf(emptyList())
         every { workoutRepository.getAllRoutines() } returns flowOf(emptyList())
@@ -82,6 +84,7 @@ class AMRAPFeatureTest {
         every { workoutRepository.getActiveProgram() } returns flowOf(null)
         every { workoutRepository.getAllPersonalRecords() } returns flowOf(emptyList())
         every { workoutRepository.getAllSessions() } returns flowOf(emptyList())
+        every { personalRecordRepository.getAllPRsGrouped() } returns flowOf(emptyList())
 
         every { preferencesManager.preferencesFlow } returns flowOf(UserPreferences())
 
@@ -162,12 +165,15 @@ class AMRAPFeatureTest {
             }
         }
 
-        // ACT: Process 16 reps (more than the "target" of 10)
-        // Note: First call establishes baseline, so to get 15 counted reps we need 16 calls
-        for (i in 0..15) {
+        actualRepCounter.process(repsRomCount = 0, repsSetCount = 0, up = 0, down = 0)
+
+        // ACT: Process 15 reps (more than the "target" of 10)
+        for (i in 1..15) {
             actualRepCounter.process(
-                repsRomCount = i,
-                repsSetCount = if (i > 0) i - 1 else 0,
+                repsRomCount = 0,
+                repsSetCount = i,
+                up = i,
+                down = i,
                 posA = 100f,
                 posB = 100f
             )
@@ -266,11 +272,15 @@ class AMRAPFeatureTest {
             }
         }
 
-        // ACT: Process exactly 10 reps (plus initial baseline call)
-        for (i in 0..10) {
+        actualRepCounter.process(repsRomCount = 0, repsSetCount = 0, up = 0, down = 0)
+
+        // ACT: Process exactly 10 reps
+        for (i in 1..10) {
             actualRepCounter.process(
-                repsRomCount = i,
-                repsSetCount = if (i > 0) i - 1 else 0,
+                repsRomCount = 0,
+                repsSetCount = i,
+                up = i,
+                down = i,
                 posA = 100f,
                 posB = 100f
             )

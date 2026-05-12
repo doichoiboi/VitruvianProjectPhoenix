@@ -118,9 +118,11 @@ class MainViewModelEnhancedTest {
         // Setup default flows for BleRepository
         every { bleRepository.connectionState } returns MutableStateFlow(ConnectionState.Disconnected)
         every { bleRepository.monitorData } returns emptyFlow()
+        every { bleRepository.heuristicData } returns MutableStateFlow(null)
         every { bleRepository.repEvents } returns emptyFlow()
         every { bleRepository.scannedDevices } returns emptyFlow()
         every { bleRepository.handleState } returns MutableStateFlow(com.example.vitruvianredux.data.ble.HandleState.Released)
+        every { bleRepository.deloadOccurredEvents } returns emptyFlow()
 
         // Setup default flows for WorkoutRepository
         every { workoutRepository.getRecentSessions(any()) } returns flowOf(emptyList())
@@ -129,6 +131,7 @@ class MainViewModelEnhancedTest {
         every { workoutRepository.getActiveProgram() } returns flowOf(null)
         every { workoutRepository.getAllPersonalRecords() } returns flowOf(emptyList())
         every { workoutRepository.getAllSessions() } returns flowOf(emptyList())
+        every { personalRecordRepository.getAllPRsGrouped() } returns flowOf(emptyList())
 
         // Setup PreferencesManager with default preferences
         every { preferencesManager.preferencesFlow } returns flowOf(UserPreferences())

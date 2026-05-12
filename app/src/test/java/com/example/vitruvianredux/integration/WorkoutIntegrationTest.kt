@@ -206,11 +206,15 @@ class WorkoutIntegrationTest {
         }
 
         // When: Processing rep notifications from machine
-        // Simulate 3 warmup reps (need 4 calls - first one initializes the counter)
-        repeat(4) { index ->
+        // Modern packets report ROM reps for warmup and set reps for working reps.
+        repCounter.process(repsRomCount = 0, repsSetCount = 0, up = 0, down = 0)
+        repeat(3) { index ->
+            val rep = index + 1
             repCounter.process(
-                repsRomCount = index,
-                repsSetCount = index,
+                repsRomCount = rep,
+                repsSetCount = 0,
+                up = rep,
+                down = rep,
                 posA = 2000f,
                 posB = 2000f
             )
@@ -224,9 +228,12 @@ class WorkoutIntegrationTest {
 
         // When: Processing 10 working reps
         repeat(10) { index ->
+            val rep = index + 1
             repCounter.process(
-                repsRomCount = 4 + index,
-                repsSetCount = 4 + index,
+                repsRomCount = 3,
+                repsSetCount = rep,
+                up = 3 + rep,
+                down = 3 + rep,
                 posA = 2000f,
                 posB = 2000f
             )
