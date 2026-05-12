@@ -9,6 +9,7 @@ import com.example.vitruvianredux.data.local.WorkoutDao
 import com.example.vitruvianredux.data.local.WorkoutDatabase
 import com.example.vitruvianredux.data.local.dao.DiagnosticsDao
 import com.example.vitruvianredux.data.local.dao.PhaseStatisticsDao
+import com.example.vitruvianredux.data.local.migration.DatabaseMigrations
 import dagger.Module
 import dagger.Provides
 import dagger.hilt.InstallIn

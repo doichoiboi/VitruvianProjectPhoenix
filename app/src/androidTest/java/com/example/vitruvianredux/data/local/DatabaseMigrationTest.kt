@@ -4,7 +4,7 @@ import androidx.room.Room
 import androidx.sqlite.db.SupportSQLiteDatabase
 import androidx.test.ext.junit.runners.AndroidJUnit4
 import androidx.test.platform.app.InstrumentationRegistry
-import com.example.vitruvianredux.di.DatabaseMigrations
+import com.example.vitruvianredux.data.local.migration.DatabaseMigrations
 import com.google.common.truth.Truth.assertThat
 import org.junit.After
 import org.junit.Test

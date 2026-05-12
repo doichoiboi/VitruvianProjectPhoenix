@@ -29,3 +29,29 @@
 - First technical orientation repair should inspect architecture, BLE boundaries, build flavors, and test commands.
 - Version metadata needs review: README says `0.6.0-beta`, Gradle production says `1.1.0`, and beta flavor says `0.6.2-beta`.
 - Legal/release wording should preserve the non-affiliation disclaimer and owner-rescue framing.
+
+---
+
+## Session 002 - 2026-05-12 - Clean Architecture Base Cleanup
+
+### Decisions Made
+
+**Prefer focused composition modules over a catch-all AppModule**
+- The Hilt `AppModule` was deleted after splitting its remaining providers into
+  smaller modules by responsibility: BLE, repositories, preferences, exercise
+  import, domain use cases, and database.
+- The team chose not to remove existing constructor/class-level injection in
+  this pass. Constructor injection can remain the dependency contract while
+  modules define app composition boundaries.
+
+**Treat migrations as data-local persistence code, not DI code**
+- Room migrations now live under `data/local/migration`.
+- `DatabaseModule` only builds Room and provides DAOs.
+
+### Open Threads
+
+- Review whether explicit providers for already `@Inject` constructible classes
+  should be removed in a later focused pass.
+- Consider `@Binds` for stable interface-to-implementation bindings after the
+  local injection convention is reviewed.
+- Continue R-007 MainViewModel fan-out reduction after this DI cleanup slice.

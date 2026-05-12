@@ -1,4 +1,4 @@
-package com.example.vitruvianredux.di
+package com.example.vitruvianredux.data.local.migration
 
 import androidx.room.migration.Migration
 import androidx.sqlite.db.SupportSQLiteDatabase

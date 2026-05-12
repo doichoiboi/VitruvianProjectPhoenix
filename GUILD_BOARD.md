@@ -50,4 +50,5 @@
 | ID | Title | Owner | File / Note |
 |---|---|---|---|
 | R-006 | Forge the Clean Workout Base | Spanner -> Sightline | `repairs/R006_CleanWorkoutBase.md`; workout engine/parser boundary established |
+| R-008 | Split DI Composition Boundaries | Spanner -> Ledger | `repairs/R008_DiModuleCleanup.md`; `AppModule` removed, database migrations moved to data-local, focused Hilt modules established |
 | B-004 | Data import transaction protection | Root -> Sightline | Backup import now runs in a Room transaction and can restore missing child rows for existing parent records during retry. |

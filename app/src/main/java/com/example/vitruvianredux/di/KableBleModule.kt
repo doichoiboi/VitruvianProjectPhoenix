@@ -5,7 +5,7 @@ package com.example.vitruvianredux.di
 // To re-enable Kable support:
 // 1. Re-create KableBleScanner.kt
 // 2. Uncomment the code below
-// 3. Comment out the provideBleRepository binding in AppModule.kt
+// 3. Comment out the provideBleRepository binding in BleModule.kt
 
 // import android.content.Context
 // import com.example.vitruvianredux.data.ble.KableBleScanner
@@ -22,8 +22,8 @@ package com.example.vitruvianredux.di
 //  * Hilt module for Kable BLE dependencies.
 //  *
 //  * To switch from Nordic to Kable:
-//  * 1. Comment out the provideBleRepository binding in AppModule.kt (lines 742-745)
-//  * 2. Uncomment the provideBleRepository binding in this module (lines 30-37)
+//  * 1. Comment out the provideBleRepository binding in BleModule.kt
+//  * 2. Uncomment the provideBleRepository binding in this module
 //  * 3. Rebuild the project
 //  *
 //  * The KableBleScanner is always provided as it's needed for future migration work.

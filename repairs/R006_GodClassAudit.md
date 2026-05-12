@@ -19,6 +19,11 @@ The target architecture should be closer to:
 
 ## Audit Snapshot
 
+Update: R-008 has since removed `di/AppModule.kt`, moved Room migrations to
+`data/local/migration`, and split Hilt providers into focused modules. The
+AppModule row below is preserved as historical audit context for the original
+cleanup target.
+
 The current project is a single Android module. Most of the app is workable, but
 the largest classes are doing too many jobs at once:
 
@@ -497,6 +502,9 @@ This file owns two unrelated surfaces:
 
 Path: `app/src/main/java/com/example/vitruvianredux/di/AppModule.kt`
 
+Status: resolved by R-008. The file no longer exists; this section records the
+pre-cleanup shape and why it was split.
+
 ### What It Owns Today
 
 `AppModule` owns:
@@ -523,14 +531,14 @@ Path: `app/src/main/java/com/example/vitruvianredux/di/AppModule.kt`
 
 | New responsibility | Suggested home | Notes |
 |---|---|---|
-| Database module | `di/DatabaseModule.kt` | Database, DAOs, migrations only. |
-| Migration list | `data/local/migrations/WorkoutMigrations.kt` | Ordered list and named migration objects. |
+| Database module | `di/DatabaseModule.kt` | Database and DAOs. |
+| Migration list | `data/local/migration/DatabaseMigrations.kt` | Ordered list and named migration objects. |
 | Repository module | `di/RepositoryModule.kt` | Workout/exercise/PR repositories. |
-| Machine/BLE module | `di/MachineModule.kt` | Scanner/repository/client providers. |
+| Machine/BLE module | `di/BleModule.kt` | BLE repository, manager, and connection logger providers. |
 | Preferences module | `di/PreferencesModule.kt` | DataStore/preferences provider. |
 
-Before splitting this, add migration tests or at least a compile/lint gate. DI
-splits are easy to make noisy without behavior improvement.
+R-008 completed this split with production compile, Android-test compile, unit
+tests, and emulator launch smoke.
 
 ## ProtocolTesterViewModel And ProtocolTesterScreen
 
