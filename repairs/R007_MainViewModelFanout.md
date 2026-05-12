@@ -245,3 +245,18 @@ Split the daily-routines destination into route collection and screen rendering:
 
 This moves another pre-active-workout feature behind the route boundary while
 leaving the routine builder/tab internals unchanged.
+
+## Risk-Reduction Slice
+
+Pin the workout-start behavior moved into routes:
+
+- `WorkoutLaunchCoordinator` centralizes the connection-gated launch flow used
+  by Home, Weekly Programs, and Daily Routines.
+- Home still loads a routine by id, starts the workout, and navigates to Daily
+  Routines after connection.
+- Weekly Programs still loads a routine by id and starts the workout without a
+  route change.
+- Daily Routines still loads the selected routine, starts the workout, and
+  navigates to Active Workout after connection.
+- Focused JVM tests verify ordering and confirm connection failure does not
+  load, start, or navigate.

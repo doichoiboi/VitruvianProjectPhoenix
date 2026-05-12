@@ -3,11 +3,14 @@ package com.example.vitruvianredux.presentation.screen
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.remember
 import androidx.compose.ui.Modifier
 import androidx.navigation.NavController
 import com.example.vitruvianredux.data.repository.ExerciseRepository
 import com.example.vitruvianredux.presentation.navigation.NavigationRoutes
 import com.example.vitruvianredux.presentation.viewmodel.MainViewModel
+import com.example.vitruvianredux.presentation.workout.MainViewModelWorkoutLaunchController
+import com.example.vitruvianredux.presentation.workout.WorkoutLaunchCoordinator
 import com.example.vitruvianredux.ui.theme.ThemeMode
 
 @Composable
@@ -21,6 +24,14 @@ fun DailyRoutinesRoute(
     val routines by viewModel.routines.collectAsState()
     val weightUnit by viewModel.weightUnit.collectAsState()
     val enableVideoPlayback by viewModel.enableVideoPlayback.collectAsState()
+    val workoutLauncher = remember(navController, viewModel) {
+        WorkoutLaunchCoordinator(
+            controller = MainViewModelWorkoutLaunchController(viewModel),
+            navigateToActiveWorkout = {
+                navController.navigate(NavigationRoutes.ActiveWorkout.route)
+            }
+        )
+    }
 
     DailyRoutinesScreen(
         themeMode = themeMode,
@@ -33,14 +44,7 @@ fun DailyRoutinesRoute(
         kgToDisplay = viewModel::kgToDisplay,
         displayToKg = viewModel::displayToKg,
         onStartWorkout = { routine ->
-            viewModel.ensureConnection(
-                onConnected = {
-                    viewModel.loadRoutine(routine)
-                    viewModel.startWorkout()
-                    navController.navigate(NavigationRoutes.ActiveWorkout.route)
-                },
-                onFailed = { /* Error shown via StateFlow */ }
-            )
+            workoutLauncher.startRoutine(routine)
         },
         onDeleteRoutine = { viewModel.deleteRoutine(it) },
         onSaveRoutine = { viewModel.saveRoutine(it) },

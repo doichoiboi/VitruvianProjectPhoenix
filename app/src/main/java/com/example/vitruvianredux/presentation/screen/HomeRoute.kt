@@ -3,10 +3,14 @@ package com.example.vitruvianredux.presentation.screen
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.remember
 import androidx.compose.ui.Modifier
 import androidx.navigation.NavController
 import com.example.vitruvianredux.presentation.navigation.NavigationRoutes
 import com.example.vitruvianredux.presentation.viewmodel.MainViewModel
+import com.example.vitruvianredux.presentation.workout.MainViewModelWorkoutLaunchController
+import com.example.vitruvianredux.presentation.workout.WorkoutLaunchCoordinator
+import com.example.vitruvianredux.presentation.workout.WorkoutLaunchDestination
 import com.example.vitruvianredux.ui.theme.ThemeMode
 
 @Composable
@@ -19,6 +23,14 @@ fun HomeRoute(
     val activeProgram by viewModel.activeProgram.collectAsState()
     val routines by viewModel.routines.collectAsState()
     val weightUnit by viewModel.weightUnit.collectAsState()
+    val workoutLauncher = remember(navController, viewModel) {
+        WorkoutLaunchCoordinator(
+            controller = MainViewModelWorkoutLaunchController(viewModel),
+            navigateToDailyRoutines = {
+                navController.navigate(NavigationRoutes.DailyRoutines.route)
+            }
+        )
+    }
 
     HomeScreen(
         themeMode = themeMode,
@@ -28,13 +40,9 @@ fun HomeRoute(
         formatWeight = viewModel::formatWeight,
         kgToDisplay = viewModel::kgToDisplay,
         onStartRoutine = { routineId ->
-            viewModel.ensureConnection(
-                onConnected = {
-                    viewModel.loadRoutineById(routineId)
-                    viewModel.startWorkout()
-                    navController.navigate(NavigationRoutes.DailyRoutines.route)
-                },
-                onFailed = { /* Error shown via StateFlow */ }
+            workoutLauncher.startRoutineById(
+                routineId = routineId,
+                destination = WorkoutLaunchDestination.DailyRoutines
             )
         },
         onNavigateToJustLift = { navController.navigate(NavigationRoutes.JustLift.route) },

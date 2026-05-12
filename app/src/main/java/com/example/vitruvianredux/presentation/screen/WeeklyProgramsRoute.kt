@@ -3,10 +3,13 @@ package com.example.vitruvianredux.presentation.screen
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.remember
 import androidx.compose.ui.Modifier
 import androidx.navigation.NavController
 import com.example.vitruvianredux.presentation.navigation.NavigationRoutes
 import com.example.vitruvianredux.presentation.viewmodel.MainViewModel
+import com.example.vitruvianredux.presentation.workout.MainViewModelWorkoutLaunchController
+import com.example.vitruvianredux.presentation.workout.WorkoutLaunchCoordinator
 import com.example.vitruvianredux.ui.theme.ThemeMode
 
 @Composable
@@ -19,6 +22,11 @@ fun WeeklyProgramsRoute(
     val programs by viewModel.weeklyPrograms.collectAsState()
     val activeProgram by viewModel.activeProgram.collectAsState()
     val routines by viewModel.routines.collectAsState()
+    val workoutLauncher = remember(viewModel) {
+        WorkoutLaunchCoordinator(
+            controller = MainViewModelWorkoutLaunchController(viewModel)
+        )
+    }
 
     WeeklyProgramsScreen(
         themeMode = themeMode,
@@ -26,13 +34,7 @@ fun WeeklyProgramsRoute(
         activeProgram = activeProgram,
         routines = routines,
         onStartTodayWorkout = { routineId ->
-            viewModel.ensureConnection(
-                onConnected = {
-                    viewModel.loadRoutineById(routineId)
-                    viewModel.startWorkout()
-                },
-                onFailed = { /* Error shown via StateFlow */ }
-            )
+            workoutLauncher.startRoutineById(routineId)
         },
         onCreateProgram = {
             navController.navigate(NavigationRoutes.ProgramBuilder.createRoute())
