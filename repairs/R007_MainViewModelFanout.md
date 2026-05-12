@@ -231,3 +231,17 @@ Split the analytics destination into route collection and screen rendering:
 This leaves CSV export behavior inside the screen for now. A later analytics
 owner can move export side effects into a presenter once route boundaries are
 stable.
+
+## Eleventh Slice
+
+Split the daily-routines destination into route collection and screen rendering:
+
+- `DailyRoutinesRoute` now collects routines, weight unit, and video playback
+  settings from `MainViewModel`.
+- `DailyRoutinesRoute` owns the routine-start connection flow, active-workout
+  navigation, and routine save/delete/update callbacks.
+- `DailyRoutinesScreen` no longer imports `NavController` or `MainViewModel`;
+  it delegates to `RoutinesTab` using explicit inputs.
+
+This moves another pre-active-workout feature behind the route boundary while
+leaving the routine builder/tab internals unchanged.

@@ -88,7 +88,7 @@ fun NavGraph(
 
         // Daily Routines screen - pre-built routines
         composable(NavigationRoutes.DailyRoutines.route) {
-            DailyRoutinesScreen(
+            DailyRoutinesRoute(
                 navController = navController,
                 viewModel = viewModel,
                 exerciseRepository = exerciseRepository,

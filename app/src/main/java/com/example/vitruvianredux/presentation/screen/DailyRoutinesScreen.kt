@@ -5,15 +5,14 @@ import androidx.compose.foundation.isSystemInDarkTheme
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.foundation.layout.*
-import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Modifier
-import androidx.navigation.NavController
 import com.example.vitruvianredux.data.repository.ExerciseRepository
-import com.example.vitruvianredux.presentation.navigation.NavigationRoutes
-import com.example.vitruvianredux.presentation.viewmodel.MainViewModel
+import com.example.vitruvianredux.data.repository.PersonalRecordRepository
+import com.example.vitruvianredux.domain.model.Routine
+import com.example.vitruvianredux.domain.model.WeightUnit
+import com.example.vitruvianredux.ui.theme.ThemeMode
 
 /**
  * Daily Routines screen - view and manage pre-built routines.
@@ -22,20 +21,26 @@ import com.example.vitruvianredux.presentation.viewmodel.MainViewModel
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun DailyRoutinesScreen(
-    navController: NavController,
-    viewModel: MainViewModel,
+    themeMode: ThemeMode,
+    routines: List<Routine>,
     exerciseRepository: ExerciseRepository,
-    themeMode: com.example.vitruvianredux.ui.theme.ThemeMode
+    personalRecordRepository: PersonalRecordRepository,
+    weightUnit: WeightUnit,
+    enableVideoPlayback: Boolean,
+    formatWeight: (Float, WeightUnit) -> String,
+    kgToDisplay: (Float, WeightUnit) -> Float,
+    displayToKg: (Float, WeightUnit) -> Float,
+    onStartWorkout: (Routine) -> Unit,
+    onDeleteRoutine: (String) -> Unit,
+    onSaveRoutine: (Routine) -> Unit,
+    onUpdateRoutine: (Routine) -> Unit,
+    modifier: Modifier = Modifier
 ) {
-    val routines by viewModel.routines.collectAsState()
-    val weightUnit by viewModel.weightUnit.collectAsState()
-    val enableVideoPlayback by viewModel.enableVideoPlayback.collectAsState()
-
     // Determine actual theme (matching Theme.kt logic)
     val useDarkColors = when (themeMode) {
-        com.example.vitruvianredux.ui.theme.ThemeMode.SYSTEM -> isSystemInDarkTheme()
-        com.example.vitruvianredux.ui.theme.ThemeMode.LIGHT -> false
-        com.example.vitruvianredux.ui.theme.ThemeMode.DARK -> true
+        ThemeMode.SYSTEM -> isSystemInDarkTheme()
+        ThemeMode.LIGHT -> false
+        ThemeMode.DARK -> true
     }
 
     val backgroundGradient = if (useDarkColors) {
@@ -57,7 +62,7 @@ fun DailyRoutinesScreen(
     }
 
     Box(
-        modifier = Modifier
+        modifier = modifier
             .fillMaxSize()
             .background(backgroundGradient)
     ) {
@@ -65,25 +70,16 @@ fun DailyRoutinesScreen(
         RoutinesTab(
             routines = routines,
             exerciseRepository = exerciseRepository,
-            personalRecordRepository = viewModel.personalRecordRepository,
-            formatWeight = viewModel::formatWeight,
+            personalRecordRepository = personalRecordRepository,
+            formatWeight = formatWeight,
             weightUnit = weightUnit,
             enableVideoPlayback = enableVideoPlayback,
-            kgToDisplay = viewModel::kgToDisplay,
-            displayToKg = viewModel::displayToKg,
-            onStartWorkout = { routine ->
-                viewModel.ensureConnection(
-                    onConnected = {
-                        viewModel.loadRoutine(routine)
-                        viewModel.startWorkout()
-                        navController.navigate(NavigationRoutes.ActiveWorkout.route)
-                    },
-                    onFailed = { /* Error shown via StateFlow */ }
-                )
-            },
-            onDeleteRoutine = { routineId -> viewModel.deleteRoutine(routineId) },
-            onSaveRoutine = { routine -> viewModel.saveRoutine(routine) },
-            onUpdateRoutine = { routine -> viewModel.updateRoutine(routine) },
+            kgToDisplay = kgToDisplay,
+            displayToKg = displayToKg,
+            onStartWorkout = onStartWorkout,
+            onDeleteRoutine = onDeleteRoutine,
+            onSaveRoutine = onSaveRoutine,
+            onUpdateRoutine = onUpdateRoutine,
             themeMode = themeMode,
             modifier = Modifier.fillMaxSize()
         )

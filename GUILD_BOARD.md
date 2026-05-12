@@ -8,7 +8,7 @@
 
 | ID | Title | Owner | File / Note |
 |---|---|---|---|
-| R-007 | Reduce MainViewModel Fan-Out | Spanner -> Sightline | `repairs/R007_MainViewModelFanout.md`; settings owner plus home/weekly/analytics route boundaries extracted; continue route/presenter extraction before active workout |
+| R-007 | Reduce MainViewModel Fan-Out | Spanner -> Sightline | `repairs/R007_MainViewModelFanout.md`; settings owner plus home/weekly/analytics/daily-routines route boundaries extracted; continue route/presenter extraction before active workout |
 
 ---
 
