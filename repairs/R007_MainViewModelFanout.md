@@ -102,3 +102,17 @@ Extract the shell connection affordance:
 This does not change BLE behavior. It makes the shell easier to debug because
 connection display policy now has its own small owner instead of living inline
 inside the root screen.
+
+## Sixth Slice
+
+Separate the settings route from the navigation table:
+
+- `SettingsRoute` now collects settings/import/export state and wires settings
+  callbacks to `MainViewModel`.
+- `NavGraph` now only declares the settings destination and delegates route
+  composition to `SettingsRoute`.
+- The unused `onThemeModeChange` navigation parameter was removed.
+
+This is still transitional because `SettingsRoute` depends on `MainViewModel`.
+The improvement is that navigation no longer owns settings state collection,
+which gives a natural place to introduce a dedicated settings presenter later.

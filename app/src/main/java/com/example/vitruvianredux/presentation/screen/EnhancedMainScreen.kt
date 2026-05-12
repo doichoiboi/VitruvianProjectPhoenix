@@ -322,7 +322,6 @@ fun EnhancedMainScreen(
                 viewModel = viewModel,
                 exerciseRepository = exerciseRepository,
                 themeMode = themeMode,
-                onThemeModeChange = { mode -> themeViewModel.setThemeMode(mode) },
                 modifier = Modifier.padding(adjustedPadding)
             )
         }
