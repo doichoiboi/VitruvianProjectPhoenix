@@ -27,15 +27,18 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
-import androidx.navigation.NavController
+import com.example.vitruvianredux.data.preferences.JustLiftDefaults
 import com.example.vitruvianredux.domain.model.*
 import com.example.vitruvianredux.presentation.components.CompactNumberPicker
 import com.example.vitruvianredux.presentation.components.ExpressiveCard
 import com.example.vitruvianredux.presentation.components.ProgressionSlider
 import com.example.vitruvianredux.presentation.components.ExpressiveSlider
-import com.example.vitruvianredux.presentation.navigation.NavigationRoutes
-import com.example.vitruvianredux.presentation.viewmodel.MainViewModel
+import com.example.vitruvianredux.presentation.viewmodel.AutoStopUiState
+import com.example.vitruvianredux.presentation.workout.JustLiftParameterPolicy
+import com.example.vitruvianredux.presentation.workout.JustLiftRestElapsedFormatter
+import com.example.vitruvianredux.presentation.workout.JustLiftRestElapsedStatePolicy
 import com.example.vitruvianredux.ui.theme.Spacing
+import kotlinx.coroutines.delay
 import timber.log.Timber
 
 /**
@@ -43,33 +46,34 @@ import timber.log.Timber
  * Allows user to select mode, eccentric load percentage, and progression/regression.
  */
 @OptIn(ExperimentalMaterial3Api::class)
-@Suppress("UNUSED_PARAMETER")
 @Composable
 fun JustLiftScreen(
-    navController: NavController,
-    viewModel: MainViewModel,
-    themeMode: com.example.vitruvianredux.ui.theme.ThemeMode
+    workoutState: WorkoutState,
+    workoutParameters: WorkoutParameters,
+    currentMetric: WorkoutMetric?,
+    currentHeuristicKgMax: Float,
+    repCount: RepCount,
+    autoStopState: AutoStopUiState,
+    autoStartCountdown: Int?,
+    justLiftRestStartedAtMillis: Long?,
+    weightUnit: WeightUnit,
+    getJustLiftDefaults: suspend () -> JustLiftDefaults?,
+    kgToDisplay: (Float, WeightUnit) -> Float,
+    displayToKg: (Float, WeightUnit) -> Float,
+    formatWeight: (Float, WeightUnit) -> String,
+    onWorkoutParametersChanged: (WorkoutParameters) -> Unit,
+    onStopWorkout: () -> Unit
 ) {
-
-    val workoutState by viewModel.workoutState.collectAsState()
-    val workoutParameters by viewModel.workoutParameters.collectAsState()
-    val currentMetric by viewModel.currentMetric.collectAsState()
-    val currentHeuristicKgMax by viewModel.currentHeuristicKgMax.collectAsState()
-    val repCount by viewModel.repCount.collectAsState()
-    val autoStopState by viewModel.autoStopState.collectAsState()
-    val weightUnit by viewModel.weightUnit.collectAsState()
-
     var selectedMode by remember { mutableStateOf(workoutParameters.workoutType.toWorkoutMode()) }
     // Initialize to match the picker's default: 1 lb = 0.453592 kg
     var weightPerCable by remember { mutableStateOf(0.453592f) }
     var weightChangePerRep by remember { mutableStateOf(0) } // Progression/Regression value
-    var restTime by remember { mutableStateOf(60) } // Rest time in seconds
     var eccentricLoad by remember { mutableStateOf(EccentricLoad.LOAD_100) }
     var echoLevel by remember { mutableStateOf(EchoLevel.HARDER) }
 
     // Load saved Just Lift defaults on screen init
     LaunchedEffect(Unit) {
-        val defaults = viewModel.getJustLiftDefaults()
+        val defaults = getJustLiftDefaults()
         if (defaults != null) {
             // Apply saved defaults
             weightPerCable = defaults.weightPerCableKg
@@ -102,45 +106,26 @@ fun JustLiftScreen(
         }
     }
 
-    // Navigate to ActiveWorkout when workout becomes active
-    LaunchedEffect(workoutState) {
-        if (workoutState is WorkoutState.Active) {
-            navController.navigate(NavigationRoutes.ActiveWorkout.route)
-        }
-    }
-
-    // Enable handle detection for auto-start when connected (matches official app)
-    val connectionState by viewModel.connectionState.collectAsState()
-    LaunchedEffect(connectionState) {
-        if (connectionState is ConnectionState.Connected) {
-            viewModel.enableHandleDetection()
-        }
-    }
-
-    // Reset workout state if entering Just Lift with any non-Idle state (matches official app)
-    // This ensures the AutoStartStopCard is always visible
-    LaunchedEffect(workoutState) {
-        if (workoutState !is WorkoutState.Idle && workoutState !is WorkoutState.Active) {
-            viewModel.prepareForJustLift()
-        }
-    }
-
-    // Update parameters whenever user changes them
-    LaunchedEffect(selectedMode, weightPerCable, weightChangePerRep, restTime) {
-        val weightChangeKg = if (weightUnit == WeightUnit.LB) {
-            weightChangePerRep / 2.20462f
-        } else {
-            weightChangePerRep.toFloat()
-        }
-
-        val updatedParameters = workoutParameters.copy(
-            workoutType = selectedMode.toWorkoutType(eccentricLoad),
-            weightPerCableKg = weightPerCable,
-            progressionRegressionKg = weightChangeKg,
-            isJustLift = true,
-            useAutoStart = true // Enable auto-start for Just Lift
+    // Update next-start parameters whenever the Just Lift draft changes.
+    LaunchedEffect(
+        selectedMode,
+        echoLevel,
+        eccentricLoad,
+        weightPerCable,
+        weightChangePerRep,
+        weightUnit
+    ) {
+        onWorkoutParametersChanged(
+            JustLiftParameterPolicy.buildParameters(
+                current = workoutParameters,
+                selectedMode = selectedMode,
+                echoLevel = echoLevel,
+                eccentricLoad = eccentricLoad,
+                weightPerCableKg = weightPerCable,
+                weightChangePerRep = weightChangePerRep,
+                weightUnit = weightUnit
+            )
         )
-        viewModel.updateWorkoutParameters(updatedParameters)
     }
 
     Scaffold(
@@ -170,11 +155,11 @@ fun JustLiftScreen(
             ) {
                 // Only show Auto-Start/Stop Card when IDLE. When Active, status is in ActiveStatusCard.
                 if (workoutState is WorkoutState.Idle) {
-                    val autoStartCountdown by viewModel.autoStartCountdown.collectAsState()
                     AutoStartStopCard(
                         workoutState = workoutState,
                         autoStartCountdown = autoStartCountdown,
-                        autoStopState = autoStopState
+                        autoStopState = autoStopState,
+                        justLiftRestStartedAtMillis = justLiftRestStartedAtMillis
                     )
                 }
 
@@ -272,12 +257,12 @@ fun JustLiftScreen(
                             val weightSuffix = if (weightUnit == WeightUnit.LB) "lbs" else "kg"
                             val maxWeight = if (weightUnit == WeightUnit.LB) 220f else 100f
                             val weightStep = if (weightUnit == WeightUnit.LB) 0.5f else 0.25f
-                            val displayWeight = viewModel.kgToDisplay(weightPerCable, weightUnit)
+                            val displayWeight = kgToDisplay(weightPerCable, weightUnit)
 
                             CompactNumberPicker(
                                 value = displayWeight,
                                 onValueChange = { newValue ->
-                                    weightPerCable = viewModel.displayToKg(newValue, weightUnit)
+                                    weightPerCable = displayToKg(newValue, weightUnit)
                                 },
                                 range = 1f..maxWeight,
                                 step = weightStep,
@@ -452,8 +437,8 @@ fun JustLiftScreen(
                         currentMetric = currentMetric,
                         repCount = repCount,
                         weightUnit = weightUnit,
-                        formatWeight = viewModel::formatWeight,
-                        onStopWorkout = { viewModel.stopWorkout() },
+                        formatWeight = formatWeight,
+                        onStopWorkout = onStopWorkout,
                         isEchoMode = workoutParameters.workoutType is WorkoutType.Echo,
                         echoForceKgMax = currentHeuristicKgMax
                     )
@@ -619,10 +604,33 @@ fun ActiveStatusCard(
 fun AutoStartStopCard(
     workoutState: WorkoutState,
     autoStartCountdown: Int?,
-    autoStopState: com.example.vitruvianredux.presentation.viewmodel.AutoStopUiState
+    autoStopState: com.example.vitruvianredux.presentation.viewmodel.AutoStopUiState,
+    justLiftRestStartedAtMillis: Long?
 ) {
     val isIdle = workoutState is WorkoutState.Idle
     val isActive = workoutState is WorkoutState.Active
+    var nowMillis by remember(justLiftRestStartedAtMillis) {
+        mutableStateOf(System.currentTimeMillis())
+    }
+
+    LaunchedEffect(isIdle, autoStartCountdown, justLiftRestStartedAtMillis) {
+        if (isIdle && autoStartCountdown == null && justLiftRestStartedAtMillis != null) {
+            while (true) {
+                nowMillis = System.currentTimeMillis()
+                delay(1000)
+            }
+        }
+    }
+
+    val shouldShowRestElapsed = JustLiftRestElapsedStatePolicy.shouldShow(
+        workoutState = workoutState,
+        autoStartCountdown = autoStartCountdown,
+        startedAtMillis = justLiftRestStartedAtMillis
+    )
+    val justLiftRestElapsedSeconds = JustLiftRestElapsedStatePolicy.elapsedSeconds(
+        startedAtMillis = justLiftRestStartedAtMillis,
+        nowMillis = nowMillis
+    )
 
     // Show card when idle (for auto-start) or active (for auto-stop)
     if (isIdle || isActive) {
@@ -700,6 +708,29 @@ fun AutoStartStopCard(
                             .height(8.dp),
                         color = MaterialTheme.colorScheme.error
                     )
+                    Spacer(modifier = Modifier.height(Spacing.small))
+                }
+
+                if (shouldShowRestElapsed && justLiftRestElapsedSeconds != null) {
+                    Row(
+                        verticalAlignment = Alignment.CenterVertically,
+                        horizontalArrangement = Arrangement.Center,
+                        modifier = Modifier.fillMaxWidth()
+                    ) {
+                        Icon(
+                            imageVector = Icons.Default.Star,
+                            contentDescription = "Explicitly added feature",
+                            modifier = Modifier.size(16.dp),
+                            tint = MaterialTheme.colorScheme.tertiary
+                        )
+                        Spacer(modifier = Modifier.width(Spacing.extraSmall))
+                        Text(
+                            text = JustLiftRestElapsedFormatter.label(justLiftRestElapsedSeconds),
+                            style = MaterialTheme.typography.titleMedium,
+                            fontWeight = FontWeight.Bold,
+                            color = MaterialTheme.colorScheme.onTertiaryContainer
+                        )
+                    }
                     Spacer(modifier = Modifier.height(Spacing.small))
                 }
 

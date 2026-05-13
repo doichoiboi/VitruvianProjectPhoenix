@@ -260,3 +260,163 @@ Pin the workout-start behavior moved into routes:
   navigates to Active Workout after connection.
 - Focused JVM tests verify ordering and confirm connection failure does not
   load, start, or navigate.
+
+## Twelfth Slice
+
+Split the single-exercise destination into route orchestration and screen
+rendering:
+
+- `SingleExerciseRoute` now collects weight unit, video playback, and session
+  eccentric-load state from `MainViewModel`.
+- `SingleExerciseRoute` owns temp-routine creation, connection gating,
+  workout start, and active-workout navigation for single-exercise launch.
+- `SingleExerciseScreen` no longer imports `NavController` or `MainViewModel`;
+  it receives repositories, render state, formatter callbacks, defaults lookup,
+  and start callback explicitly.
+
+The route intentionally preserves the previous ordering for single-exercise
+launch: create and load the temp routine first, then ensure connection, then
+start the workout and navigate. That keeps behavior stable while removing
+another pre-active-workout feature surface from direct god-ViewModel ownership.
+
+## Thirteenth Slice
+
+Split the Just Lift destination into route orchestration and screen rendering:
+
+- `JustLiftRoute` now collects workout state, current metrics, rep count,
+  auto-start/auto-stop state, weight unit, and connection state from
+  `MainViewModel`.
+- `JustLiftRoute` owns active-workout navigation, connected-handle detection,
+  and the reset-to-Just-Lift-idle effect for non-idle/non-active states.
+- `JustLiftScreen` no longer imports `NavController` or `MainViewModel`; it
+  receives render state, defaults lookup, formatter callbacks, workout
+  parameter mutation, and stop callback explicitly.
+
+This keeps Just Lift behavior in the current `MainViewModel` controller for
+now, but moves another leaf screen away from direct god-ViewModel and navigation
+ownership. The next low-risk cleanup should continue around route/presenter
+surfaces before changing active workout execution.
+
+## Fourteenth Slice
+
+Split the Program Builder destination into route orchestration and screen
+rendering:
+
+- `ProgramBuilderRoute` now collects routines and weekly programs from
+  `MainViewModel`.
+- `ProgramBuilderRoute` owns existing-program loading, dynamic app chrome title,
+  save top-bar action, program persistence, and navigate-up behavior.
+- `ProgramBuilderScreen` no longer imports `NavController`, `MainViewModel`,
+  `LocalAppChrome`, or `TopBarAction`; it receives program draft state, routine
+  lists, mutation callbacks, and theme mode explicitly.
+
+This keeps program-builder persistence behavior unchanged while moving another
+setup/editing flow behind the route boundary. The remaining high-risk area is
+still active workout execution and should stay behind focused tests before any
+semantic changes.
+
+## Fifteenth Slice
+
+Split the Active Workout destination into route orchestration and screen
+rendering without changing workout execution:
+
+- `ActiveWorkoutRoute` now collects active workout state, metrics, rep state,
+  loaded-routine state, user preferences, connection state, haptic events, and
+  PR celebration events from `MainViewModel`.
+- `ActiveWorkoutRoute` owns dynamic app chrome title, guarded top/system back
+  behavior, completion/error navigate-up timing, exit-confirmation actions, and
+  `MainViewModel` workout callbacks.
+- `ActiveWorkoutScreen` no longer imports `NavController`, `MainViewModel`, or
+  `LocalAppChrome`; it renders `WorkoutTab`, exit confirmation, and PR
+  celebration from explicit inputs and callbacks.
+
+This is only a boundary cleanup. `WorkoutTab`, `WorkoutEngine`, BLE start/stop,
+rep counting, rest transitions, AMRAP behavior, and persistence semantics were
+not intentionally changed. Any semantic active-workout cleanup still needs
+focused tests first.
+
+## Active Route Protection Slice
+
+Pin the route-level active workout navigation policy before semantic changes:
+
+- `ActiveWorkoutRoutePolicy` now owns the small pure rules for guarded back
+  confirmation, auto navigate-up timing, exit-confirmation state, and one-shot
+  navigation guard state for delayed and manual exits.
+- Focused JVM tests cover active/resting/countdown back confirmation,
+  non-active immediate back behavior, completed-delay navigation, Just Lift
+  idle auto-reset navigation, normal idle no-op, error-delay navigation,
+  confirmation dialog state, confirmed exit action, and duplicate-navigation
+  suppression for both auto and manual route exits.
+- `ActiveWorkoutRoute` delegates those decisions to the policy while keeping
+  the same route behavior.
+
+Validation: `:app:testProductionDebugUnitTest --tests
+com.example.vitruvianredux.presentation.workout.ActiveWorkoutRoutePolicyTest`
+passes.
+
+Manual smoke: Daniel tested the route cleanup on device/hardware after the
+broader unit lane passed and reported the flow seemed fine.
+
+## Just Lift Parameter Policy Follow-Up
+
+Review found that Just Lift Echo eccentric-load changes were local UI state but
+were not part of the parameter-sync trigger. That meant the setup UI could show
+one Echo eccentric-load value while `WorkoutParameters` still held the previous
+value until another keyed setting changed.
+
+The follow-up keeps the safety boundary conservative:
+
+- Just Lift controls still update app-side next-start parameters.
+- BLE command emission still happens only through the existing workout start
+  path, where `BleRepositoryImpl.startWorkout` builds the Echo frame.
+- `JustLiftParameterPolicy` now owns the mapping from the screen draft to
+  `WorkoutParameters`.
+- Focused JVM tests cover Echo level/eccentric-load mapping, lb-to-kg
+  progression conversion, and program-mode behavior ignoring Echo-only draft
+  values.
+
+Validation: `:app:testProductionDebugUnitTest --tests
+com.example.vitruvianredux.presentation.workout.JustLiftParameterPolicyTest`
+passes.
+
+## Just Lift Rest Elapsed Feature
+
+Add a small informational rest timer for Daniel's Just Lift smoke/testing flow:
+
+- `MainViewModel` records elapsed time after a Just Lift set ends through
+  manual stop or auto-stop.
+- The elapsed timer is cleared when a new workout starts.
+- `JustLiftRoute` passes the timer into `JustLiftScreen`.
+- `AutoStartStopCard` shows a star-marked `Resting M:SS` row while Just Lift is
+  idle and waiting for the next set.
+- The star marker identifies this as an explicitly added feature, not inherited
+  app behavior.
+- `JustLiftRestElapsedStatePolicy` owns the tested state rules for mark, clear,
+  elapsed calculation, and display eligibility.
+- `JustLiftRestElapsedFormatter` owns the tested `Resting M:SS` label.
+
+This does not add a programmed rest duration, and it does not affect BLE start,
+stop, auto-start, or resistance commands.
+
+Validation: `:app:testProductionDebugUnitTest --tests
+com.example.vitruvianredux.presentation.workout.JustLiftRestElapsedFormatterTest`
+and `:app:testProductionDebugUnitTest --tests
+com.example.vitruvianredux.presentation.workout.JustLiftRestElapsedStatePolicyTest`
+pass.
+
+## AMRAP Manual-Save Protection
+
+Close B-003 before deeper active-workout execution changes:
+
+- Added focused workout-flow coverage for manual AMRAP stop.
+- The test loads an AMRAP routine where the configured target reps placeholder
+  is `0`, injects measured working reps, manually stops the workout, and
+  captures the saved `WorkoutSession`.
+- The captured session must persist actual `workingReps` and `totalReps`
+  instead of the `0` AMRAP target placeholder.
+- The manual-stop path must also show `WorkoutState.SetSummary` with the same
+  measured rep count.
+
+Validation: `:app:testProductionDebugUnitTest --tests
+com.example.vitruvianredux.presentation.viewmodel.MainViewModelWorkoutFlowTest`
+passes.

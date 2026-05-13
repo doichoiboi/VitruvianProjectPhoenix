@@ -15,6 +15,7 @@ import com.example.vitruvianredux.domain.usecase.RepCounterFromMachine
 import com.example.vitruvianredux.domain.workout.WorkoutEngine
 import com.example.vitruvianredux.domain.workout.WorkoutEngineAction
 import com.example.vitruvianredux.domain.weight.WeightFormatter
+import com.example.vitruvianredux.presentation.workout.JustLiftRestElapsedStatePolicy
 import com.example.vitruvianredux.service.WorkoutForegroundService
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.Job
@@ -118,6 +119,9 @@ class MainViewModel @Inject constructor(
 
     private val _autoStartCountdown = MutableStateFlow<Int?>(null)
     val autoStartCountdown: StateFlow<Int?> = _autoStartCountdown.asStateFlow()
+
+    private val _justLiftRestStartedAtMillis = MutableStateFlow<Long?>(null)
+    val justLiftRestStartedAtMillis: StateFlow<Long?> = _justLiftRestStartedAtMillis.asStateFlow()
 
     private val _scannedDevices = MutableStateFlow<List<ScannedDevice>>(emptyList())
     val scannedDevices: StateFlow<List<ScannedDevice>> = _scannedDevices.asStateFlow()
@@ -1254,6 +1258,8 @@ class MainViewModel @Inject constructor(
             // Update the state flow so the rest of the app is consistent
             _workoutParameters.value = params
 
+            clearJustLiftRestStartedAt()
+
             val workingTarget = if (params.isJustLift) 0 else params.reps
             // For Just Lift mode, preserve position ranges built during handle detection
             // A full reset() would wipe out hasMeaningfulRange() data needed for auto-stop
@@ -1414,6 +1420,8 @@ class MainViewModel @Inject constructor(
             // Just Lift mode: Reset to Idle and re-enable auto-start for next set
             // Issue #121: Manual finish must behave the same as auto-stop
             if (isJustLift) {
+                markJustLiftRestStarted()
+
                 // Reset state
                 repCounter.reset()
                 resetAutoStopState()
@@ -1520,6 +1528,8 @@ class MainViewModel @Inject constructor(
 
             // Just Lift mode: Auto-advance to next set after showing summary
             if (isJustLift) {
+                markJustLiftRestStarted()
+
                 Timber.d("⏱️ [${System.currentTimeMillis() - completionStartTime}ms] Just Lift: IMMEDIATE reset for next set (while showing summary)")
 
                 // 1. Reset logical state immediately
@@ -2108,6 +2118,16 @@ class MainViewModel @Inject constructor(
         autoStopTriggered.set(false)
         autoStopStopRequested.set(false)
         _autoStopState.value = AutoStopUiState()
+    }
+
+    private fun markJustLiftRestStarted(startMillis: Long = System.currentTimeMillis()) {
+        _justLiftRestStartedAtMillis.value =
+            JustLiftRestElapsedStatePolicy.markSetEnded(startMillis)
+    }
+
+    private fun clearJustLiftRestStartedAt() {
+        _justLiftRestStartedAtMillis.value =
+            JustLiftRestElapsedStatePolicy.clearOnWorkoutStart()
     }
 
     private suspend fun saveWorkoutSession() {

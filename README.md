@@ -54,6 +54,8 @@ Vitruvian Project Phoenix is a native Android control app for Vitruvian Trainer 
 
 ### Technical
 > Core logic, BLE protocol, data flow, architecture, build system
+- `BLE_COMMUNICATION.md` - learning map for the BLE communication layer,
+  command path, telemetry path, and key source files.
 - `app/src/main/java/com/example/vitruvianredux/data/ble/` - BLE communication layer.
 - `app/src/main/java/com/example/vitruvianredux/domain/` - domain models and business logic.
 - `app/src/main/java/com/example/vitruvianredux/data/local/` - Room database and DAOs.
@@ -77,6 +79,8 @@ Vitruvian Project Phoenix is a native Android control app for Vitruvian Trainer 
 ### Learning
 > Existing documentation, decision logs, contributor clarity
 - `README.md` - this file; project identity, constraints, and current architecture.
+- `BLE_COMMUNICATION.md` - communication-layer overview for learning how the
+  app talks to the machine.
 - `DECISIONS.md` - Forge session log and durable notes.
 
 ### Project

@@ -8,7 +8,7 @@
 
 | ID | Title | Owner | File / Note |
 |---|---|---|---|
-| R-007 | Reduce MainViewModel Fan-Out | Spanner -> Sightline | `repairs/R007_MainViewModelFanout.md`; settings owner plus home/weekly/analytics/daily-routines route boundaries extracted; continue route/presenter extraction before active workout |
+| R-007 | Reduce MainViewModel Fan-Out | Spanner -> Sightline | `repairs/R007_MainViewModelFanout.md`; route boundaries extracted through active workout; active route navigation state/timing, AMRAP manual-save persistence, Just Lift next-start parameter mapping, and rest-elapsed state/formatting now have focused JVM coverage; full Compose route harness remains deferred before deeper semantic workout changes |
 
 ---
 
@@ -30,7 +30,6 @@
 |---|---|---|---|
 | B-001 | Version drift between README and Gradle | Ledger -> Spanner | README says `0.6.0-beta`; Gradle production says `1.1.0`; beta flavor says `0.6.2-beta`. Confirm intended public version before release notes or APK distribution. |
 | B-002 | `stopAtTop` is ignored by modern rep counting | Spanner -> Sightline | Discovered pre-existing issue: `RepCounterFromMachine` stores `stopAtTop`, but modern `repsSetCount` completion does not use it. Decide intended firmware behavior before changing workout stop logic. |
-| B-003 | AMRAP manual-save coverage is incomplete | Sightline -> Spanner | Current tests verify AMRAP parameter loading and auto-stop behavior, but do not prove manual stop saves actual completed reps. Add a focused workout-flow test before changing AMRAP persistence. |
 
 ---
 
@@ -52,3 +51,4 @@
 | R-006 | Forge the Clean Workout Base | Spanner -> Sightline | `repairs/R006_CleanWorkoutBase.md`; workout engine/parser boundary established |
 | R-008 | Split DI Composition Boundaries | Spanner -> Ledger | `repairs/R008_DiModuleCleanup.md`; `AppModule` removed, database migrations moved to data-local, focused Hilt modules established |
 | B-004 | Data import transaction protection | Root -> Sightline | Backup import now runs in a Room transaction and can restore missing child rows for existing parent records during retry. |
+| B-003 | AMRAP manual-save coverage | Sightline -> Spanner | `MainViewModelWorkoutFlowTest` now proves manual AMRAP stop saves actual working reps instead of the zero target placeholder and shows the set summary with the measured rep count. |

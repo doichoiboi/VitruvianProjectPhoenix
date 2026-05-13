@@ -1,143 +1,71 @@
 package com.example.vitruvianredux.presentation.screen
 
+import androidx.activity.compose.BackHandler
 import androidx.compose.foundation.layout.*
-import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material3.*
-import androidx.compose.runtime.*
+import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
-import androidx.navigation.NavController
 import com.example.vitruvianredux.data.repository.ExerciseRepository
-import com.example.vitruvianredux.domain.model.*
-import com.example.vitruvianredux.presentation.chrome.LocalAppChrome
-import com.example.vitruvianredux.presentation.viewmodel.MainViewModel
-import com.example.vitruvianredux.ui.theme.Spacing
-import kotlinx.coroutines.delay
+import com.example.vitruvianredux.domain.model.ConnectionState
+import com.example.vitruvianredux.domain.model.HapticEvent
+import com.example.vitruvianredux.domain.model.PRCelebrationEvent
+import com.example.vitruvianredux.domain.model.RepCount
+import com.example.vitruvianredux.domain.model.Routine
+import com.example.vitruvianredux.domain.model.UserPreferences
+import com.example.vitruvianredux.domain.model.WeightUnit
+import com.example.vitruvianredux.domain.model.WorkoutMetric
+import com.example.vitruvianredux.domain.model.WorkoutParameters
+import com.example.vitruvianredux.domain.model.WorkoutState
+import com.example.vitruvianredux.domain.usecase.RepRanges
+import com.example.vitruvianredux.presentation.viewmodel.AutoStopUiState
+import kotlinx.coroutines.flow.SharedFlow
 
 /**
- * Active Workout screen - displays workout controls and metrics during an active workout.
- * This screen is shown when a workout is in progress.
+ * Active Workout screen - displays workout controls and metrics during a workout.
  */
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun ActiveWorkoutScreen(
-    navController: NavController,
-    viewModel: MainViewModel,
-    exerciseRepository: ExerciseRepository
+    connectionState: ConnectionState,
+    workoutState: WorkoutState,
+    currentMetric: WorkoutMetric?,
+    currentHeuristicKgMax: Float,
+    workoutParameters: WorkoutParameters,
+    repCount: RepCount,
+    repRanges: RepRanges?,
+    autoStopState: AutoStopUiState,
+    weightUnit: WeightUnit,
+    enableVideoPlayback: Boolean,
+    loadedRoutine: Routine?,
+    currentExerciseIndex: Int,
+    isBodyweightExercise: Boolean,
+    bodyweightTimerState: Pair<Int, Int>?,
+    hapticEvents: SharedFlow<HapticEvent>,
+    userPreferences: UserPreferences,
+    prCelebrationEvent: PRCelebrationEvent?,
+    exerciseRepository: ExerciseRepository,
+    kgToDisplay: (Float, WeightUnit) -> Float,
+    displayToKg: (Float, WeightUnit) -> Float,
+    formatWeight: (Float, WeightUnit) -> String,
+    showExitConfirmation: Boolean,
+    onBackAttempt: () -> Unit,
+    onDismissExitConfirmation: () -> Unit,
+    onExitConfirmed: () -> Unit,
+    onDismissPrCelebration: () -> Unit,
+    onScan: () -> Unit,
+    onDisconnect: () -> Unit,
+    onStartWorkout: () -> Unit,
+    onSkipRest: () -> Unit,
+    onProceedFromSummary: () -> Unit,
+    onResetForNewWorkout: () -> Unit,
+    onStartNextExercise: () -> Unit,
+    onUpdateParameters: (WorkoutParameters) -> Unit
 ) {
-    val workoutState by viewModel.workoutState.collectAsState()
-    val appChrome = LocalAppChrome.current
-    val chromeOwner = remember { "ActiveWorkoutScreen" }
-    val currentMetric by viewModel.currentMetric.collectAsState()
-    val currentHeuristicKgMax by viewModel.currentHeuristicKgMax.collectAsState()
-    val workoutParameters by viewModel.workoutParameters.collectAsState()
-    val repCount by viewModel.repCount.collectAsState()
-    val repRanges by viewModel.repRanges.collectAsState()
-    val autoStopState by viewModel.autoStopState.collectAsState()
-    val weightUnit by viewModel.weightUnit.collectAsState()
-    val enableVideoPlayback by viewModel.enableVideoPlayback.collectAsState()
-    val loadedRoutine by viewModel.loadedRoutine.collectAsState()
-    val currentExerciseIndex by viewModel.currentExerciseIndex.collectAsState()
-    val isBodyweightExercise by viewModel.isCurrentExerciseBodyweight.collectAsState()
-    val bodyweightTimerState by viewModel.bodyweightTimerState.collectAsState()
-    val hapticEvents = viewModel.hapticEvents
-    val connectionState by viewModel.connectionState.collectAsState()
-    val userPreferences by viewModel.userPreferences.collectAsState()
-
-    // State for confirmation dialog
-    var showExitConfirmation by remember { mutableStateOf(false) }
-
-    // PR Celebration state
-    var prCelebrationEvent by remember { mutableStateOf<PRCelebrationEvent?>(null) }
-    LaunchedEffect(Unit) {
-        viewModel.prCelebrationEvent.collect { event ->
-            prCelebrationEvent = event
-        }
+    BackHandler(enabled = true) {
+        onBackAttempt()
     }
 
-    // Dynamic title based on workout type
-    val screenTitle = remember(loadedRoutine, workoutParameters.isJustLift) {
-        when {
-            loadedRoutine != null -> loadedRoutine?.name ?: "Routine"
-            workoutParameters.isJustLift -> "Just Lift"
-            else -> "Single Exercise"
-        }
-    }
-
-    // Set global title
-    LaunchedEffect(appChrome, chromeOwner, screenTitle) {
-        appChrome.setDynamicTitle(chromeOwner, screenTitle)
-    }
-
-    // Handle Back Button (System + Top Bar)
-    LaunchedEffect(appChrome, chromeOwner) {
-        val onBack: () -> Unit = {
-            // Show confirmation if workout is active
-            if (viewModel.workoutState.value is WorkoutState.Active ||
-                viewModel.workoutState.value is WorkoutState.Resting ||
-                viewModel.workoutState.value is WorkoutState.Countdown
-            ) {
-                showExitConfirmation = true
-            } else {
-                navController.navigateUp()
-            }
-        }
-        appChrome.setBackAction(chromeOwner, onBack)
-    }
-
-    // Clean up back action
-    DisposableEffect(appChrome, chromeOwner) {
-        onDispose {
-            appChrome.clearChrome(chromeOwner)
-        }
-    }
-
-    // System Back Handler
-    androidx.activity.compose.BackHandler(enabled = true) {
-        if (workoutState is WorkoutState.Active ||
-            workoutState is WorkoutState.Resting ||
-            workoutState is WorkoutState.Countdown
-        ) {
-            showExitConfirmation = true
-        } else {
-            navController.navigateUp()
-        }
-    }
-
-    // Haptic and audio feedback effect
     HapticFeedbackEffect(hapticEvents = hapticEvents, beepsEnabled = userPreferences.beepsEnabled)
-
-    // Navigation guard to prevent double navigateUp() calls (Issue #204)
-    // The LaunchedEffect can re-trigger if workoutParameters changes during navigation,
-    // causing navigateUp() to be called twice (ActiveWorkout → JustLift → Home)
-    var hasNavigatedAway by remember { mutableStateOf(false) }
-
-    // Watch for workout completion and navigate back
-    // For Just Lift, navigate back when state becomes Idle (after auto-reset)
-    // Key only on workoutState to avoid re-triggering on workoutParameters changes
-    LaunchedEffect(workoutState) {
-        // Guard against double navigation
-        if (hasNavigatedAway) return@LaunchedEffect
-
-        when {
-            workoutState is WorkoutState.Completed -> {
-                delay(2000)
-                hasNavigatedAway = true
-                navController.navigateUp()
-            }
-            workoutState is WorkoutState.Idle && workoutParameters.isJustLift -> {
-                // Just Lift completed and reset to Idle - navigate back to Just Lift screen
-                hasNavigatedAway = true
-                navController.navigateUp()
-            }
-            workoutState is WorkoutState.Error -> {
-                // Show error for 3 seconds then navigate back
-                delay(3000)
-                hasNavigatedAway = true
-                navController.navigateUp()
-            }
-        }
-    }
 
     WorkoutTab(
         connectionState = connectionState,
@@ -159,76 +87,61 @@ fun ActiveWorkoutScreen(
         autoplayEnabled = userPreferences.autoplayEnabled,
         isBodyweightExercise = isBodyweightExercise,
         bodyweightTimerState = bodyweightTimerState,
-        kgToDisplay = viewModel::kgToDisplay,
-        displayToKg = viewModel::displayToKg,
-        formatWeight = viewModel::formatWeight,
-        onScan = { viewModel.startScanning() },
-        onDisconnect = { viewModel.disconnect() },
-        onStartWorkout = {
-            viewModel.ensureConnection(
-                onConnected = { viewModel.startWorkout() },
-                onFailed = { /* Error shown via StateFlow */ }
-            )
-        },
-        onStopWorkout = { showExitConfirmation = true },
-        onSkipRest = { viewModel.skipRest() },
-        onProceedFromSummary = { viewModel.proceedFromSummary() },
-        onResetForNewWorkout = { viewModel.resetForNewWorkout() },
-        onStartNextExercise = { viewModel.advanceToNextExercise() },
-        onUpdateParameters = { viewModel.updateWorkoutParameters(it) },
-        onShowWorkoutSetupDialog = { /* Not used in ActiveWorkoutScreen */ },
-        onHideWorkoutSetupDialog = { /* Not used in ActiveWorkoutScreen */ },
+        kgToDisplay = kgToDisplay,
+        displayToKg = displayToKg,
+        formatWeight = formatWeight,
+        onScan = onScan,
+        onDisconnect = onDisconnect,
+        onStartWorkout = onStartWorkout,
+        onStopWorkout = onBackAttempt,
+        onSkipRest = onSkipRest,
+        onProceedFromSummary = onProceedFromSummary,
+        onResetForNewWorkout = onResetForNewWorkout,
+        onStartNextExercise = onStartNextExercise,
+        onUpdateParameters = onUpdateParameters,
+        onShowWorkoutSetupDialog = { },
+        onHideWorkoutSetupDialog = { },
         showConnectionCard = false,
         showWorkoutSetupCard = false
     )
 
-    // Exit confirmation dialog
     if (showExitConfirmation) {
         AlertDialog(
-            onDismissRequest = { showExitConfirmation = false },
+            onDismissRequest = onDismissExitConfirmation,
             title = { Text("Exit Workout?") },
             text = { Text("The workout is currently active. Are you sure you want to exit?") },
             containerColor = MaterialTheme.colorScheme.surface,
             shape = MaterialTheme.shapes.medium,
             confirmButton = {
-                Button(
-                    onClick = {
-                        viewModel.stopWorkout()
-                        showExitConfirmation = false
-                        navController.navigateUp()
-                    }
-                ) {
+                Button(onClick = onExitConfirmed) {
                     Text("Exit")
                 }
             },
             dismissButton = {
-                TextButton(onClick = { showExitConfirmation = false }) {
+                TextButton(onClick = onDismissExitConfirmation) {
                     Text("Cancel")
                 }
             }
         )
     }
 
-    // PR Celebration Dialog
     prCelebrationEvent?.let { event ->
-        // Convert PRType list to PRDisplayType
         val prDisplayType = when {
             event.isBothPRs -> com.example.vitruvianredux.presentation.components.PRDisplayType.BOTH
             event.isVolumePR -> com.example.vitruvianredux.presentation.components.PRDisplayType.VOLUME
             else -> com.example.vitruvianredux.presentation.components.PRDisplayType.WEIGHT
         }
 
-        // Calculate volume (weight per cable × reps × 2 cables)
         val totalVolume = event.weightPerCableKg * event.reps * 2
-        val volumeFormatted = "${viewModel.formatWeight(totalVolume, weightUnit)} total"
+        val volumeFormatted = "${formatWeight(totalVolume, weightUnit)} total"
 
         com.example.vitruvianredux.presentation.components.PRCelebrationDialog(
             show = true,
             exerciseName = event.exerciseName,
-            weight = "${viewModel.formatWeight(event.weightPerCableKg, weightUnit)}/cable × ${event.reps} reps",
+            weight = "${formatWeight(event.weightPerCableKg, weightUnit)}/cable x ${event.reps} reps",
             prType = prDisplayType,
             volume = volumeFormatted,
-            onDismiss = { prCelebrationEvent = null }
+            onDismiss = onDismissPrCelebration
         )
     }
 }

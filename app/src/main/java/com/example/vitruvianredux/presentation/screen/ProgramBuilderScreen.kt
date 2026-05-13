@@ -19,16 +19,9 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.zIndex
-import androidx.navigation.NavController
-import com.example.vitruvianredux.data.local.ProgramDayEntity
-import com.example.vitruvianredux.data.local.WeeklyProgramEntity
-import com.example.vitruvianredux.data.local.WeeklyProgramWithDays
-import com.example.vitruvianredux.data.repository.ExerciseRepository
 import com.example.vitruvianredux.domain.model.Routine
-import com.example.vitruvianredux.presentation.chrome.LocalAppChrome
-import com.example.vitruvianredux.presentation.chrome.TopBarAction
-import com.example.vitruvianredux.presentation.viewmodel.MainViewModel
 import com.example.vitruvianredux.ui.theme.Spacing
+import com.example.vitruvianredux.ui.theme.ThemeMode
 import java.time.DayOfWeek
 import java.time.format.TextStyle
 import java.util.*
@@ -40,111 +33,15 @@ import java.util.*
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun ProgramBuilderScreen(
-    navController: NavController,
-    viewModel: MainViewModel,
-    programId: String,
-    exerciseRepository: ExerciseRepository,
-    themeMode: com.example.vitruvianredux.ui.theme.ThemeMode
+    programName: String,
+    onProgramNameChange: (String) -> Unit,
+    routines: List<Routine>,
+    dailyRoutines: Map<DayOfWeek, Routine?>,
+    onDailyRoutinesChange: (Map<DayOfWeek, Routine?>) -> Unit,
+    themeMode: ThemeMode
 ) {
-    val routines by viewModel.routines.collectAsState()
-    val appChrome = LocalAppChrome.current
-    val chromeOwner = remember(programId) { "ProgramBuilderScreen:$programId" }
-
-    var programName by remember { mutableStateOf("New Program") }
     var showRoutinePicker by remember { mutableStateOf(false) }
     var selectedDay by remember { mutableStateOf<DayOfWeek?>(null) }
-
-    // Map of day to selected routine
-    var dailyRoutines by remember {
-        mutableStateOf<Map<DayOfWeek, Routine?>>(
-            DayOfWeek.entries.associateWith { null }
-        )
-    }
-
-    // Load existing program data if editing (programId != "new")
-    val programs by viewModel.weeklyPrograms.collectAsState()
-    LaunchedEffect(programId, programs, routines) {
-        if (programId != "new") {
-            val existingProgram = programs.find { it.program.id == programId }
-            existingProgram?.let { program ->
-                // Set program name
-                programName = program.program.title
-
-                // Convert ProgramDayEntity list back to Map<DayOfWeek, Routine?>
-                val routineMap = mutableMapOf<DayOfWeek, Routine?>()
-
-                // Initialize all days as rest days
-                DayOfWeek.entries.forEach { day ->
-                    routineMap[day] = null
-                }
-
-                // Fill in workout days from program
-                program.days.forEach { programDay ->
-                    // programDay.dayOfWeek is Int (1=MONDAY, 7=SUNDAY)
-                    val dayOfWeek = DayOfWeek.of(programDay.dayOfWeek)
-                    val routine = routines.find { it.id == programDay.routineId }
-                    routineMap[dayOfWeek] = routine
-                }
-
-                dailyRoutines = routineMap
-            }
-        }
-    }
-
-    // Setup Top Bar
-    LaunchedEffect(appChrome, chromeOwner, programId) {
-        appChrome.setDynamicTitle(chromeOwner, if (programId == "new") "New Program" else "Edit Program")
-    }
-
-    // Setup Save Action
-    LaunchedEffect(appChrome, chromeOwner, programName, dailyRoutines) {
-        appChrome.setTopBarActions(
-            chromeOwner,
-            listOf(
-                TopBarAction(
-                    icon = Icons.Default.Done,
-                    description = "Save Program",
-                    onClick = {
-                        // Collect program data and save to database
-                        val programEntity = WeeklyProgramEntity(
-                            id = if (programId == "new") UUID.randomUUID().toString() else programId,
-                            title = programName,
-                            notes = null,
-                            isActive = false,
-                            createdAt = System.currentTimeMillis()
-                        )
-
-                        // Create ProgramDayEntity for each day with an assigned routine
-                        val programDays = dailyRoutines.entries
-                            .filter { (_, routine) -> routine != null }
-                            .map { (day, routine) ->
-                                ProgramDayEntity(
-                                    programId = programEntity.id,
-                                    dayOfWeek = day.value, // DayOfWeek.value: MONDAY=1 to SUNDAY=7
-                                    routineId = routine!!.id
-                                )
-                            }
-
-                        // Save program with days
-                        val programWithDays = WeeklyProgramWithDays(
-                            program = programEntity,
-                            days = programDays
-                        )
-                        viewModel.saveProgram(programWithDays)
-
-                        navController.navigateUp()
-                    }
-                )
-            )
-        )
-    }
-
-    // Clean up actions on dispose
-    DisposableEffect(appChrome, chromeOwner) {
-        onDispose {
-            appChrome.clearChrome(chromeOwner)
-        }
-    }
 
     // No local Scaffold needed - utilizing Global Smart Scaffold
     
@@ -205,7 +102,7 @@ fun ProgramBuilderScreen(
                 // Program Name Input
                 OutlinedTextField(
                     value = programName,
-                    onValueChange = { programName = it },
+                    onValueChange = onProgramNameChange,
                     label = { Text("Program Name") },
                     modifier = Modifier.fillMaxWidth(),
                     shape = RoundedCornerShape(12.dp),
@@ -236,9 +133,9 @@ fun ProgramBuilderScreen(
                         showRoutinePicker = true
                     },
                     onClearRoutine = {
-                        dailyRoutines = dailyRoutines.toMutableMap().apply {
+                        onDailyRoutinesChange(dailyRoutines.toMutableMap().apply {
                             put(day, null)
-                        }
+                        })
                     }
                 )
             }
@@ -349,9 +246,9 @@ fun ProgramBuilderScreen(
                                     modifier = Modifier
                                         .fillMaxWidth()
                                         .clickable {
-                                            dailyRoutines = dailyRoutines.toMutableMap().apply {
+                                            onDailyRoutinesChange(dailyRoutines.toMutableMap().apply {
                                                 put(selectedDay!!, routine)
-                                            }
+                                            })
                                             showRoutinePicker = false
                                         },
                                     colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surfaceContainerHighest), // Material 3 Expressive: Higher contrast

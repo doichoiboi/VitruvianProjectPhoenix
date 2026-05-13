@@ -70,7 +70,7 @@ fun NavGraph(
                 )
             }
         ) {
-            JustLiftScreen(
+            JustLiftRoute(
                 navController = navController,
                 viewModel = viewModel,
                 themeMode = themeMode
@@ -79,7 +79,7 @@ fun NavGraph(
 
         // Single Exercise screen - choose one exercise
         composable(NavigationRoutes.SingleExercise.route) {
-            SingleExerciseScreen(
+            SingleExerciseRoute(
                 navController = navController,
                 viewModel = viewModel,
                 exerciseRepository = exerciseRepository
@@ -124,7 +124,7 @@ fun NavGraph(
                 ) + fadeOut(animationSpec = tween(300))
             }
         ) {
-            ActiveWorkoutScreen(
+            ActiveWorkoutRoute(
                 navController = navController,
                 viewModel = viewModel,
                 exerciseRepository = exerciseRepository
@@ -146,11 +146,10 @@ fun NavGraph(
             arguments = listOf(navArgument("programId") { type = NavType.StringType })
         ) { backStackEntry ->
             val programId = backStackEntry.arguments?.getString("programId") ?: "new"
-            ProgramBuilderScreen(
+            ProgramBuilderRoute(
                 navController = navController,
                 viewModel = viewModel,
                 programId = programId,
-                exerciseRepository = exerciseRepository,
                 themeMode = themeMode
             )
         }

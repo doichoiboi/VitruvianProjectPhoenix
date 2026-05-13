@@ -1,27 +1,14 @@
 package com.example.vitruvianredux.presentation.screen
 
 import androidx.compose.foundation.layout.*
-import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.automirrored.filled.ArrowBack
-import androidx.compose.material.icons.filled.FitnessCenter
-import androidx.compose.material.icons.filled.Search
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
-import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.text.font.FontWeight
-import androidx.compose.ui.text.style.TextAlign
-import androidx.compose.ui.unit.dp
-import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
-import androidx.navigation.NavController
 import com.example.vitruvianredux.data.preferences.SingleExerciseDefaults
 import com.example.vitruvianredux.data.repository.ExerciseRepository
+import com.example.vitruvianredux.data.repository.PersonalRecordRepository
 import com.example.vitruvianredux.domain.model.*
-import com.example.vitruvianredux.presentation.navigation.NavigationRoutes
-import com.example.vitruvianredux.presentation.viewmodel.MainViewModel
-import com.example.vitruvianredux.presentation.viewmodel.MainViewModel.Companion.TEMP_SINGLE_EXERCISE_PREFIX
-import com.example.vitruvianredux.ui.theme.Spacing
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.launch
 import timber.log.Timber
@@ -30,14 +17,18 @@ import java.util.UUID
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun SingleExerciseScreen(
-    navController: NavController,
-    viewModel: MainViewModel = hiltViewModel(),
-    exerciseRepository: ExerciseRepository
+    exerciseRepository: ExerciseRepository,
+    personalRecordRepository: PersonalRecordRepository,
+    weightUnit: WeightUnit,
+    enableVideoPlayback: Boolean,
+    sessionEccentricLoad: EccentricLoad,
+    kgToDisplay: (Float, WeightUnit) -> Float,
+    displayToKg: (Float, WeightUnit) -> Float,
+    formatWeight: (Float, WeightUnit) -> String,
+    getSingleExerciseDefaults: suspend (exerciseId: String, cableConfig: String) -> SingleExerciseDefaults?,
+    onStartWorkout: (RoutineExercise) -> Unit,
+    modifier: Modifier = Modifier
 ) {
-    val weightUnit by viewModel.weightUnit.collectAsState()
-    val enableVideoPlayback by viewModel.enableVideoPlayback.collectAsState()
-    val sessionEccentricLoad by viewModel.sessionEccentricLoad.collectAsState()
-
     var exerciseToConfig by remember { mutableStateOf<RoutineExercise?>(null) }
     var isLoadingDefaults by remember { mutableStateOf(false) }
     val coroutineScope = rememberCoroutineScope()
@@ -92,7 +83,7 @@ fun SingleExerciseScreen(
     Scaffold(
         // No local topBar needed
     ) { padding ->
-        Box(modifier = Modifier.padding(padding)) {
+        Box(modifier = modifier.padding(padding)) {
             // Always show the picker content as the background
             com.example.vitruvianredux.presentation.components.ExercisePickerContent(
                 exercises = exercises,
@@ -132,7 +123,7 @@ fun SingleExerciseScreen(
                     loadingJob = coroutineScope.launch {
                         try {
                             val savedDefaults = selectedExercise.id?.let { exerciseId ->
-                                viewModel.getSingleExerciseDefaults(exerciseId, defaultCableConfig.name)
+                                getSingleExerciseDefaults(exerciseId, defaultCableConfig.name)
                             }
 
                             val newRoutineExercise = if (savedDefaults != null) {
@@ -197,41 +188,23 @@ fun SingleExerciseScreen(
             if (!isLoadingDefaults) {
                 exerciseToConfig?.let {
                     ExerciseEditBottomSheet(
-                    exercise = it,
-                    weightUnit = weightUnit,
-                    enableVideoPlayback = enableVideoPlayback,
-                    kgToDisplay = viewModel::kgToDisplay,
-                    displayToKg = viewModel::displayToKg,
-                    exerciseRepository = exerciseRepository,
-                    personalRecordRepository = viewModel.personalRecordRepository,
-                    formatWeight = viewModel::formatWeight,
-                    buttonText = "Start Workout",
-                    onSave = { configuredExercise ->
-                        val tempRoutine = Routine(
-                            id = "${TEMP_SINGLE_EXERCISE_PREFIX}${UUID.randomUUID()}",
-                            name = "Single Exercise: ${configuredExercise.exercise.name}",
-                            description = "Temporary routine for single exercise mode",
-                            exercises = listOf(configuredExercise)
-                        )
-
-                        viewModel.loadRoutine(tempRoutine)
-
-                        viewModel.ensureConnection(
-                            onConnected = {
-                                viewModel.startWorkout()
-                                navController.navigate(NavigationRoutes.ActiveWorkout.route) {
-                                    popUpTo(NavigationRoutes.Home.route)
-                                }
-                            },
-                            onFailed = { }
-                        )
-
-                        exerciseToConfig = null
-                    },
-                    onDismiss = {
-                        exerciseToConfig = null
-                    }
-                )
+                        exercise = it,
+                        weightUnit = weightUnit,
+                        enableVideoPlayback = enableVideoPlayback,
+                        kgToDisplay = kgToDisplay,
+                        displayToKg = displayToKg,
+                        exerciseRepository = exerciseRepository,
+                        personalRecordRepository = personalRecordRepository,
+                        formatWeight = formatWeight,
+                        buttonText = "Start Workout",
+                        onSave = { configuredExercise ->
+                            onStartWorkout(configuredExercise)
+                            exerciseToConfig = null
+                        },
+                        onDismiss = {
+                            exerciseToConfig = null
+                        }
+                    )
                 }
             }
         }
