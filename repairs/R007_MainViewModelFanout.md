@@ -501,3 +501,23 @@ Start the critical rest/progression cleanup before building `F-001`:
 Validation: `:app:testProductionDebugUnitTest --tests
 com.example.vitruvianredux.presentation.workout.RestTimerDisplayPolicyTest`
 passes.
+
+## Workout Progression Parameter Policy
+
+Continue the critical rest/progression cleanup before building `F-001`:
+
+- `WorkoutProgressionParameterPolicy` now owns the pure parameter mapping for
+  same-exercise next sets and first sets of the next exercise.
+- `MainViewModel` still owns index mutation, timer cancellation, routine
+  completion, and `startWorkout(skipCountdown = true)` calls.
+- The extraction preserves user-modified rest parameters, per-set weights,
+  null-rep AMRAP handling, next-exercise workout mode/progression, and selected
+  exercise updates.
+- Focused JVM tests cover normal next-set progression, user-modified rest
+  parameters, AMRAP next sets, next-exercise first-set parameters, and default
+  weight fallback for AMRAP first sets.
+
+Validation: `:app:testProductionDebugUnitTest --tests
+com.example.vitruvianredux.presentation.workout.WorkoutProgressionParameterPolicyTest
+--tests com.example.vitruvianredux.presentation.viewmodel.MainViewModelWorkoutFlowTest`
+passes.

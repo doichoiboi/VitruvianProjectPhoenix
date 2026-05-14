@@ -17,6 +17,7 @@ import com.example.vitruvianredux.domain.workout.WorkoutEngineAction
 import com.example.vitruvianredux.domain.weight.WeightFormatter
 import com.example.vitruvianredux.presentation.workout.JustLiftRestElapsedStatePolicy
 import com.example.vitruvianredux.presentation.workout.RestTimerDisplayPolicy
+import com.example.vitruvianredux.presentation.workout.WorkoutProgressionParameterPolicy
 import com.example.vitruvianredux.service.WorkoutForegroundService
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.Job
@@ -1807,8 +1808,6 @@ class MainViewModel @Inject constructor(
                     val currentExerciseSets = routine?.exercises?.getOrNull(_currentExerciseIndex.value)
                     if (currentExerciseSets != null && _currentSetIndex.value < currentExerciseSets.setReps.size - 1) {
                         _currentSetIndex.value++
-                        // CRITICAL: Update workout parameters for the new set (Issue #147 fix)
-                        val targetReps = currentExerciseSets.setReps[_currentSetIndex.value]
 
                         // Check if user modified parameters during rest
                         val userModified = _parametersModifiedDuringRest.value
@@ -1816,24 +1815,14 @@ class MainViewModel @Inject constructor(
                             Timber.d("Autoplay: User modified parameters during rest - preserving their changes")
                         }
 
-                        val setWeight = if (userModified) {
-                            workoutParameters.value.weightPerCableKg
-                        } else {
-                            currentExerciseSets.setWeightsPerCableKg.getOrNull(_currentSetIndex.value)
-                                ?: currentExerciseSets.weightPerCableKg
-                        }
-                        val finalReps = if (userModified) {
-                            workoutParameters.value.reps
-                        } else {
-                            targetReps ?: 0
-                        }
-
-                        Timber.d("Autoplay: Advancing to set ${_currentSetIndex.value + 1}, targetReps=$finalReps, isAMRAP=${!userModified && targetReps == null}")
-                        _workoutParameters.value = workoutParameters.value.copy(
-                            reps = finalReps,
-                            weightPerCableKg = setWeight,
-                            isAMRAP = if (userModified) workoutParameters.value.isAMRAP else (targetReps == null)
+                        val nextParameters = WorkoutProgressionParameterPolicy.buildNextSetParameters(
+                            current = workoutParameters.value,
+                            exercise = currentExerciseSets,
+                            nextSetIndex = _currentSetIndex.value,
+                            userModifiedDuringRest = userModified
                         )
+                        Timber.d("Autoplay: Advancing to set ${_currentSetIndex.value + 1}, targetReps=${nextParameters.reps}, isAMRAP=${nextParameters.isAMRAP}")
+                        _workoutParameters.value = nextParameters
                         // Reset the flag after applying user changes
                         _parametersModifiedDuringRest.value = false
                         startWorkout(skipCountdown = true)
@@ -1893,7 +1882,6 @@ class MainViewModel @Inject constructor(
             // More sets in current exercise
             Timber.d("  ? Moving to next set")
             _currentSetIndex.value++
-            val targetReps = currentExercise.setReps[_currentSetIndex.value]
 
             // Check if user modified parameters during rest - if so, use their values
             val userModified = _parametersModifiedDuringRest.value
@@ -1903,33 +1891,20 @@ class MainViewModel @Inject constructor(
                 Timber.d("  Using user reps: ${workoutParameters.value.reps}")
             }
 
-            // Get per-set weight, falling back to exercise default (Issue #147)
-            val setWeight = if (userModified) {
-                workoutParameters.value.weightPerCableKg
-            } else {
-                currentExercise.setWeightsPerCableKg.getOrNull(_currentSetIndex.value)
-                    ?: currentExercise.weightPerCableKg
-            }
-            val finalReps = if (userModified) {
-                workoutParameters.value.reps
-            } else {
-                targetReps ?: 0
-            }
+            val nextParameters = WorkoutProgressionParameterPolicy.buildNextSetParameters(
+                current = workoutParameters.value,
+                exercise = currentExercise,
+                nextSetIndex = _currentSetIndex.value,
+                userModifiedDuringRest = userModified
+            )
 
             Timber.d("  New set index: ${_currentSetIndex.value}")
-            Timber.d("  Target reps: $finalReps")
-            Timber.d("  Set weight: $setWeight kg")
-            _workoutParameters.value = workoutParameters.value.copy(
-                reps = finalReps,
-                weightPerCableKg = setWeight,
-                progressionRegressionKg = workoutParameters.value.progressionRegressionKg,
-                workoutType = workoutParameters.value.workoutType,
-                selectedExerciseId = workoutParameters.value.selectedExerciseId,
-                isAMRAP = if (userModified) workoutParameters.value.isAMRAP else (targetReps == null)
-            )
+            Timber.d("  Target reps: ${nextParameters.reps}")
+            Timber.d("  Set weight: ${nextParameters.weightPerCableKg} kg")
+            _workoutParameters.value = nextParameters
             // Reset the flag after applying user changes
             _parametersModifiedDuringRest.value = false
-            Timber.d("  AFTER UPDATE - isAMRAP set to: ${_workoutParameters.value.isAMRAP} (targetReps was: $targetReps)")
+            Timber.d("  AFTER UPDATE - isAMRAP set to: ${_workoutParameters.value.isAMRAP}")
             Timber.d("  AFTER UPDATE - reps set to: ${_workoutParameters.value.reps}")
             Timber.d("???????????????????????????????????????????????????")
             startWorkout(skipCountdown = true)
@@ -1944,21 +1919,14 @@ class MainViewModel @Inject constructor(
                 _parametersModifiedDuringRest.value = false
                 // Update workout parameters for new exercise
                 val nextExercise = routine.exercises[_currentExerciseIndex.value]
-                val nextSetReps = nextExercise.setReps.getOrNull(0)
-                // Get per-set weight for first set, falling back to exercise default (Issue #147)
-                val nextSetWeight = nextExercise.setWeightsPerCableKg.getOrNull(0)
-                    ?: nextExercise.weightPerCableKg
+                val nextParameters = WorkoutProgressionParameterPolicy.buildFirstSetParameters(
+                    current = workoutParameters.value,
+                    exercise = nextExercise
+                )
                 Timber.d("  New exercise index: ${_currentExerciseIndex.value}")
                 Timber.d("  Next exercise: ${nextExercise.exercise.displayName}")
-                Timber.d("  First set weight: $nextSetWeight kg")
-                _workoutParameters.value = workoutParameters.value.copy(
-                    weightPerCableKg = nextSetWeight, // Use per-set weight (Issue #147)
-                    reps = nextSetReps ?: 0, // AMRAP sets have null reps
-                    workoutType = nextExercise.workoutType,
-                    progressionRegressionKg = nextExercise.progressionKg,
-                    selectedExerciseId = nextExercise.exercise.id,
-                    isAMRAP = nextSetReps == null // First SET is AMRAP if its reps is null
-                )
+                Timber.d("  First set weight: ${nextParameters.weightPerCableKg} kg")
+                _workoutParameters.value = nextParameters
                 Timber.d("???????????????????????????????????????????????????")
                 startWorkout(skipCountdown = true)
             } else {
@@ -2003,7 +1971,6 @@ class MainViewModel @Inject constructor(
                 val currentExercise = routine?.exercises?.getOrNull(_currentExerciseIndex.value)
                 if (currentExercise != null && _currentSetIndex.value < currentExercise.setReps.size - 1) {
                     _currentSetIndex.value++
-                    val targetReps = currentExercise.setReps[_currentSetIndex.value]
 
                     // Check if user modified parameters during rest
                     val userModified = _parametersModifiedDuringRest.value
@@ -2011,24 +1978,14 @@ class MainViewModel @Inject constructor(
                         Timber.d("skipRest: User modified parameters during rest - preserving their changes")
                     }
 
-                    val setWeight = if (userModified) {
-                        workoutParameters.value.weightPerCableKg
-                    } else {
-                        currentExercise.setWeightsPerCableKg.getOrNull(_currentSetIndex.value)
-                            ?: currentExercise.weightPerCableKg
-                    }
-                    val finalReps = if (userModified) {
-                        workoutParameters.value.reps
-                    } else {
-                        targetReps ?: 0
-                    }
-
-                    Timber.d("skipRest: Advancing to set ${_currentSetIndex.value + 1}, targetReps=$finalReps, isAMRAP=${!userModified && targetReps == null}")
-                    _workoutParameters.value = workoutParameters.value.copy(
-                        reps = finalReps,
-                        weightPerCableKg = setWeight,
-                        isAMRAP = if (userModified) workoutParameters.value.isAMRAP else (targetReps == null)
+                    val nextParameters = WorkoutProgressionParameterPolicy.buildNextSetParameters(
+                        current = workoutParameters.value,
+                        exercise = currentExercise,
+                        nextSetIndex = _currentSetIndex.value,
+                        userModifiedDuringRest = userModified
                     )
+                    Timber.d("skipRest: Advancing to set ${_currentSetIndex.value + 1}, targetReps=${nextParameters.reps}, isAMRAP=${nextParameters.isAMRAP}")
+                    _workoutParameters.value = nextParameters
                     // Reset the flag after applying user changes
                     _parametersModifiedDuringRest.value = false
                     startWorkout(skipCountdown = true)
@@ -2058,17 +2015,9 @@ class MainViewModel @Inject constructor(
 
             // Update workout parameters for new exercise
             val nextExercise = routine.exercises[_currentExerciseIndex.value]
-            val nextSetReps = nextExercise.setReps.getOrNull(0)
-            // Get per-set weight for first set, falling back to exercise default (Issue #147)
-            val nextSetWeight = nextExercise.setWeightsPerCableKg.getOrNull(0)
-                ?: nextExercise.weightPerCableKg
-            _workoutParameters.value = workoutParameters.value.copy(
-                weightPerCableKg = nextSetWeight, // Use per-set weight (Issue #147)
-                reps = nextSetReps ?: 0, // AMRAP sets have null reps
-                workoutType = nextExercise.workoutType,
-                progressionRegressionKg = nextExercise.progressionKg,
-                selectedExerciseId = nextExercise.exercise.id,
-                isAMRAP = nextSetReps == null // First SET is AMRAP if its reps is null
+            _workoutParameters.value = WorkoutProgressionParameterPolicy.buildFirstSetParameters(
+                current = workoutParameters.value,
+                exercise = nextExercise
             )
 
             // Start the next exercise

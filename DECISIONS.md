@@ -437,3 +437,25 @@ parameter mapping fix.
 
 - Next cleanup should separate next-set parameter progression from
   `MainViewModel` before adding richer rest-screen context.
+
+---
+
+## Session 021 - 2026-05-14 - Workout Progression Parameter Policy
+
+### Decisions Made
+
+**Move next-set parameter mapping out of `MainViewModel`**
+- Added `WorkoutProgressionParameterPolicy` as the pure owner for selecting the
+  next `WorkoutParameters` when moving to another set or exercise.
+- `MainViewModel` keeps the stateful workflow responsibilities: set/exercise
+  index mutation, rest timer cancellation, routine completion, and workout
+  restart.
+- The policy preserves the current safety behavior around user-edited rest
+  parameters, per-set weights, null-rep AMRAP sets, workout mode/progression,
+  and selected exercise IDs.
+
+### Open Threads
+
+- `F-001` can now build rest countdown context from the tested display and
+  progression policies instead of adding more parameter math to
+  `MainViewModel`.
