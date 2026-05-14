@@ -16,6 +16,30 @@ For each pass, add a short note with:
 
 ## Pending Smoke List
 
+### Connection Safety After R-010
+
+Run these with no load selected beyond what is needed for connection and with
+handles at rest. Do not test active loaded failure/cancel cases until there is a
+separate safety plan for that exact scenario.
+
+- [ ] Normal connect from disconnected state:
+      tap connect, let the app scan/connect, and confirm the overlay disappears
+      only after the app shows connected.
+- [ ] Cancel while connecting:
+      tap connect, cancel while the connecting overlay is visible, and confirm
+      the overlay disappears, the app remains disconnected, no workout starts,
+      and the machine applies no load.
+- [ ] Failed connect / unavailable machine:
+      turn the machine off or move it out of range, tap connect, and confirm
+      scan/connect fails cleanly with no stuck connecting overlay.
+- [ ] Workout start while disconnected:
+      start a workout while disconnected and confirm the app gates on
+      connection first; the workout must not begin until the app is actually
+      connected.
+- [ ] Idle disconnect:
+      connect normally, tap disconnect from the top bar, and confirm the app
+      returns to disconnected/idle without a hanging overlay.
+
 ### BLE Connect And Basic Workout
 
 - [ ] Launch the app fresh.
@@ -102,3 +126,7 @@ For each pass, add a short note with:
 - 2026-05-14: Daniel retested the AMRAP multi-set flow after the empty-start
   and completion-reset guards and reported it is good. B-005 moved out of open
   bugs.
+- 2026-05-14: Added the R-010 connection safety smoke list after
+  `ensureConnection` was hardened and covered in JVM tests. These cases still
+  need real hardware confirmation because JVM tests prove ViewModel control
+  flow, not physical machine behavior.
