@@ -37,6 +37,7 @@
 | ID | Title | Owner | Note |
 |---|---|---|---|
 | - | Hardware test checklist | Spanner + Sightline | `HARDWARE_SMOKE_TESTS.md`; running real-machine checklist for BLE, route exit, Stop At Top, Just Lift, and AMRAP smoke passes. |
+| F-001 | Rest countdown context | Sightline -> Spanner | `features/F001_RestCountdownContext.md`; show previous-set reps and upcoming exercise/setup preview during rest so the lifter can prepare equipment before the timer ends. |
 | - | Contributor setup pass | Ledger + Spanner | Make sure build requirements, JDK/Android Studio expectations, and hardware requirements match reality. |
 | - | Permission onboarding review | Sightline + Tag | Check Bluetooth/location/notification prompts and rationale copy. |
 | - | Attribution surface | Tag + Ledger | Decide where original-project credit belongs: README, About screen, release notes, and license/notice files. |

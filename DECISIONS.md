@@ -380,3 +380,21 @@ parameter mapping fix.
 
 - Retest the completed AMRAP route button on hardware to confirm one tap exits
   cleanly.
+
+---
+
+## Session 018 - 2026-05-14 - Rest Countdown Context Request
+
+### Decisions Made
+
+**Capture rest-screen context as a later feature**
+- Daniel wants the rest countdown to show previous-set reps while resting.
+- Daniel also wants a preview of the upcoming exercise/setup during rest so
+  equipment can be prepared before the next set starts.
+- Logged as `F-001` in `features/F001_RestCountdownContext.md` and linked from
+  the board backlog.
+
+### Open Threads
+
+- Implementation should likely introduce a small rest-context state shape
+  rather than adding more ad hoc strings directly to `RestTimerCard`.
