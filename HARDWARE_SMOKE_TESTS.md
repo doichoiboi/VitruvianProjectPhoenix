@@ -99,3 +99,6 @@ For each pass, add a short note with:
 - 2026-05-13: Daniel confirmed the empty-start guard seemed to work, then found
   the completed route could reset into a blank/dim active-workout surface after
   tapping a completion button. Active-workout reset now exits the route.
+- 2026-05-14: Daniel retested the AMRAP multi-set flow after the empty-start
+  and completion-reset guards and reported it is good. B-005 moved out of open
+  bugs.

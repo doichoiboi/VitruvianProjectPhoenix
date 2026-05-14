@@ -28,7 +28,6 @@
 
 | ID | Title | Owner | Note |
 |---|---|---|---|
-| B-005 | AMRAP next-set resistance did not load | Spanner -> Sightline | Daniel hit this during hardware smoke on a last AMRAP set: UI showed warmup `0/3`, resistance did not seem to load, and the app moved to Continue. App-side false completion is now guarded; root no-load cause needs focused retest/log inspection. |
 
 ---
 
@@ -51,6 +50,7 @@
 | R-006 | Forge the Clean Workout Base | Spanner -> Sightline | `repairs/R006_CleanWorkoutBase.md`; workout engine/parser boundary established |
 | R-008 | Split DI Composition Boundaries | Spanner -> Ledger | `repairs/R008_DiModuleCleanup.md`; `AppModule` removed, database migrations moved to data-local, focused Hilt modules established |
 | B-004 | Data import transaction protection | Root -> Sightline | Backup import now runs in a Room transaction and can restore missing child rows for existing parent records during retry. |
+| B-005 | AMRAP next-set hardware retest | Spanner -> Sightline | Daniel retested the two-set AMRAP flow after the empty-start and completion-reset guards and reported it is good. |
 | B-003 | AMRAP manual-save coverage | Sightline -> Spanner | `MainViewModelWorkoutFlowTest` now proves manual AMRAP stop saves actual working reps instead of the zero target placeholder and shows the set summary with the measured rep count. |
 | B-002 | `stopAtTop` modern rep counting | Spanner -> Sightline | `RepCounterFromMachineTest` now proves modern packets stop at the final top movement when `stopAtTop=true`, count the target rep, and suppress duplicate completion when bottom confirmation later arrives. |
 | B-001 | Version drift between README and Gradle | Ledger -> Spanner | Public/review lane is beta `0.6.2-beta`; production `1.1.0` metadata is documented as unreleased until Daniel chooses a production promotion. |

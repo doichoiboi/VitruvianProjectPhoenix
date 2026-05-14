@@ -358,8 +358,8 @@ parameter mapping fix.
 
 ### Open Threads
 
-- The app-side false completion is guarded, but the hardware start/no-load
-  cause still needs focused retest and possibly BLE command/log inspection.
+- Closed by Daniel's 2026-05-14 hardware retest: the AMRAP multi-set flow is
+  good after the empty-start guard.
 
 ---
 
@@ -378,8 +378,8 @@ parameter mapping fix.
 
 ### Open Threads
 
-- Retest the completed AMRAP route button on hardware to confirm one tap exits
-  cleanly.
+- Closed by Daniel's 2026-05-14 hardware retest: the completion-reset route
+  behavior is good.
 
 ---
 
