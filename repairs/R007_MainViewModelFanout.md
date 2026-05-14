@@ -465,3 +465,21 @@ Close B-006 from Daniel's AMRAP hardware smoke:
 Validation: `:app:testProductionDebugUnitTest --tests
 com.example.vitruvianredux.presentation.workout.ActiveWorkoutRoutePolicyTest`
 passes.
+
+## Active Workout Display Policy
+
+Pin route/display state before the next refactor cleanup:
+
+- `ActiveWorkoutDisplayPolicy` now owns the small mapping from
+  `WorkoutState` to the primary active-workout content and overlay content.
+- `WorkoutTab` delegates setup, active, completed, error, countdown,
+  set-summary, and resting display decisions to that policy.
+- Focused JVM tests cover SetSummary overlay visibility, Resting overlay
+  visibility, Completed visibility when setup is hidden, Idle-with-hidden-setup
+  as intentionally blank, and Just Lift countdown suppression.
+- This does not replace a full Compose route harness, but it pins the state
+  decision layer that caused the recent blank/dim active-workout route bug.
+
+Validation: `:app:testProductionDebugUnitTest --tests
+com.example.vitruvianredux.presentation.workout.ActiveWorkoutDisplayPolicyTest`
+passes.

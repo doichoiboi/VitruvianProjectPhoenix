@@ -398,3 +398,23 @@ parameter mapping fix.
 
 - Implementation should likely introduce a small rest-context state shape
   rather than adding more ad hoc strings directly to `RestTimerCard`.
+
+---
+
+## Session 019 - 2026-05-14 - Active Workout Display Policy
+
+### Decisions Made
+
+**Pin active workout display states before more refactor work**
+- Added `ActiveWorkoutDisplayPolicy` as the tested owner for active-workout
+  primary content and overlay content decisions.
+- `WorkoutTab` now uses the policy for setup, active, completed, error,
+  countdown, set-summary, and resting display branches.
+- JVM coverage now proves SetSummary, Resting, and Completed all produce
+  visible active-workout route content while Idle with setup hidden remains
+  intentionally empty and must be exited by route policy.
+
+### Open Threads
+
+- A full Compose route harness is still deferred; the current slice covers the
+  route/display decision layer that caused the recent blank-route bug.

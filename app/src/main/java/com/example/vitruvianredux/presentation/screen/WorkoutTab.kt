@@ -35,6 +35,9 @@ import com.example.vitruvianredux.domain.model.*
 import com.example.vitruvianredux.presentation.components.ExercisePickerDialog
 import com.example.vitruvianredux.presentation.components.ExpressiveSlider
 import com.example.vitruvianredux.presentation.components.ProgressionSlider
+import com.example.vitruvianredux.presentation.workout.ActiveWorkoutDisplayPolicy
+import com.example.vitruvianredux.presentation.workout.ActiveWorkoutOverlayContent
+import com.example.vitruvianredux.presentation.workout.ActiveWorkoutPrimaryContent
 import com.example.vitruvianredux.presentation.viewmodel.AutoStopUiState
 import com.example.vitruvianredux.ui.theme.*
 import kotlin.math.abs
@@ -168,9 +171,8 @@ fun WorkoutTab(
 
         if (connectionState is ConnectionState.Connected) {
             // Show setup button when in Idle state, otherwise show workout controls
-            when (workoutState) {
-                is WorkoutState.Idle -> {
-                    if (showWorkoutSetupCard) {
+            when (ActiveWorkoutDisplayPolicy.primaryContent(workoutState, showWorkoutSetupCard)) {
+                ActiveWorkoutPrimaryContent.Setup -> {
                         Card(
                             modifier = Modifier.fillMaxWidth(),
                             colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surfaceContainerHighest), // Material 3 Expressive: Higher contrast
@@ -211,9 +213,9 @@ fun WorkoutTab(
                                 }
                             }
                         }
-                    }
                 }
-                is WorkoutState.Error -> {
+                ActiveWorkoutPrimaryContent.Error -> {
+                    val errorState = workoutState as WorkoutState.Error
                     Card(
                         modifier = Modifier.fillMaxWidth(),
                         colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.errorContainer),
@@ -242,7 +244,7 @@ fun WorkoutTab(
                             )
                             Spacer(modifier = Modifier.height(Spacing.small))
                             Text(
-                                workoutState.message,
+                                errorState.message,
                                 style = MaterialTheme.typography.bodyMedium,
                                 color = MaterialTheme.colorScheme.onErrorContainer,
                                 textAlign = TextAlign.Center
@@ -257,7 +259,7 @@ fun WorkoutTab(
                         }
                     }
                 }
-                is WorkoutState.Completed -> {
+                ActiveWorkoutPrimaryContent.Completed -> {
                     Card(
                         modifier = Modifier.fillMaxWidth(),
                         colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surfaceContainerHighest), // Material 3 Expressive: Higher contrast
@@ -374,7 +376,7 @@ fun WorkoutTab(
                         }
                     }
                 }
-                is WorkoutState.Active -> {
+                ActiveWorkoutPrimaryContent.Active -> {
                     Card(
                         modifier = Modifier.fillMaxWidth(),
                         colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.primaryContainer), // Material 3 Expressive: Use primary container for active state
@@ -412,7 +414,7 @@ fun WorkoutTab(
                         }
                     }
                 }
-                else -> {}
+                ActiveWorkoutPrimaryContent.None -> {}
             }
 
             // Display state-specific cards (only non-overlay cards)
@@ -456,18 +458,18 @@ fun WorkoutTab(
 
         // OVERLAYS - These float on top of all content, always visible without scrolling
         // Don't show countdown overlay for Just Lift mode
-        when (workoutState) {
-            is WorkoutState.Countdown -> {
-                if (!workoutParameters.isJustLift) {
-                    CountdownCard(secondsRemaining = workoutState.secondsRemaining)
-                }
+        when (ActiveWorkoutDisplayPolicy.overlayContent(workoutState, workoutParameters.isJustLift)) {
+            ActiveWorkoutOverlayContent.Countdown -> {
+                val countdownState = workoutState as WorkoutState.Countdown
+                CountdownCard(secondsRemaining = countdownState.secondsRemaining)
             }
-            is WorkoutState.SetSummary -> {
+            ActiveWorkoutOverlayContent.SetSummary -> {
+                val summaryState = workoutState as WorkoutState.SetSummary
                 com.example.vitruvianredux.presentation.components.SetSummaryCard(
-                    metrics = workoutState.metrics,
-                    peakPower = workoutState.peakPower,
-                    averagePower = workoutState.averagePower,
-                    repCount = workoutState.repCount,
+                    metrics = summaryState.metrics,
+                    peakPower = summaryState.peakPower,
+                    averagePower = summaryState.averagePower,
+                    repCount = summaryState.repCount,
                     weightUnit = weightUnit,
                     formatWeight = formatWeight,
                     onContinue = onProceedFromSummary,
@@ -475,13 +477,14 @@ fun WorkoutTab(
                     configuredPerCableKg = workoutParameters.weightPerCableKg
                 )
             }
-            is WorkoutState.Resting -> {
+            ActiveWorkoutOverlayContent.Resting -> {
+                val restingState = workoutState as WorkoutState.Resting
                 RestTimerCard(
-                    restSecondsRemaining = workoutState.restSecondsRemaining,
-                    nextExerciseName = workoutState.nextExerciseName,
-                    isLastExercise = workoutState.isLastExercise,
-                    currentSet = workoutState.currentSet,
-                    totalSets = workoutState.totalSets,
+                    restSecondsRemaining = restingState.restSecondsRemaining,
+                    nextExerciseName = restingState.nextExerciseName,
+                    isLastExercise = restingState.isLastExercise,
+                    currentSet = restingState.currentSet,
+                    totalSets = restingState.totalSets,
                     nextExerciseWeight = workoutParameters.weightPerCableKg,
                     nextExerciseReps = workoutParameters.reps,
                     nextExerciseMode = workoutParameters.workoutType.displayName,
@@ -497,7 +500,7 @@ fun WorkoutTab(
                     onEndWorkout = onStopWorkout
                 )
             }
-            else -> {}
+            ActiveWorkoutOverlayContent.None -> {}
         }
         }
     }
