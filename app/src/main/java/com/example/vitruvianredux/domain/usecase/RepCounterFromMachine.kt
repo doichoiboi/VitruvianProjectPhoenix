@@ -265,7 +265,7 @@ class RepCounterFromMachine {
                     )
 
                     // Check if target reached (unless AMRAP or Just Lift)
-                    if (!isJustLift && !isAMRAP && workingTarget > 0 && workingReps >= workingTarget) {
+                    if (!shouldStop && canAutoStopAtTarget() && workingReps >= workingTarget) {
                         Timber.d("⚠️ LEGACY: shouldStop set to TRUE (target reached)")
                         shouldStop = true
                         onRepEvent?.invoke(
@@ -303,8 +303,10 @@ class RepCounterFromMachine {
             if (upDelta > 0) {
                 recordTopPosition(posA, posB)
 
-                // Only show pending for WORKING reps (after warmup complete)
-                if (warmupReps >= warmupTarget && !hasPendingRep) {
+                if (shouldStopAtTopOnFinalRep()) {
+                    completeWorkoutAtTop()
+                } else if (warmupReps >= warmupTarget && !hasPendingRep) {
+                    // Only show pending for WORKING reps (after warmup complete)
                     hasPendingRep = true
                     pendingRepProgress = 0f
                     Timber.d("📈 TOP - WORKING_PENDING: showing grey rep ${workingReps + 1}")
@@ -393,7 +395,7 @@ class RepCounterFromMachine {
             )
 
             // Check if target reached (unless AMRAP or Just Lift)
-            if (!isJustLift && !isAMRAP && workingTarget > 0 && workingReps >= workingTarget) {
+            if (!shouldStop && canAutoStopAtTarget() && workingReps >= workingTarget) {
                 Timber.d("⚠️ shouldStop set to TRUE (target reached)")
                 Timber.d("  workingTarget=$workingTarget, workingReps=$workingReps")
                 shouldStop = true
@@ -406,6 +408,44 @@ class RepCounterFromMachine {
                 )
             }
         }
+    }
+
+    private fun canAutoStopAtTarget(): Boolean =
+        !isJustLift && !isAMRAP && workingTarget > 0
+
+    private fun shouldStopAtTopOnFinalRep(): Boolean =
+        stopAtTop &&
+            !shouldStop &&
+            canAutoStopAtTarget() &&
+            warmupReps >= warmupTarget &&
+            workingReps >= workingTarget - 1
+
+    private fun completeWorkoutAtTop() {
+        if (workingReps < workingTarget) {
+            workingReps = workingTarget
+        }
+        hasPendingRep = false
+        pendingRepProgress = 0f
+
+        Timber.d("STOP_AT_TOP: final rep completed at top")
+        Timber.d("  workingTarget=$workingTarget, workingReps=$workingReps")
+
+        onRepEvent?.invoke(
+            RepEvent(
+                type = RepType.WORKING_COMPLETED,
+                warmupCount = warmupReps,
+                workingCount = workingReps
+            )
+        )
+
+        shouldStop = true
+        onRepEvent?.invoke(
+            RepEvent(
+                type = RepType.WORKOUT_COMPLETE,
+                warmupCount = warmupReps,
+                workingCount = workingReps
+            )
+        )
     }
 
     private fun calculateDelta(last: Int, current: Int): Int {

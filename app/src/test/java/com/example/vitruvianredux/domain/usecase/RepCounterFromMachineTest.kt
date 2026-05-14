@@ -91,6 +91,39 @@ class RepCounterFromMachineTest {
     }
 
     @Test
+    fun `modern mode - stop at top completes final rep before machine bottom confirmation`() {
+        repCounter.configure(warmupTarget = 0, workingTarget = 5, isJustLift = false, stopAtTop = true)
+        repCounter.process(repsRomCount = 0, repsSetCount = 0, up = 0, down = 0)
+
+        for (rep in 1..4) {
+            repCounter.process(repsRomCount = 0, repsSetCount = rep - 1, up = rep, down = rep - 1)
+            repCounter.process(repsRomCount = 0, repsSetCount = rep, up = rep, down = rep)
+        }
+
+        assertEquals(4, repCounter.getRepCount().workingReps)
+        assertFalse(repCounter.shouldStopWorkout())
+
+        repCounter.process(repsRomCount = 0, repsSetCount = 4, up = 5, down = 4)
+
+        assertEquals(5, repCounter.getRepCount().workingReps)
+        assertFalse(repCounter.getRepCount().hasPendingRep)
+        assertTrue(repCounter.shouldStopWorkout())
+        assertEquals(
+            1,
+            capturedEvents.count { it.type == RepType.WORKOUT_COMPLETE }
+        )
+
+        repCounter.process(repsRomCount = 0, repsSetCount = 5, up = 5, down = 5)
+
+        assertEquals(5, repCounter.getRepCount().workingReps)
+        assertEquals(
+            1,
+            capturedEvents.count { it.type == RepType.WORKOUT_COMPLETE },
+            "Machine bottom confirmation should not duplicate completion after stop-at-top"
+        )
+    }
+
+    @Test
     fun `danger zone - detects when handles are near bottom`() {
         repCounter.configure(warmupTarget = 0, workingTarget = 5, isJustLift = true, stopAtTop = false)
 

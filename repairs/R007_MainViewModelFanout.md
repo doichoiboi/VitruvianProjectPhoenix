@@ -420,3 +420,19 @@ Close B-003 before deeper active-workout execution changes:
 Validation: `:app:testProductionDebugUnitTest --tests
 com.example.vitruvianredux.presentation.viewmodel.MainViewModelWorkoutFlowTest`
 passes.
+
+## Stop At Top Modern Counter Repair
+
+Close B-002 before deeper active-workout execution changes:
+
+- `RepCounterFromMachine` now honors `stopAtTop` in modern packet mode.
+- Normal mode still waits for machine `repsSetCount` bottom confirmation when
+  `stopAtTop=false`.
+- With `stopAtTop=true`, reaching the top of the final target rep counts that
+  final rep, sets `shouldStop`, and emits workout completion immediately.
+- Later bottom confirmation for the same final rep does not duplicate workout
+  completion.
+- Just Lift and AMRAP remain excluded from target-based auto-stop.
+
+Validation: `:app:testProductionDebugUnitTest --tests
+com.example.vitruvianredux.domain.usecase.RepCounterFromMachineTest` passes.

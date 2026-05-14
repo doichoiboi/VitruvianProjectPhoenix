@@ -283,3 +283,24 @@ parameter mapping fix.
 - Deeper active-workout execution cleanup can now lean on this AMRAP persistence
   guard, but multi-set AMRAP progression still deserves focused coverage before
   changing rest/advance behavior.
+
+---
+
+## Session 013 - 2026-05-13 - Stop At Top Modern Counter Repair
+
+### Decisions Made
+
+**Honor `stopAtTop` in modern rep counting**
+- Modern rep notifications use machine `repsSetCount` as the source of truth
+  for normal bottom-confirmed reps.
+- When `stopAtTop=true`, the final top-counter movement now completes the
+  target rep immediately, sets `shouldStop`, and emits workout completion
+  without waiting for bottom confirmation.
+- If a later bottom/set-count confirmation arrives for that same final rep, it
+  must not emit duplicate workout completion.
+- Just Lift and AMRAP remain excluded from target-based auto-stop behavior.
+
+### Open Threads
+
+- Hardware smoke should specifically try a short set with `stopAtTop=true` and
+  confirm the machine releases at the contracted/top position.

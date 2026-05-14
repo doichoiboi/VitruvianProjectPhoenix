@@ -29,7 +29,6 @@
 | ID | Title | Owner | Note |
 |---|---|---|---|
 | B-001 | Version drift between README and Gradle | Ledger -> Spanner | README says `0.6.0-beta`; Gradle production says `1.1.0`; beta flavor says `0.6.2-beta`. Confirm intended public version before release notes or APK distribution. |
-| B-002 | `stopAtTop` is ignored by modern rep counting | Spanner -> Sightline | Discovered pre-existing issue: `RepCounterFromMachine` stores `stopAtTop`, but modern `repsSetCount` completion does not use it. Decide intended firmware behavior before changing workout stop logic. |
 
 ---
 
@@ -37,7 +36,7 @@
 
 | ID | Title | Owner | Note |
 |---|---|---|---|
-| - | Hardware test checklist | Spanner + Sightline | Define the minimum real-machine test path before cutting releases. |
+| - | Hardware test checklist | Spanner + Sightline | `HARDWARE_SMOKE_TESTS.md`; running real-machine checklist for BLE, route exit, Stop At Top, Just Lift, and AMRAP smoke passes. |
 | - | Contributor setup pass | Ledger + Spanner | Make sure build requirements, JDK/Android Studio expectations, and hardware requirements match reality. |
 | - | Permission onboarding review | Sightline + Tag | Check Bluetooth/location/notification prompts and rationale copy. |
 | - | Attribution surface | Tag + Ledger | Decide where original-project credit belongs: README, About screen, release notes, and license/notice files. |
@@ -52,3 +51,4 @@
 | R-008 | Split DI Composition Boundaries | Spanner -> Ledger | `repairs/R008_DiModuleCleanup.md`; `AppModule` removed, database migrations moved to data-local, focused Hilt modules established |
 | B-004 | Data import transaction protection | Root -> Sightline | Backup import now runs in a Room transaction and can restore missing child rows for existing parent records during retry. |
 | B-003 | AMRAP manual-save coverage | Sightline -> Spanner | `MainViewModelWorkoutFlowTest` now proves manual AMRAP stop saves actual working reps instead of the zero target placeholder and shows the set summary with the measured rep count. |
+| B-002 | `stopAtTop` modern rep counting | Spanner -> Sightline | `RepCounterFromMachineTest` now proves modern packets stop at the final top movement when `stopAtTop=true`, count the target rep, and suppress duplicate completion when bottom confirmation later arrives. |
