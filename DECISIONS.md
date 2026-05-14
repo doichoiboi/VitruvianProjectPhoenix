@@ -568,3 +568,24 @@ parameter mapping fix.
   focused regression coverage.
 - The current `ensureConnection` callback contract should get its own cleanup
   before being hidden behind a broad event.
+
+---
+
+## Session 026 - 2026-05-14 - Connection Workflow Coverage
+
+### Decisions Made
+
+**Cover connection callbacks before deeper refactor**
+- `ensureConnection` now has focused JVM coverage for already-connected,
+  scan-timeout, user-cancel, and discovered-device success paths.
+- The success-path test proved `onConnected` must fire exactly once.
+- Removed the stale pending-callback branch from `connectToDevice`; connection
+  workflow callbacks are now owned by `ensureConnection`.
+- `startScanning` and `stopScanning` keep their public wrappers, but
+  `ensureConnection` calls suspend internal scan helpers directly so the
+  workflow does not bounce through nested ViewModel launches.
+
+### Open Threads
+
+- A dedicated connection coordinator may still be worthwhile, but the callback
+  contract is now pinned before that extraction.

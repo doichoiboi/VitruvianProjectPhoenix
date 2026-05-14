@@ -42,3 +42,19 @@ workout execution in a single risky pass.
   current `ensureConnection` callback contract is covered.
 - Continue replacing direct Compose collections with stable screen UI state
   models before deeper workout-flow event migration.
+
+## Connection Coverage Slice
+
+Focused `ensureConnection` coverage now pins the app-shell connection contract:
+
+- already-connected state calls `onConnected` without scanning
+- scan timeout clears the connecting overlay, cancels BLE work, and reports the
+  timeout error
+- user cancellation clears the overlay without calling `onFailed`
+- discovered-device success stops scanning, connects, clears the overlay, and
+  invokes `onConnected` exactly once
+
+The success-path test exposed a stale pending-callback path that could call
+`onConnected` twice. `ensureConnection` now owns that callback decision, while
+`connectToDevice` only connects and clears the overlay when connection state
+reports success.

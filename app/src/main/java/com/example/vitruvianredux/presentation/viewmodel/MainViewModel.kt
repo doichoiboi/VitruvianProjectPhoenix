@@ -358,9 +358,6 @@ class MainViewModel @Inject constructor(
     private val _connectionError = MutableStateFlow<String?>(null)
     val connectionError: StateFlow<String?> = _connectionError.asStateFlow()
 
-    // Pending callback for after connection completes
-    private var _pendingConnectionCallback: (() -> Unit)? = null
-
     // Haptic feedback events
     private val _hapticEvents = MutableSharedFlow<HapticEvent>(
         extraBufferCapacity = 10,  // Buffer events to prevent drops
@@ -1024,21 +1021,29 @@ class MainViewModel @Inject constructor(
     fun startScanning() {
         Timber.d("MainViewModel.startScanning() called")
         viewModelScope.launch {
-            _scannedDevices.value = emptyList()
-            Timber.d("Cleared previous scan results, calling bleRepository.startScanning()")
-            val result = bleRepository.startScanning()
-            if (result.isSuccess) {
-                Timber.d("Scan started successfully")
-            } else {
-                Timber.e("Scan failed: ${result.exceptionOrNull()?.message}")
-            }
+            startScanningInternal()
+        }
+    }
+
+    private suspend fun startScanningInternal() {
+        _scannedDevices.value = emptyList()
+        Timber.d("Cleared previous scan results, calling bleRepository.startScanning()")
+        val result = bleRepository.startScanning()
+        if (result.isSuccess) {
+            Timber.d("Scan started successfully")
+        } else {
+            Timber.e("Scan failed: ${result.exceptionOrNull()?.message}")
         }
     }
 
     fun stopScanning() {
         viewModelScope.launch {
-            bleRepository.stopScanning()
+            stopScanningInternal()
         }
+    }
+
+    private suspend fun stopScanningInternal() {
+        bleRepository.stopScanning()
     }
 
     fun connectToDevice(deviceAddress: String) {
@@ -1058,9 +1063,6 @@ class MainViewModel @Inject constructor(
                     .collect {
                         // Connection succeeded - dismiss connecting overlay immediately
                         _isAutoConnecting.value = false
-                        // Call pending callback if any
-                        _pendingConnectionCallback?.invoke()
-                        _pendingConnectionCallback = null
                     }
             }
         }
@@ -1087,7 +1089,7 @@ class MainViewModel @Inject constructor(
                         _connectionError.value = null
 
                         // Start scanning
-                        startScanning()
+                        startScanningInternal()
 
                         // Wait for first discovered device (with timeout)
                         val found = withTimeoutOrNull(30000) {
@@ -1095,34 +1097,25 @@ class MainViewModel @Inject constructor(
                                 .filter { it.isNotEmpty() }
                                 .take(1)
                                 .collect { devices ->
-                                    stopScanning()
+                                    stopScanningInternal()
                                     val device = devices.firstOrNull()
                                     if (device != null) {
-                                        _pendingConnectionCallback = onConnected
                                         connectToDevice(device.address)
 
                                         // Wait for Connected state with timeout (15 seconds)
-                                        val connected = withTimeoutOrNull(15000) {
-                                            connectionState
-                                                .filter { it is ConnectionState.Connected }
-                                                .take(1)
-                                                .collect { }
-                                            true // Return true if we got Connected
-                                        }
+                                        val connected = awaitConnected(timeoutMillis = 15000)
 
                                         _isAutoConnecting.value = false
-                                        if (connected == true) {
+                                        if (connected) {
                                             onConnected()
                                         } else {
                                             // Connection timeout or failure - clean up BLE connection
                                             Timber.d("Connection timeout or failure - cleaning up")
                                             bleRepository.cancelConnection()
-                                            _pendingConnectionCallback = null  // Clear callback on failure
                                             _connectionError.value = "Connection timeout"
                                             onFailed()
                                         }
                                     } else {
-                                        _pendingConnectionCallback = null  // Clear callback on failure
                                         _isAutoConnecting.value = false
                                         _connectionError.value = "No device found"
                                         onFailed()
@@ -1133,8 +1126,7 @@ class MainViewModel @Inject constructor(
                         if (found == null) {
                             // Scan timeout - clean up properly
                             Timber.d("Scan timeout reached - cleaning up")
-                            _pendingConnectionCallback = null  // Clear callback on timeout
-                            stopScanning()
+                            stopScanningInternal()
                             bleRepository.cancelConnection()  // Cancel any in-progress connection
                             _isAutoConnecting.value = false
                             _connectionError.value = "Scan timeout - no device found"
@@ -1146,10 +1138,9 @@ class MainViewModel @Inject constructor(
                 // User explicitly cancelled - clean up without showing errors
                 Timber.d("🔴 CancellationException caught - User cancelled connection")
                 Timber.d("🔴 Cleaning up: stopping scan, cancelling BLE, clearing state")
-                stopScanning()
+                stopScanningInternal()
                 bleRepository.cancelConnection()  // Cancel any in-progress connection
                 _isAutoConnecting.value = false
-                _pendingConnectionCallback = null
                 Timber.d("🔴 Cleanup complete, _isAutoConnecting set to false")
                 // Don't show error or call onFailed() - user cancelled intentionally
                 throw e  // Re-throw to properly cancel the coroutine
@@ -1183,15 +1174,13 @@ class MainViewModel @Inject constructor(
         // Immediately clear the connecting state to dismiss the overlay
         // This must happen synchronously, not in the exception handler
         _isAutoConnecting.value = false
-        _pendingConnectionCallback = null
-
         // Cancel the connection coroutine
         connectionJob?.cancel()
         connectionJob = null
 
         // Clean up BLE (must be done in coroutine since it's a suspend function)
         viewModelScope.launch {
-            stopScanning()
+            stopScanningInternal()
             bleRepository.cancelConnection()
             Timber.d("🔴 BLE cleanup complete")
         }
@@ -1205,6 +1194,16 @@ class MainViewModel @Inject constructor(
 
     private fun dismissConnectionLostAlertInternal() {
         _connectionLostDuringWorkout.value = false
+    }
+
+    private suspend fun awaitConnected(timeoutMillis: Long): Boolean {
+        return withTimeoutOrNull(timeoutMillis) {
+            connectionState
+                .filter { it is ConnectionState.Connected }
+                .take(1)
+                .collect { }
+            true
+        } == true
     }
 
     // Device selection dialog removed in favor of auto-connect flow

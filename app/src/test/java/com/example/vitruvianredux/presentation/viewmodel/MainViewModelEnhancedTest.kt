@@ -1,6 +1,8 @@
 package com.example.vitruvianredux.presentation.viewmodel
 
 import android.app.Application
+import android.bluetooth.BluetoothDevice
+import android.bluetooth.le.ScanResult
 import com.example.vitruvianredux.data.preferences.PreferencesManager
 import com.example.vitruvianredux.data.repository.BleRepository
 import com.example.vitruvianredux.data.repository.ExerciseRepository
@@ -38,7 +40,8 @@ import org.junit.Assert.assertTrue
 @RunWith(RobolectricTestRunner::class)
 class MainViewModelEnhancedTest {
 
-    private val testDispatcher = UnconfinedTestDispatcher()
+    private val testScheduler = TestCoroutineScheduler()
+    private val testDispatcher = UnconfinedTestDispatcher(testScheduler)
 
     private lateinit var application: Application
     private lateinit var bleRepository: BleRepository
@@ -49,6 +52,8 @@ class MainViewModelEnhancedTest {
     private lateinit var preferencesManager: PreferencesManager
     private lateinit var themeManager: ThemeManager
     private lateinit var viewModel: MainViewModel
+    private lateinit var connectionStateFlow: MutableStateFlow<ConnectionState>
+    private lateinit var scannedDevicesFlow: MutableSharedFlow<ScanResult>
 
     // Test data
     private val testExercise1 = Exercise(
@@ -117,13 +122,20 @@ class MainViewModelEnhancedTest {
         preferencesManager = mockk(relaxed = true)
         themeManager = mockk(relaxed = true)
         // Setup default flows for BleRepository
-        every { bleRepository.connectionState } returns MutableStateFlow(ConnectionState.Disconnected)
+        connectionStateFlow = MutableStateFlow(ConnectionState.Disconnected)
+        scannedDevicesFlow = MutableSharedFlow(extraBufferCapacity = 1)
+        every { bleRepository.connectionState } returns connectionStateFlow
         every { bleRepository.monitorData } returns emptyFlow()
         every { bleRepository.heuristicData } returns MutableStateFlow(null)
         every { bleRepository.repEvents } returns emptyFlow()
-        every { bleRepository.scannedDevices } returns emptyFlow()
+        every { bleRepository.scannedDevices } returns scannedDevicesFlow
         every { bleRepository.handleState } returns MutableStateFlow(com.example.vitruvianredux.data.ble.HandleState.Released)
         every { bleRepository.deloadOccurredEvents } returns emptyFlow()
+        coEvery { bleRepository.startScanning() } returns Result.success(Unit)
+        coEvery { bleRepository.stopScanning() } returns Unit
+        coEvery { bleRepository.cancelConnection() } returns Unit
+        coEvery { bleRepository.connectToDevice(any()) } returns Result.success(Unit)
+        coEvery { bleRepository.disconnect() } returns Unit
 
         // Setup default flows for WorkoutRepository
         every { workoutRepository.getRecentSessions(any()) } returns flowOf(emptyList())
@@ -226,6 +238,93 @@ class MainViewModelEnhancedTest {
     // For now, we verify the critical flag that enables autoplay.
 
     // ========== State Management Tests ==========
+
+    @Test
+    fun `ensureConnection already connected calls callback without scanning`() = runTest(testDispatcher) {
+        connectionStateFlow.value = ConnectionState.Connected("Vitruvian", "device-1")
+        var connectedCount = 0
+        var failedCount = 0
+
+        viewModel.ensureConnection(
+            onConnected = { connectedCount++ },
+            onFailed = { failedCount++ }
+        )
+        testScheduler.advanceUntilIdle()
+
+        assertThat(connectedCount).isEqualTo(1)
+        assertThat(failedCount).isEqualTo(0)
+        assertThat(viewModel.appScaffoldUiState.value.isAutoConnecting).isFalse()
+        coVerify(exactly = 0) { bleRepository.startScanning() }
+    }
+
+    @Test
+    fun `ensureConnection scan timeout clears overlay and reports failure`() = runTest(testDispatcher) {
+        var connectedCount = 0
+        var failedCount = 0
+
+        viewModel.ensureConnection(
+            onConnected = { connectedCount++ },
+            onFailed = { failedCount++ }
+        )
+        assertThat(viewModel.appScaffoldUiState.value.isAutoConnecting).isTrue()
+
+        testScheduler.advanceTimeBy(30_000)
+        testScheduler.runCurrent()
+
+        assertThat(connectedCount).isEqualTo(0)
+        assertThat(failedCount).isEqualTo(1)
+        assertThat(viewModel.appScaffoldUiState.value.isAutoConnecting).isFalse()
+        assertThat(viewModel.appScaffoldUiState.value.connectionError)
+            .isEqualTo("Scan timeout - no device found")
+        coVerify { bleRepository.startScanning() }
+        coVerify { bleRepository.stopScanning() }
+        coVerify { bleRepository.cancelConnection() }
+    }
+
+    @Test
+    fun `cancelAutoConnecting clears overlay and runs BLE cleanup`() = runTest(testDispatcher) {
+        var failedCount = 0
+
+        viewModel.ensureConnection(
+            onConnected = {},
+            onFailed = { failedCount++ }
+        )
+        assertThat(viewModel.appScaffoldUiState.value.isAutoConnecting).isTrue()
+
+        viewModel.onEvent(MainViewModelEvent.AutoConnectCancelled)
+        testScheduler.advanceUntilIdle()
+
+        assertThat(viewModel.appScaffoldUiState.value.isAutoConnecting).isFalse()
+        assertThat(viewModel.appScaffoldUiState.value.connectionError).isNull()
+        assertThat(failedCount).isEqualTo(0)
+        coVerify(atLeast = 1) { bleRepository.stopScanning() }
+        coVerify(atLeast = 1) { bleRepository.cancelConnection() }
+    }
+
+    @Test
+    fun `ensureConnection discovered device connects and invokes callback once`() = runTest(testDispatcher) {
+        val deviceAddress = "AA:BB:CC:DD:EE:FF"
+        coEvery { bleRepository.connectToDevice(deviceAddress) } answers {
+            connectionStateFlow.value = ConnectionState.Connected("Vitruvian", deviceAddress)
+            Result.success(Unit)
+        }
+        var connectedCount = 0
+        var failedCount = 0
+
+        viewModel.ensureConnection(
+            onConnected = { connectedCount++ },
+            onFailed = { failedCount++ }
+        )
+        scannedDevicesFlow.emit(scanResult(address = deviceAddress))
+        testScheduler.advanceUntilIdle()
+
+        assertThat(connectedCount).isEqualTo(1)
+        assertThat(failedCount).isEqualTo(0)
+        assertThat(viewModel.appScaffoldUiState.value.isAutoConnecting).isFalse()
+        assertThat(viewModel.appScaffoldUiState.value.connectionError).isNull()
+        coVerify { bleRepository.stopScanning() }
+        coVerify { bleRepository.connectToDevice(deviceAddress) }
+    }
 
 
 
@@ -469,5 +568,19 @@ class MainViewModelEnhancedTest {
         // mode will fail for temp routines created by SingleExerciseScreen.
         // The bug is likely here:
         // val isSingleExercise = routine == null && !isJustLift  // ← Always false!
+    }
+
+    private fun scanResult(
+        address: String,
+        name: String = "Vitruvian",
+        rssi: Int = -65
+    ): ScanResult {
+        val device = mockk<BluetoothDevice>(relaxed = true)
+        val result = mockk<ScanResult>(relaxed = true)
+        every { device.address } returns address
+        every { device.name } returns name
+        every { result.device } returns device
+        every { result.rssi } returns rssi
+        return result
     }
 }
