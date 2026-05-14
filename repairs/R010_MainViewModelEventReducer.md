@@ -71,4 +71,6 @@ its tracked `connectionJob`. That means connect failure clears the connecting
 overlay, cancels BLE connection work, reports a connection failure, and calls
 `onFailed` without waiting for the connected-state timeout. It also means
 canceling auto-connect cancels an in-flight connect coroutine instead of leaving
-an untracked ViewModel job running.
+an untracked ViewModel job running. The path where `connectToDevice` returns
+success but no `Connected` state arrives is also pinned: the app times out,
+cancels BLE connection work, and does not call `onConnected`.

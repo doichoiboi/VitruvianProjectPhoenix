@@ -355,6 +355,32 @@ class MainViewModelEnhancedTest {
     }
 
     @Test
+    fun `ensureConnection connect success without connected state times out safely`() = runTest(testDispatcher) {
+        val deviceAddress = "AA:BB:CC:DD:EE:FF"
+        coEvery { bleRepository.connectToDevice(deviceAddress) } returns Result.success(Unit)
+        var connectedCount = 0
+        var failedCount = 0
+
+        viewModel.ensureConnection(
+            onConnected = { connectedCount++ },
+            onFailed = { failedCount++ }
+        )
+        scannedDevicesFlow.emit(scanResult(address = deviceAddress))
+
+        testScheduler.advanceTimeBy(15_000)
+        testScheduler.runCurrent()
+
+        assertThat(connectedCount).isEqualTo(0)
+        assertThat(failedCount).isEqualTo(1)
+        assertThat(viewModel.appScaffoldUiState.value.isAutoConnecting).isFalse()
+        assertThat(viewModel.appScaffoldUiState.value.connectionError)
+            .isEqualTo("Connection timeout")
+        coVerify { bleRepository.stopScanning() }
+        coVerify { bleRepository.connectToDevice(deviceAddress) }
+        coVerify { bleRepository.cancelConnection() }
+    }
+
+    @Test
     fun `cancelAutoConnecting after connect starts cancels in-flight connect`() = runTest(testDispatcher) {
         val deviceAddress = "AA:BB:CC:DD:EE:FF"
         val connectStarted = CompletableDeferred<Unit>()

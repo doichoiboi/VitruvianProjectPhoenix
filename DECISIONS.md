@@ -603,7 +603,8 @@ parameter mapping fix.
 - Auto-connect cancellation after the connect attempt has started now cancels
   the in-flight connect coroutine because `ensureConnection` owns that call
   inside its tracked `connectionJob`.
-- Added focused tests for both cases.
+- Added focused tests for those cases and for the path where `connectToDevice`
+  returns success but no `Connected` state arrives before timeout.
 
 ### Open Threads
 
