@@ -589,3 +589,23 @@ parameter mapping fix.
 
 - A dedicated connection coordinator may still be worthwhile, but the callback
   contract is now pinned before that extraction.
+
+---
+
+## Session 027 - 2026-05-14 - Connection Safety Hardening
+
+### Decisions Made
+
+**Treat connection failure/cancel paths as safety-critical**
+- A failed BLE connect attempt before `Connected` is emitted now clears the
+  connecting overlay, cancels BLE connection work, reports `"Connection failed:
+  <reason>"`, and invokes `onFailed` immediately.
+- Auto-connect cancellation after the connect attempt has started now cancels
+  the in-flight connect coroutine because `ensureConnection` owns that call
+  inside its tracked `connectionJob`.
+- Added focused tests for both cases.
+
+### Open Threads
+
+- A dedicated connection coordinator is still the likely next refactor once the
+  rest of the connection states are pinned.

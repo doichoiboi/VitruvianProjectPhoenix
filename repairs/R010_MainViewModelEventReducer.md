@@ -58,3 +58,17 @@ The success-path test exposed a stale pending-callback path that could call
 `onConnected` twice. `ensureConnection` now owns that callback decision, while
 `connectToDevice` only connects and clears the overlay when connection state
 reports success.
+
+## Safety Follow-Up Slice
+
+The next review found two remaining safety gaps:
+
+- connect failure before a `Connected` emission
+- cancellation after a device connect attempt had already started
+
+`ensureConnection` now owns the scanned-device connect attempt directly inside
+its tracked `connectionJob`. That means connect failure clears the connecting
+overlay, cancels BLE connection work, reports a connection failure, and calls
+`onFailed` without waiting for the connected-state timeout. It also means
+canceling auto-connect cancels an in-flight connect coroutine instead of leaving
+an untracked ViewModel job running.

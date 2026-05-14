@@ -1100,7 +1100,15 @@ class MainViewModel @Inject constructor(
                                     stopScanningInternal()
                                     val device = devices.firstOrNull()
                                     if (device != null) {
-                                        connectToDevice(device.address)
+                                        val result = bleRepository.connectToDevice(device.address)
+                                        if (result.isFailure) {
+                                            Timber.e("Failed to connect: ${result.exceptionOrNull()?.message}")
+                                            bleRepository.cancelConnection()
+                                            _isAutoConnecting.value = false
+                                            _connectionError.value = result.connectionFailureMessage()
+                                            onFailed()
+                                            return@collect
+                                        }
 
                                         // Wait for Connected state with timeout (15 seconds)
                                         val connected = awaitConnected(timeoutMillis = 15000)
@@ -1194,6 +1202,15 @@ class MainViewModel @Inject constructor(
 
     private fun dismissConnectionLostAlertInternal() {
         _connectionLostDuringWorkout.value = false
+    }
+
+    private fun Result<Unit>.connectionFailureMessage(): String {
+        val message = exceptionOrNull()?.message
+        return if (message.isNullOrBlank()) {
+            "Connection failed"
+        } else {
+            "Connection failed: $message"
+        }
     }
 
     private suspend fun awaitConnected(timeoutMillis: Long): Boolean {

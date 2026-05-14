@@ -14,8 +14,10 @@ import com.example.vitruvianredux.ui.theme.ThemeManager
 import com.example.vitruvianredux.ui.theme.ThemeMode
 import com.google.common.truth.Truth.assertThat
 import io.mockk.*
+import kotlinx.coroutines.CompletableDeferred
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.ExperimentalCoroutinesApi
+import kotlinx.coroutines.awaitCancellation
 import kotlinx.coroutines.flow.*
 import kotlinx.coroutines.test.*
 import org.junit.After
@@ -324,6 +326,64 @@ class MainViewModelEnhancedTest {
         assertThat(viewModel.appScaffoldUiState.value.connectionError).isNull()
         coVerify { bleRepository.stopScanning() }
         coVerify { bleRepository.connectToDevice(deviceAddress) }
+    }
+
+    @Test
+    fun `ensureConnection connect failure clears overlay and reports failure`() = runTest(testDispatcher) {
+        val deviceAddress = "AA:BB:CC:DD:EE:FF"
+        coEvery { bleRepository.connectToDevice(deviceAddress) } returns Result.failure(
+            IllegalStateException("BLE failed")
+        )
+        var connectedCount = 0
+        var failedCount = 0
+
+        viewModel.ensureConnection(
+            onConnected = { connectedCount++ },
+            onFailed = { failedCount++ }
+        )
+        scannedDevicesFlow.emit(scanResult(address = deviceAddress))
+        testScheduler.advanceUntilIdle()
+
+        assertThat(connectedCount).isEqualTo(0)
+        assertThat(failedCount).isEqualTo(1)
+        assertThat(viewModel.appScaffoldUiState.value.isAutoConnecting).isFalse()
+        assertThat(viewModel.appScaffoldUiState.value.connectionError)
+            .isEqualTo("Connection failed: BLE failed")
+        coVerify { bleRepository.stopScanning() }
+        coVerify { bleRepository.connectToDevice(deviceAddress) }
+        coVerify { bleRepository.cancelConnection() }
+    }
+
+    @Test
+    fun `cancelAutoConnecting after connect starts cancels in-flight connect`() = runTest(testDispatcher) {
+        val deviceAddress = "AA:BB:CC:DD:EE:FF"
+        val connectStarted = CompletableDeferred<Unit>()
+        var connectCancelled = false
+        var failedCount = 0
+        coEvery { bleRepository.connectToDevice(deviceAddress) } coAnswers {
+            connectStarted.complete(Unit)
+            try {
+                awaitCancellation()
+            } finally {
+                connectCancelled = true
+            }
+        }
+
+        viewModel.ensureConnection(
+            onConnected = {},
+            onFailed = { failedCount++ }
+        )
+        scannedDevicesFlow.emit(scanResult(address = deviceAddress))
+        connectStarted.await()
+
+        viewModel.onEvent(MainViewModelEvent.AutoConnectCancelled)
+        testScheduler.advanceUntilIdle()
+
+        assertThat(connectCancelled).isTrue()
+        assertThat(failedCount).isEqualTo(0)
+        assertThat(viewModel.appScaffoldUiState.value.isAutoConnecting).isFalse()
+        assertThat(viewModel.appScaffoldUiState.value.connectionError).isNull()
+        coVerify { bleRepository.cancelConnection() }
     }
 
 
