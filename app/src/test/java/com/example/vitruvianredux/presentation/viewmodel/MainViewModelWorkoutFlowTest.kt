@@ -9,6 +9,8 @@ import com.example.vitruvianredux.data.repository.PersonalRecordRepository
 import com.example.vitruvianredux.data.repository.WorkoutRepository
 import com.example.vitruvianredux.domain.model.*
 import com.example.vitruvianredux.domain.usecase.RepCounterFromMachine
+import com.example.vitruvianredux.ui.theme.ThemeManager
+import com.example.vitruvianredux.ui.theme.ThemeMode
 import io.mockk.*
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.ExperimentalCoroutinesApi
@@ -40,6 +42,7 @@ class MainViewModelWorkoutFlowTest {
     private lateinit var personalRecordRepository: PersonalRecordRepository
     private lateinit var repCounter: RepCounterFromMachine
     private lateinit var preferencesManager: PreferencesManager
+    private lateinit var themeManager: ThemeManager
     private lateinit var viewModel: MainViewModel
 
     private val handleStateFlow = MutableStateFlow(com.example.vitruvianredux.data.ble.HandleState.Released)
@@ -55,6 +58,7 @@ class MainViewModelWorkoutFlowTest {
         personalRecordRepository = mockk(relaxed = true)
         repCounter = mockk(relaxed = true)
         preferencesManager = mockk(relaxed = true)
+        themeManager = mockk(relaxed = true)
         // Setup common mock returns
         every { bleRepository.connectionState } returns MutableStateFlow(ConnectionState.Connected("Test Device", "00:11:22:33:44:55"))
         every { bleRepository.monitorData } returns flowOf() // Replaced below if needed
@@ -76,6 +80,8 @@ class MainViewModelWorkoutFlowTest {
         every { personalRecordRepository.getAllPRsGrouped() } returns flowOf(emptyList())
 
         every { preferencesManager.preferencesFlow } returns flowOf(UserPreferences())
+        every { themeManager.themeMode } returns flowOf(ThemeMode.SYSTEM)
+        coEvery { themeManager.setThemeMode(any()) } returns Unit
 
         coEvery { bleRepository.startWorkout(any()) } returns Result.success(Unit)
         coEvery { bleRepository.stopWorkout() } returns Result.success(Unit)
@@ -87,7 +93,8 @@ class MainViewModelWorkoutFlowTest {
             exerciseRepository,
             personalRecordRepository,
             repCounter,
-            preferencesManager
+            preferencesManager,
+            themeManager
         )
     }
 

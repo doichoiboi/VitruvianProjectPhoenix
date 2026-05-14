@@ -8,6 +8,8 @@ import com.example.vitruvianredux.data.repository.PersonalRecordRepository
 import com.example.vitruvianredux.data.repository.WorkoutRepository
 import com.example.vitruvianredux.domain.model.*
 import com.example.vitruvianredux.domain.usecase.RepCounterFromMachine
+import com.example.vitruvianredux.ui.theme.ThemeManager
+import com.example.vitruvianredux.ui.theme.ThemeMode
 import com.google.common.truth.Truth.assertThat
 import io.mockk.*
 import kotlinx.coroutines.Dispatchers
@@ -44,6 +46,7 @@ class AMRAPFeatureTest {
     private lateinit var personalRecordRepository: PersonalRecordRepository
     private lateinit var repCounter: RepCounterFromMachine
     private lateinit var preferencesManager: PreferencesManager
+    private lateinit var themeManager: ThemeManager
     private lateinit var viewModel: MainViewModel
 
     private val testExercise = Exercise(
@@ -67,6 +70,7 @@ class AMRAPFeatureTest {
         personalRecordRepository = mockk(relaxed = true)
         repCounter = mockk(relaxed = true)
         preferencesManager = mockk(relaxed = true)
+        themeManager = mockk(relaxed = true)
         every { bleRepository.connectionState } returns MutableStateFlow(ConnectionState.Disconnected)
         every { bleRepository.monitorData } returns emptyFlow()
         every { bleRepository.heuristicData } returns MutableStateFlow(null)
@@ -84,6 +88,8 @@ class AMRAPFeatureTest {
         every { personalRecordRepository.getAllPRsGrouped() } returns flowOf(emptyList())
 
         every { preferencesManager.preferencesFlow } returns flowOf(UserPreferences())
+        every { themeManager.themeMode } returns flowOf(ThemeMode.SYSTEM)
+        coEvery { themeManager.setThemeMode(any()) } returns Unit
 
         viewModel = MainViewModel(
             application = application,
@@ -92,7 +98,8 @@ class AMRAPFeatureTest {
             exerciseRepository = exerciseRepository,
             personalRecordRepository = personalRecordRepository,
             repCounter = repCounter,
-            preferencesManager = preferencesManager
+            preferencesManager = preferencesManager,
+            themeManager = themeManager
         )
     }
 

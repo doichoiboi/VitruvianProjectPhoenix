@@ -169,8 +169,8 @@ fun ExerciseEditBottomSheet(
             onDismiss()
         },
         sheetState = sheetState,
-        containerColor = MaterialTheme.colorScheme.surfaceContainerHighest, // Material 3 Expressive: Higher contrast
-        shape = RoundedCornerShape(topStart = 28.dp, topEnd = 28.dp) // Material 3 Expressive: Very rounded for bottom sheets
+        containerColor = MaterialTheme.colorScheme.surfaceContainerHighest,
+        shape = RoundedCornerShape(topStart = 28.dp, topEnd = 28.dp)
     ) {
         Column(
             modifier = Modifier
@@ -186,13 +186,13 @@ fun ExerciseEditBottomSheet(
                 Column {
                     Text(
                         "Configure Exercise",
-                        style = MaterialTheme.typography.headlineMedium, // Material 3 Expressive: Larger (was headlineSmall)
+                        style = MaterialTheme.typography.headlineMedium,
                         fontWeight = FontWeight.Bold
                     )
                     Text(
                         exercise.exercise.displayName,
-                        style = MaterialTheme.typography.bodyLarge, // Material 3 Expressive: Larger (was bodyMedium)
-                        fontWeight = FontWeight.Medium, // Material 3 Expressive: Bolder
+                        style = MaterialTheme.typography.bodyLarge,
+                        fontWeight = FontWeight.Medium,
                         color = MaterialTheme.colorScheme.primary
                     )
                 }
@@ -221,9 +221,9 @@ fun ExerciseEditBottomSheet(
                             modifier = Modifier
                                 .fillMaxWidth()
                                 .aspectRatio(16f / 9f),
-                            shape = RoundedCornerShape(20.dp), // Material 3 Expressive: More rounded (was 12dp)
-                            colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surfaceContainerHighest), // Material 3 Expressive: Higher contrast
-                            elevation = CardDefaults.cardElevation(defaultElevation = 8.dp) // Material 3 Expressive: Higher elevation
+                            shape = RoundedCornerShape(12.dp),
+                            colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surfaceContainerHighest),
+                            elevation = CardDefaults.cardElevation(defaultElevation = 2.dp)
                         ) {
                             VideoPlayer(
                                 videoUrl = video.videoUrl,
@@ -232,17 +232,15 @@ fun ExerciseEditBottomSheet(
                         }
                     }
                 }
-
-                // Personal Record Display - Material 3 Expressive
                 currentPR?.let { pr ->
                     Card(
                         modifier = Modifier.fillMaxWidth(),
-                        shape = RoundedCornerShape(20.dp), // Material 3 Expressive: More rounded (was 12dp)
+                        shape = RoundedCornerShape(12.dp),
                         colors = CardDefaults.cardColors(
                             containerColor = MaterialTheme.colorScheme.primaryContainer
                         ),
-                        elevation = CardDefaults.cardElevation(defaultElevation = 8.dp), // Material 3 Expressive: Higher elevation
-                        border = BorderStroke(2.dp, MaterialTheme.colorScheme.primary.copy(alpha = 0.3f)) // Material 3 Expressive: Thicker border
+                        elevation = CardDefaults.cardElevation(defaultElevation = 2.dp),
+                        border = BorderStroke(1.dp, MaterialTheme.colorScheme.primary.copy(alpha = 0.3f))
                     ) {
                         Row(
                             modifier = Modifier
@@ -341,7 +339,7 @@ fun ExerciseEditBottomSheet(
                         enabled = false,
                         modifier = Modifier.fillMaxWidth(),
                         colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surfaceContainerHighest),
-                        border = BorderStroke(2.dp, MaterialTheme.colorScheme.outlineVariant)
+                        border = BorderStroke(1.dp, MaterialTheme.colorScheme.outlineVariant)
                     ) {
                         Column(
                             modifier = Modifier
@@ -463,12 +461,12 @@ fun ExerciseEditBottomSheet(
                     onClick = dismissSheet,
                     modifier = Modifier
                         .weight(1f)
-                        .height(56.dp), // Material 3 Expressive: Taller button
-                    shape = RoundedCornerShape(20.dp) // Material 3 Expressive: More rounded
+                        .height(56.dp),
+                    shape = RoundedCornerShape(12.dp)
                 ) {
                     Text(
                         "Cancel",
-                        style = MaterialTheme.typography.titleMedium, // Material 3 Expressive: Larger text
+                        style = MaterialTheme.typography.titleMedium,
                         fontWeight = FontWeight.Bold
                     )
                 }
@@ -478,13 +476,13 @@ fun ExerciseEditBottomSheet(
                     },
                     modifier = Modifier
                         .weight(1f)
-                        .height(56.dp), // Material 3 Expressive: Taller button
+                        .height(56.dp),
                     enabled = sets.isNotEmpty(),
                     colors = ButtonDefaults.buttonColors(
                         containerColor = MaterialTheme.colorScheme.primary,
                         contentColor = MaterialTheme.colorScheme.onPrimary
                     ),
-                    shape = RoundedCornerShape(20.dp), // Material 3 Expressive: More rounded (was 16dp)
+                    shape = RoundedCornerShape(12.dp),
                     elevation = ButtonDefaults.buttonElevation(
                         defaultElevation = 4.dp,
                         pressedElevation = 2.dp
@@ -585,24 +583,22 @@ fun SetsConfiguration(
                 )
             }
         }
-
-        // Add Set button - Material 3 Expressive
         OutlinedButton(
             onClick = onAddSet,
             modifier = Modifier
                 .fillMaxWidth()
-                .height(56.dp), // Material 3 Expressive: Taller button
-            shape = RoundedCornerShape(20.dp) // Material 3 Expressive: More rounded (was 16dp)
+                .height(56.dp),
+            shape = RoundedCornerShape(12.dp)
         ) {
             Icon(
                 Icons.Default.Add,
                 contentDescription = "Add set",
-                modifier = Modifier.size(24.dp) // Material 3 Expressive: Larger icon (was 20dp)
+                modifier = Modifier.size(24.dp)
             )
             Spacer(modifier = Modifier.width(Spacing.small))
             Text(
                 "Add Set",
-                style = MaterialTheme.typography.titleLarge, // Material 3 Expressive: Larger text
+                style = MaterialTheme.typography.titleLarge,
                 fontWeight = FontWeight.Bold
             )
         }
@@ -628,10 +624,10 @@ fun SetRow(
 ) {
     Card(
         modifier = Modifier.fillMaxWidth(),
-        colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surfaceContainerHighest), // Material 3 Expressive: Higher contrast
-        shape = RoundedCornerShape(20.dp), // Material 3 Expressive: More rounded (was 16dp)
-        elevation = CardDefaults.cardElevation(defaultElevation = 8.dp), // Material 3 Expressive: Higher elevation (was 4dp)
-        border = BorderStroke(2.dp, MaterialTheme.colorScheme.primary.copy(alpha = 0.2f)) // Material 3 Expressive: Thicker border (was 1dp)
+        colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surfaceContainerHighest),
+        shape = RoundedCornerShape(12.dp),
+        elevation = CardDefaults.cardElevation(defaultElevation = 2.dp),
+        border = BorderStroke(1.dp, MaterialTheme.colorScheme.primary.copy(alpha = 0.2f))
     ) {
         Column(
             modifier = Modifier
@@ -847,15 +843,15 @@ fun ModeSelector(
 
     Surface(
         modifier = Modifier.fillMaxWidth(),
-        shape = RoundedCornerShape(20.dp), // Material 3 Expressive: More rounded (was 16dp)
-        color = MaterialTheme.colorScheme.surfaceContainerHighest, // Material 3 Expressive: Higher contrast
-        border = BorderStroke(2.dp, MaterialTheme.colorScheme.primary.copy(alpha = 0.2f)), // Material 3 Expressive: Thicker border (was 1dp)
-        shadowElevation = 8.dp // Material 3 Expressive: Higher elevation (was 4dp)
+        shape = RoundedCornerShape(12.dp),
+        color = MaterialTheme.colorScheme.surfaceContainerHighest,
+        border = BorderStroke(1.dp, MaterialTheme.colorScheme.primary.copy(alpha = 0.2f)),
+        shadowElevation = 8.dp
     ) {
         Column(modifier = Modifier.padding(Spacing.medium)) {
             Text(
                 "Workout Mode",
-                style = MaterialTheme.typography.titleMedium, // Material 3 Expressive: Larger (was titleSmall)
+                style = MaterialTheme.typography.titleMedium,
                 fontWeight = FontWeight.Bold,
                 modifier = Modifier.padding(bottom = Spacing.small)
             )
@@ -907,7 +903,7 @@ fun EccentricLoadSelector(
         enabled = false,
         modifier = Modifier.fillMaxWidth(),
         colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surfaceContainerHighest),
-        border = BorderStroke(2.dp, MaterialTheme.colorScheme.outlineVariant)
+        border = BorderStroke(1.dp, MaterialTheme.colorScheme.outlineVariant)
     ) {
         Column(
             modifier = Modifier
@@ -982,7 +978,7 @@ fun EchoLevelSelector(
         enabled = false,
         modifier = Modifier.fillMaxWidth(),
         colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surfaceContainerHighest),
-        border = BorderStroke(2.dp, MaterialTheme.colorScheme.outlineVariant)
+        border = BorderStroke(1.dp, MaterialTheme.colorScheme.outlineVariant)
     ) {
         Column(
             modifier = Modifier

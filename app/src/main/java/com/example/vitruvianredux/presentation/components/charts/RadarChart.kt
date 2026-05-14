@@ -32,6 +32,7 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.material3.Icon
 import androidx.compose.material3.Text
 import androidx.compose.foundation.layout.size
+import com.example.vitruvianredux.ui.theme.appChartColors
 import kotlin.math.cos
 import kotlin.math.sin
 
@@ -67,8 +68,8 @@ fun RadarChart(
 
     val colorScheme = MaterialTheme.colorScheme
     val outlineColor = colorScheme.outline
-    val primaryColor = colorScheme.primary
-    val primaryContainerColor = colorScheme.primaryContainer
+    val primaryColor = MaterialTheme.appChartColors.primary
+    val primaryContainerColor = MaterialTheme.appChartColors.secondary
     val onSurfaceColor = colorScheme.onSurface
     
     Canvas(

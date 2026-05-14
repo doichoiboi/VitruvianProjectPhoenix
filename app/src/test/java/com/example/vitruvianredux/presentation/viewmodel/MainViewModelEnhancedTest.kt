@@ -8,6 +8,8 @@ import com.example.vitruvianredux.data.repository.PersonalRecordRepository
 import com.example.vitruvianredux.data.repository.WorkoutRepository
 import com.example.vitruvianredux.domain.model.*
 import com.example.vitruvianredux.domain.usecase.RepCounterFromMachine
+import com.example.vitruvianredux.ui.theme.ThemeManager
+import com.example.vitruvianredux.ui.theme.ThemeMode
 import com.google.common.truth.Truth.assertThat
 import io.mockk.*
 import kotlinx.coroutines.Dispatchers
@@ -45,6 +47,7 @@ class MainViewModelEnhancedTest {
     private lateinit var personalRecordRepository: PersonalRecordRepository
     private lateinit var repCounter: RepCounterFromMachine
     private lateinit var preferencesManager: PreferencesManager
+    private lateinit var themeManager: ThemeManager
     private lateinit var viewModel: MainViewModel
 
     // Test data
@@ -112,6 +115,7 @@ class MainViewModelEnhancedTest {
         personalRecordRepository = mockk(relaxed = true)
         repCounter = mockk(relaxed = true)
         preferencesManager = mockk(relaxed = true)
+        themeManager = mockk(relaxed = true)
         // Setup default flows for BleRepository
         every { bleRepository.connectionState } returns MutableStateFlow(ConnectionState.Disconnected)
         every { bleRepository.monitorData } returns emptyFlow()
@@ -132,6 +136,8 @@ class MainViewModelEnhancedTest {
 
         // Setup PreferencesManager with default preferences
         every { preferencesManager.preferencesFlow } returns flowOf(UserPreferences())
+        every { themeManager.themeMode } returns flowOf(ThemeMode.SYSTEM)
+        coEvery { themeManager.setThemeMode(any()) } returns Unit
 
         // Create ViewModel
         viewModel = MainViewModel(
@@ -141,7 +147,8 @@ class MainViewModelEnhancedTest {
             exerciseRepository = exerciseRepository,
             personalRecordRepository = personalRecordRepository,
             repCounter = repCounter,
-            preferencesManager = preferencesManager
+            preferencesManager = preferencesManager,
+            themeManager = themeManager
         )
     }
 
@@ -299,7 +306,8 @@ class MainViewModelEnhancedTest {
             exerciseRepository = exerciseRepository,
             personalRecordRepository = personalRecordRepository,
             repCounter = repCounter,
-            preferencesManager = preferencesManager
+            preferencesManager = preferencesManager,
+            themeManager = themeManager
         )
 
         // Assert

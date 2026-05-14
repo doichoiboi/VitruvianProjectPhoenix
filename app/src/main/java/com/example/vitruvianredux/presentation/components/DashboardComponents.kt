@@ -25,6 +25,7 @@ import com.example.vitruvianredux.domain.model.PersonalRecord
 import com.example.vitruvianredux.domain.model.WeightUnit
 import com.example.vitruvianredux.domain.model.WorkoutSession
 import com.example.vitruvianredux.ui.theme.Spacing
+import com.example.vitruvianredux.ui.theme.appStatusColors
 import java.text.SimpleDateFormat
 import java.time.Instant
 import java.time.ZoneId
@@ -65,12 +66,12 @@ fun StrengthScoreCard(
     Card(
         modifier = modifier
             .fillMaxWidth()
-            .shadow(12.dp, RoundedCornerShape(24.dp)),
+            .shadow(4.dp, RoundedCornerShape(16.dp)),
         colors = CardDefaults.cardColors(
             containerColor = MaterialTheme.colorScheme.primaryContainer
         ),
-        shape = RoundedCornerShape(24.dp),
-        border = BorderStroke(2.dp, MaterialTheme.colorScheme.primary.copy(alpha = 0.3f))
+        shape = RoundedCornerShape(16.dp),
+        border = BorderStroke(1.dp, MaterialTheme.colorScheme.primary.copy(alpha = 0.3f))
     ) {
         Box(
             modifier = Modifier
@@ -119,20 +120,25 @@ fun StrengthScoreCard(
                 )
 
                 if (scoreDiff != 0) {
+                    val changeColor = if (scoreDiff > 0) {
+                        MaterialTheme.appStatusColors.success
+                    } else {
+                        MaterialTheme.colorScheme.error
+                    }
                     Row(
                         verticalAlignment = Alignment.CenterVertically
                     ) {
                         Icon(
                             imageVector = if (scoreDiff > 0) Icons.AutoMirrored.Filled.TrendingUp else Icons.AutoMirrored.Filled.TrendingDown,
                             contentDescription = null,
-                            tint = if (scoreDiff > 0) Color(0xFF10B981) else Color(0xFFEF4444),
+                            tint = changeColor,
                             modifier = Modifier.size(20.dp)
                         )
                         Spacer(modifier = Modifier.width(4.dp))
                         Text(
                             text = "${if (scoreDiff > 0) "+" else ""}$scoreDiff from last week",
                             style = MaterialTheme.typography.bodyMedium,
-                            color = if (scoreDiff > 0) Color(0xFF10B981) else Color(0xFFEF4444),
+                            color = changeColor,
                             fontWeight = FontWeight.SemiBold
                         )
                     }
@@ -177,11 +183,11 @@ fun ThisWeekStatsCard(
     Card(
         modifier = modifier
             .fillMaxWidth()
-            .shadow(8.dp, RoundedCornerShape(20.dp)),
+            .shadow(2.dp, RoundedCornerShape(12.dp)),
         colors = CardDefaults.cardColors(
             containerColor = MaterialTheme.colorScheme.surfaceContainerHighest
         ),
-        shape = RoundedCornerShape(20.dp)
+        shape = RoundedCornerShape(12.dp)
     ) {
         Column(modifier = Modifier.padding(20.dp)) {
             Row(
@@ -276,11 +282,11 @@ fun RecentPRsCard(
     Card(
         modifier = modifier
             .fillMaxWidth()
-            .shadow(8.dp, RoundedCornerShape(20.dp)),
+            .shadow(2.dp, RoundedCornerShape(12.dp)),
         colors = CardDefaults.cardColors(
             containerColor = MaterialTheme.colorScheme.surfaceContainerHighest
         ),
-        shape = RoundedCornerShape(20.dp)
+        shape = RoundedCornerShape(12.dp)
     ) {
         Column(modifier = Modifier.padding(20.dp)) {
             Row(
@@ -397,11 +403,11 @@ fun TopExercisesCard(
     Card(
         modifier = modifier
             .fillMaxWidth()
-            .shadow(8.dp, RoundedCornerShape(20.dp)),
+            .shadow(2.dp, RoundedCornerShape(12.dp)),
         colors = CardDefaults.cardColors(
             containerColor = MaterialTheme.colorScheme.surfaceContainerHighest
         ),
-        shape = RoundedCornerShape(20.dp)
+        shape = RoundedCornerShape(12.dp)
     ) {
         Column(modifier = Modifier.padding(20.dp)) {
             Row(

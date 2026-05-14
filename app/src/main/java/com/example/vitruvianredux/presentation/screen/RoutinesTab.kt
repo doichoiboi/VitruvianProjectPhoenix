@@ -14,8 +14,6 @@ import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.graphics.Brush
-import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import com.example.vitruvianredux.data.repository.ExerciseRepository
@@ -48,28 +46,10 @@ fun RoutinesTab(
     var showRoutineBuilder by remember { mutableStateOf(false) }
     var routineToEdit by remember { mutableStateOf<Routine?>(null) }
 
-    val backgroundGradient = if (themeMode == ThemeMode.DARK) {
-        Brush.verticalGradient(
-            colors = listOf(
-                Color(0xFF0F172A), // slate-900
-                Color(0xFF1E1B4B), // indigo-950
-                Color(0xFF172554)  // blue-950
-            )
-        )
-    } else {
-        Brush.verticalGradient(
-            colors = listOf(
-                Color(0xFFE0E7FF), // indigo-200 - soft lavender
-                Color(0xFFFCE7F3), // pink-100 - soft pink
-                Color(0xFFDDD6FE)  // violet-200 - soft violet
-            )
-        )
-    }
-
     Box(
         modifier = modifier
             .fillMaxSize()
-            .background(backgroundGradient)
+            .background(MaterialTheme.appBrushes.screenBackground)
     ) {
         Column(
             modifier = Modifier
@@ -213,14 +193,14 @@ fun RoutineCard(
     Card(
         onClick = { expanded = !expanded },
         modifier = Modifier.fillMaxWidth(),
-        shape = RoundedCornerShape(20.dp), // Material 3 Expressive: More rounded
+        shape = RoundedCornerShape(12.dp),
         colors = CardDefaults.cardColors(
-            containerColor = MaterialTheme.colorScheme.surfaceContainerHighest // Material 3 Expressive: Higher contrast
+            containerColor = MaterialTheme.colorScheme.surfaceContainerHighest
         ),
         elevation = CardDefaults.cardElevation(
             defaultElevation = if (expanded) 8.dp else 2.dp
         ),
-        border = BorderStroke(2.dp, MaterialTheme.colorScheme.primary.copy(alpha = 0.2f))
+        border = BorderStroke(1.dp, MaterialTheme.colorScheme.primary.copy(alpha = 0.2f))
     ) {
         Column(
             modifier = Modifier
@@ -236,12 +216,10 @@ fun RoutineCard(
                 Box(
                     modifier = Modifier
                         .size(64.dp)
-                        .shadow(8.dp, RoundedCornerShape(20.dp))
+                        .shadow(2.dp, RoundedCornerShape(12.dp))
                         .background(
-                            Brush.linearGradient(
-                                colors = listOf(Color(0xFF9333EA), Color(0xFF7E22CE))
-                            ),
-                            RoundedCornerShape(20.dp)
+                            MaterialTheme.appBrushes.primaryAccent,
+                            RoundedCornerShape(12.dp)
                         ),
                     contentAlignment = Alignment.Center
                 ) {
@@ -443,10 +421,10 @@ private fun formatEstimatedDuration(routine: Routine): String {
         val restCount = maxOf(0, exercise.setReps.size - 1)
         exercise.setRestSeconds.take(restCount).sum()
     }
-    
+
     val estimatedSeconds = (totalReps * 3) + totalRestSeconds // 3 seconds per rep estimate
     val minutes = estimatedSeconds / 60
-    
+
     return if (minutes < 60) {
         "${minutes} min"
     } else {

@@ -1,6 +1,5 @@
 package com.example.vitruvianredux.presentation.chrome
 
-import androidx.compose.ui.graphics.Color
 import com.example.vitruvianredux.domain.model.ConnectionState
 import kotlin.test.Test
 import kotlin.test.assertEquals
@@ -17,7 +16,7 @@ class MachineConnectionChromeStateTest {
 
         assertEquals("Connected", state.label)
         assertEquals("Connected to machine. Tap to disconnect", state.contentDescription)
-        assertEquals(Color(0xFF22C55E), state.color)
+        assertEquals(MachineConnectionTone.Success, state.tone)
     }
 
     @Test
@@ -26,7 +25,7 @@ class MachineConnectionChromeStateTest {
 
         assertEquals("Disconnected", state.label)
         assertEquals("Disconnected. Tap to connect", state.contentDescription)
-        assertEquals(Color(0xFFEF4444), state.color)
+        assertEquals(MachineConnectionTone.Error, state.tone)
     }
 
     @Test

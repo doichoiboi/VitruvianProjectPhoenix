@@ -1,6 +1,5 @@
 package com.example.vitruvianredux.presentation.components
 
-import android.graphics.Color
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.shape.RoundedCornerShape
@@ -16,14 +15,15 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.toArgb
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import kotlinx.coroutines.delay
 import androidx.compose.ui.viewinterop.AndroidView
-import androidx.core.graphics.toColorInt
 import com.example.vitruvianredux.domain.model.WeightUnit
 import com.example.vitruvianredux.domain.model.WorkoutMetric
 import com.example.vitruvianredux.ui.theme.Spacing
+import com.example.vitruvianredux.ui.theme.appChartColors
 import com.github.mikephil.charting.charts.LineChart
 import com.github.mikephil.charting.components.XAxis
 import com.github.mikephil.charting.data.Entry
@@ -67,9 +67,9 @@ fun SetSummaryCard(
     Card(
         modifier = modifier.fillMaxWidth(),
         colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface),
-        shape = RoundedCornerShape(20.dp), // Material 3 Expressive: More rounded (was 16dp)
-        elevation = CardDefaults.cardElevation(defaultElevation = 8.dp), // Material 3 Expressive: Higher elevation (was 4dp)
-        border = BorderStroke(2.dp, MaterialTheme.colorScheme.primary.copy(alpha = 0.2f)) // Material 3 Expressive: Thicker border (was 1dp)
+        shape = RoundedCornerShape(12.dp),
+        elevation = CardDefaults.cardElevation(defaultElevation = 2.dp),
+        border = BorderStroke(1.dp, MaterialTheme.colorScheme.primary.copy(alpha = 0.2f))
     ) {
         Column(
             modifier = Modifier
@@ -244,9 +244,9 @@ private fun ForceGraph(
     metrics: List<WorkoutMetric>,
     modifier: Modifier = Modifier
 ) {
-    val isDark = androidx.compose.foundation.isSystemInDarkTheme()
-    val textColor = if (isDark) Color.WHITE else Color.BLACK
-    val gridColor = if (isDark) Color.DKGRAY else Color.LTGRAY
+    val textColor = MaterialTheme.colorScheme.onSurface.toArgb()
+    val gridColor = MaterialTheme.colorScheme.outlineVariant.toArgb()
+    val forceColor = MaterialTheme.appChartColors.primary.toArgb()
 
     AndroidView(
         factory = { context ->
@@ -300,15 +300,15 @@ private fun ForceGraph(
 
             // Create dataset
             val dataSet = LineDataSet(entries, "Force").apply {
-                color = "#9333EA".toColorInt() // Purple
-                setCircleColor("#9333EA".toColorInt())
+                color = forceColor
+                setCircleColor(forceColor)
                 lineWidth = 2f
                 circleRadius = 0f // No circles for cleaner look
                 setDrawCircleHole(false)
                 setDrawValues(false) // No values on points
                 mode = LineDataSet.Mode.CUBIC_BEZIER
                 setDrawFilled(true)
-                fillColor = "#9333EA".toColorInt()
+                fillColor = forceColor
                 fillAlpha = 50
             }
 

@@ -93,10 +93,9 @@ fun RestTimerCard(
             verticalArrangement = Arrangement.SpaceBetween
         ) {
             Spacer(modifier = Modifier.height(8.dp))
-            // REST TIME Header - Material 3 Expressive
             Text(
                 text = "REST TIME",
-                style = MaterialTheme.typography.titleMedium, // Material 3 Expressive: Larger (was labelLarge)
+                style = MaterialTheme.typography.titleMedium,
                 fontWeight = FontWeight.Bold,
                 color = MaterialTheme.colorScheme.onSurfaceVariant,
                 letterSpacing = 1.5.sp
@@ -128,20 +127,16 @@ fun RestTimerCard(
                     color = MaterialTheme.colorScheme.primary
                 )
             }
-
-            // UP NEXT section - Material 3 Expressive
             Text(
                 text = "UP NEXT",
-                style = MaterialTheme.typography.titleMedium, // Material 3 Expressive: Larger (was labelMedium)
+                style = MaterialTheme.typography.titleMedium,
                 fontWeight = FontWeight.Bold,
                 color = MaterialTheme.colorScheme.onSurfaceVariant,
                 letterSpacing = 1.2.sp
             )
-
-            // Next exercise name or completion message - Material 3 Expressive
             Text(
                 text = if (isLastExercise) "Workout Complete" else nextExerciseName,
-                style = MaterialTheme.typography.headlineSmall, // Material 3 Expressive: Larger (was titleLarge)
+                style = MaterialTheme.typography.headlineSmall,
                 fontWeight = FontWeight.Bold,
                 color = if (isLastExercise)
                     MaterialTheme.colorScheme.primary
@@ -184,13 +179,11 @@ fun RestTimerCard(
                 var editableReps by remember(workoutParameters.reps) {
                     mutableIntStateOf(workoutParameters.reps)
                 }
-
-                // Configuration card - Material 3 Expressive
                 Card(
                     modifier = Modifier.fillMaxWidth(),
-                    shape = RoundedCornerShape(20.dp),
+                    shape = RoundedCornerShape(12.dp),
                     colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surfaceContainerHighest),
-                    elevation = CardDefaults.cardElevation(defaultElevation = 8.dp)
+                    elevation = CardDefaults.cardElevation(defaultElevation = 2.dp)
                 ) {
                     Column(
                         modifier = Modifier
@@ -275,9 +268,9 @@ fun RestTimerCard(
 
                 Card(
                     modifier = Modifier.fillMaxWidth(),
-                    shape = RoundedCornerShape(20.dp),
+                    shape = RoundedCornerShape(12.dp),
                     colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surfaceContainerHighest),
-                    elevation = CardDefaults.cardElevation(defaultElevation = 8.dp)
+                    elevation = CardDefaults.cardElevation(defaultElevation = 2.dp)
                 ) {
                     Column(
                         modifier = Modifier
@@ -349,42 +342,39 @@ fun RestTimerCard(
                     .padding(bottom = 8.dp),
                 verticalArrangement = Arrangement.spacedBy(Spacing.small)
             ) {
-                // Skip Rest button (primary action) - Material 3 Expressive
                 Button(
                     onClick = onSkipRest,
                     modifier = Modifier
                         .fillMaxWidth()
-                        .height(56.dp), // Material 3 Expressive: Taller button
+                        .height(56.dp),
                     colors = ButtonDefaults.buttonColors(
                         containerColor = MaterialTheme.colorScheme.primary,
                         contentColor = MaterialTheme.colorScheme.onPrimary
                     ),
-                    shape = RoundedCornerShape(20.dp), // Material 3 Expressive: More rounded (was 16dp)
+                    shape = RoundedCornerShape(12.dp),
                     elevation = ButtonDefaults.buttonElevation(
-                        defaultElevation = 4.dp, // Material 3 Expressive: Higher elevation
+                        defaultElevation = 4.dp,
                         pressedElevation = 2.dp
                     )
                 ) {
                     Icon(
                         Icons.Default.PlayArrow,
                         contentDescription = "Skip rest",
-                        modifier = Modifier.size(24.dp) // Material 3 Expressive: Larger icon (was 20dp)
+                        modifier = Modifier.size(24.dp)
                     )
                     Spacer(modifier = Modifier.width(Spacing.small))
                     Text(
                         text = if (isLastExercise) "Continue" else "Skip Rest",
-                        style = MaterialTheme.typography.titleLarge, // Material 3 Expressive: Larger (was labelLarge)
+                        style = MaterialTheme.typography.titleLarge,
                         fontWeight = FontWeight.Bold
                     )
                 }
-
-                // End Workout button (secondary/destructive action) - Material 3 Expressive
                 TextButton(
                     onClick = onEndWorkout,
                     modifier = Modifier
                         .fillMaxWidth()
-                        .height(56.dp), // Material 3 Expressive: Taller button
-                    shape = RoundedCornerShape(20.dp) // Material 3 Expressive: More rounded (was 16dp)
+                        .height(56.dp),
+                    shape = RoundedCornerShape(12.dp)
                 ) {
                     Icon(
                         Icons.Default.Close,
@@ -395,8 +385,8 @@ fun RestTimerCard(
                     Spacer(modifier = Modifier.width(Spacing.small))
                     Text(
                         text = "End Workout",
-                        style = MaterialTheme.typography.titleMedium, // Material 3 Expressive: Larger (was labelMedium)
-                        fontWeight = FontWeight.Bold, // Material 3 Expressive: Bolder
+                        style = MaterialTheme.typography.titleMedium,
+                        fontWeight = FontWeight.Bold,
                         color = MaterialTheme.colorScheme.error
                     )
                 }

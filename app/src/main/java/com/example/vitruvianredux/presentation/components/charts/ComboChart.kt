@@ -3,18 +3,23 @@ package com.example.vitruvianredux.presentation.components.charts
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.background
+import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.unit.dp
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Row
 import com.patrykandpatrick.vico.compose.cartesian.CartesianChartHost
 import com.patrykandpatrick.vico.compose.cartesian.layer.rememberColumnCartesianLayer
 import com.patrykandpatrick.vico.compose.cartesian.layer.rememberLineCartesianLayer
 import com.patrykandpatrick.vico.compose.common.component.rememberLineComponent
+import com.patrykandpatrick.vico.compose.common.component.rememberShapeComponent
 import com.patrykandpatrick.vico.compose.common.fill
 import com.patrykandpatrick.vico.core.cartesian.layer.ColumnCartesianLayer
 import com.patrykandpatrick.vico.core.cartesian.layer.LineCartesianLayer
@@ -32,6 +37,8 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.material3.Icon
 import androidx.compose.material3.Text
 import androidx.compose.foundation.layout.size
+import com.example.vitruvianredux.ui.theme.appChartColors
+import com.patrykandpatrick.vico.core.common.shape.CorneredShape
 
 /**
  * Material 3 Expressive Combo Chart
@@ -56,53 +63,123 @@ fun ComboChart(
     }
 
     val modelProducer = remember { CartesianChartModelProducer() }
+    val columnColor = MaterialTheme.appChartColors.primary
+    val lineColor = MaterialTheme.appChartColors.comparison
 
     LaunchedEffect(columnData, lineData) {
         if (columnData.isEmpty() && lineData.isEmpty()) return@LaunchedEffect
 
         modelProducer.runTransaction {
+            val sessionXByLabel = (columnData.map { it.first } + lineData.map { it.first })
+                .distinct()
+                .withIndex()
+                .associate { (index, label) -> label to index.toFloat() }
+            val columnX = columnData.mapIndexed { index, (label, _) ->
+                sessionXByLabel[label] ?: index.toFloat()
+            }
+            val lineX = lineData.mapIndexed { index, (label, _) ->
+                sessionXByLabel[label] ?: index.toFloat()
+            }
+
             // Column series (e.g., volume)
             if (columnData.isNotEmpty()) {
                 columnSeries {
-                    series(columnData.map { it.second })
+                    series(
+                        x = columnX,
+                        y = columnData.map { it.second.toDouble() }
+                    )
                 }
             }
             
             // Line series (e.g., weight progression)
             if (lineData.isNotEmpty()) {
                 lineSeries {
-                    series(lineData.map { it.second })
+                    series(
+                        x = lineX,
+                        y = lineData.map { it.second.toDouble() }
+                    )
                 }
             }
         }
     }
 
     ProvideVicoTheme(rememberM3VicoTheme()) {
-        CartesianChartHost(
-            chart = rememberCartesianChart(
-                // Column layer
-                rememberColumnCartesianLayer(
-                    columnProvider = ColumnCartesianLayer.ColumnProvider.series(
-                        listOf(
-                            MaterialTheme.colorScheme.primary,
-                            MaterialTheme.colorScheme.secondary
-                        ).map { color ->
-                            rememberLineComponent(
-                                fill(color),
-                                0.6f.dp
-                            )
-                        }
-                    ),
-                    columnCollectionSpacing = 8.dp
-                ),
-                // Line layer
-                rememberLineCartesianLayer()
-            ),
-            modelProducer = modelProducer,
+        Column(
             modifier = modifier
                 .fillMaxWidth()
-                .height(280.dp) // Material 3 Expressive: Taller charts
-                .padding(16.dp)
+                .height(280.dp)
+                .padding(16.dp),
+            verticalArrangement = Arrangement.spacedBy(8.dp)
+        ) {
+            Row(
+                horizontalArrangement = Arrangement.spacedBy(16.dp),
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                ChartLegendItem(label = columnLabel, color = columnColor)
+                ChartLegendItem(label = lineLabel, color = lineColor)
+            }
+            CartesianChartHost(
+                chart = rememberCartesianChart(
+                    // Column layer
+                    rememberColumnCartesianLayer(
+                        columnProvider = ColumnCartesianLayer.ColumnProvider.series(
+                            rememberLineComponent(
+                                fill(columnColor),
+                                8.dp,
+                                shape = CorneredShape.rounded(3f)
+                            )
+                        ),
+                        columnCollectionSpacing = 8.dp
+                    ),
+                    // Line layer
+                    rememberLineCartesianLayer(
+                        lineProvider = LineCartesianLayer.LineProvider.series(
+                            LineCartesianLayer.Line(
+                                fill = LineCartesianLayer.LineFill.single(fill(lineColor)),
+                                stroke = LineCartesianLayer.LineStroke.Continuous(thicknessDp = 2.25f),
+                                pointProvider = LineCartesianLayer.PointProvider.single(
+                                    LineCartesianLayer.Point(
+                                        rememberShapeComponent(
+                                            fill = fill(lineColor),
+                                            shape = CorneredShape.Pill,
+                                            strokeFill = fill(MaterialTheme.colorScheme.surfaceContainerHighest),
+                                            strokeThickness = 1.dp
+                                        ),
+                                        sizeDp = 7f
+                                    )
+                                )
+                            )
+                        )
+                    )
+                ),
+                modelProducer = modelProducer,
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .weight(1f)
+            )
+        }
+    }
+}
+
+@Composable
+private fun ChartLegendItem(
+    label: String,
+    color: Color
+) {
+    Row(
+        horizontalArrangement = Arrangement.spacedBy(6.dp),
+        verticalAlignment = Alignment.CenterVertically
+    ) {
+        Box(
+            modifier = Modifier
+                .size(10.dp)
+                .background(color, CircleShape)
+        )
+        Text(
+            text = label,
+            style = MaterialTheme.typography.labelSmall,
+            color = MaterialTheme.colorScheme.onSurfaceVariant,
+            maxLines = 1
         )
     }
 }

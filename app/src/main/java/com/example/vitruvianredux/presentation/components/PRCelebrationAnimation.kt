@@ -18,6 +18,7 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.window.Dialog
 import androidx.compose.ui.window.DialogProperties
+import com.example.vitruvianredux.ui.theme.appStatusColors
 import kotlin.math.cos
 import kotlin.math.sin
 import kotlin.random.Random
@@ -136,20 +137,20 @@ private fun PRCelebrationContent(
         label = "confetti"
     )
 
+    val celebrationColors = listOf(
+        MaterialTheme.colorScheme.primary,
+        MaterialTheme.colorScheme.tertiary,
+        MaterialTheme.appStatusColors.warning,
+        MaterialTheme.appStatusColors.success
+    )
+
     // Generate confetti particles
-    val confettiParticles = remember {
+    val confettiParticles = remember(celebrationColors) {
         List(30) {
             ConfettiParticle(
                 startX = Random.nextFloat(),
                 startY = 0f,
-                color = listOf(
-                    Color(0xFFFFD700), // Gold
-                    Color(0xFFFFA500), // Orange
-                    Color(0xFFFF69B4), // Pink
-                    Color(0xFF9333EA), // Purple
-                    Color(0xFF3B82F6), // Blue
-                    Color(0xFF10B981)  // Green
-                ).random(),
+                color = celebrationColors.random(),
                 size = Random.nextFloat() * 8f + 4f,
                 rotationSpeed = Random.nextFloat() * 10f - 5f,
                 velocityX = Random.nextFloat() * 400f - 200f,
@@ -216,7 +217,7 @@ private fun PRCelebrationContent(
                     Icon(
                         imageVector = Icons.Default.Star,
                         contentDescription = "Personal record achievement",
-                        tint = Color(0xFFFFD700),
+                        tint = MaterialTheme.appStatusColors.warning,
                         modifier = Modifier
                             .size(32.dp)
                             .scale(pulseScale)

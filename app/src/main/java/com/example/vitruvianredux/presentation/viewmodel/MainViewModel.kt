@@ -19,6 +19,8 @@ import com.example.vitruvianredux.presentation.workout.JustLiftRestElapsedStateP
 import com.example.vitruvianredux.presentation.workout.RestTimerDisplayPolicy
 import com.example.vitruvianredux.presentation.workout.WorkoutProgressionParameterPolicy
 import com.example.vitruvianredux.service.WorkoutForegroundService
+import com.example.vitruvianredux.ui.theme.ThemeManager
+import com.example.vitruvianredux.ui.theme.ThemeMode
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.delay
@@ -30,6 +32,7 @@ import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asSharedFlow
 import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.filter
 import kotlinx.coroutines.flow.firstOrNull
 import kotlinx.coroutines.flow.map
@@ -66,6 +69,13 @@ data class GroupedRoutineHistoryItem(
     override val timestamp: Long
 ) : HistoryItem()
 
+data class AppScaffoldUiState(
+    val connectionState: ConnectionState = ConnectionState.Disconnected,
+    val connectionLostDuringWorkout: Boolean = false,
+    val isAutoConnecting: Boolean = false,
+    val connectionError: String? = null
+)
+
 @HiltViewModel
 class MainViewModel @Inject constructor(
     application: Application,
@@ -74,7 +84,8 @@ class MainViewModel @Inject constructor(
     val exerciseRepository: ExerciseRepository,
     val personalRecordRepository: PersonalRecordRepository,
     private val repCounter: RepCounterFromMachine,
-    private val preferencesManager: PreferencesManager
+    private val preferencesManager: PreferencesManager,
+    private val themeManager: ThemeManager
 ) : AndroidViewModel(application) {
 
     // Use application context directly instead of storing it
@@ -150,6 +161,15 @@ class MainViewModel @Inject constructor(
     val enableVideoPlayback: StateFlow<Boolean> = userPreferences
         .map { it.enableVideoPlayback }
         .stateIn(viewModelScope, SharingStarted.Eagerly, true)
+
+    val themeMode: StateFlow<ThemeMode> = themeManager.themeMode
+        .stateIn(viewModelScope, SharingStarted.Eagerly, ThemeMode.SYSTEM)
+
+    fun setThemeMode(mode: ThemeMode) {
+        viewModelScope.launch {
+            themeManager.setThemeMode(mode)
+        }
+    }
 
     // Feature 4: Routine Management
     private val _routines = MutableStateFlow<List<Routine>>(emptyList())
@@ -336,6 +356,20 @@ class MainViewModel @Inject constructor(
     // Connection loss detection (Issue #43)
     private val _connectionLostDuringWorkout = MutableStateFlow(false)
     val connectionLostDuringWorkout: StateFlow<Boolean> = _connectionLostDuringWorkout.asStateFlow()
+
+    val appScaffoldUiState: StateFlow<AppScaffoldUiState> = combine(
+        connectionState,
+        connectionLostDuringWorkout,
+        isAutoConnecting,
+        connectionError
+    ) { connectionState, connectionLostDuringWorkout, isAutoConnecting, connectionError ->
+        AppScaffoldUiState(
+            connectionState = connectionState,
+            connectionLostDuringWorkout = connectionLostDuringWorkout,
+            isAutoConnecting = isAutoConnecting,
+            connectionError = connectionError
+        )
+    }.stateIn(viewModelScope, SharingStarted.Eagerly, AppScaffoldUiState())
 
     // Current workout tracking
     private var currentSessionId: String? = null

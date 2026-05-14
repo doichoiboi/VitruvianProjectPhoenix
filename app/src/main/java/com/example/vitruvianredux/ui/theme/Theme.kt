@@ -5,96 +5,253 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.darkColorScheme
 import androidx.compose.material3.lightColorScheme
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.CompositionLocalProvider
+import androidx.compose.runtime.Immutable
+import androidx.compose.runtime.ReadOnlyComposable
+import androidx.compose.runtime.staticCompositionLocalOf
+import androidx.compose.ui.graphics.Brush
+import androidx.compose.ui.graphics.Color
 
 enum class ThemeMode { SYSTEM, LIGHT, DARK }
 
+fun ThemeMode.resolveDarkTheme(systemInDarkTheme: Boolean): Boolean =
+    when (this) {
+        ThemeMode.SYSTEM -> systemInDarkTheme
+        ThemeMode.LIGHT -> false
+        ThemeMode.DARK -> true
+    }
+
+@Immutable
+data class AppStatusColors(
+    val success: Color,
+    val onSuccess: Color,
+    val successContainer: Color,
+    val onSuccessContainer: Color,
+    val warning: Color,
+    val onWarning: Color,
+    val warningContainer: Color,
+    val onWarningContainer: Color,
+    val info: Color,
+    val onInfo: Color,
+    val infoContainer: Color,
+    val onInfoContainer: Color
+)
+
+@Immutable
+data class AppBrushes(
+    val screenBackground: Brush,
+    val primaryAccent: Brush,
+    val celebration: Brush
+)
+
+@Immutable
+data class AppChartColors(
+    val primary: Color,
+    val secondary: Color,
+    val tertiary: Color,
+    val positive: Color,
+    val warning: Color,
+    val negative: Color,
+    val neutral: Color,
+    val comparison: Color
+) {
+    val series: List<Color>
+        get() = listOf(
+            primary,
+            secondary,
+            tertiary,
+            positive,
+            warning,
+            negative,
+            neutral,
+            comparison
+        )
+}
+
 private val DarkColorScheme = darkColorScheme(
-    primary = PrimaryPurpleDark,               // Desaturated purple reduces eye strain
-    onPrimary = TextPrimary,                   // White text on purple
-    primaryContainer = PurpleAccentDark,       // Desaturated purple container
-    onPrimaryContainer = TextPrimary,
+    primary = MonoTextPrimary,
+    onPrimary = MonoBlack,
+    primaryContainer = MonoSurfaceHighest,
+    onPrimaryContainer = MonoTextPrimary,
 
-    secondary = SecondaryPurpleDark,           // Desaturated deeper purple
-    onSecondary = TextPrimary,
-    secondaryContainer = SecondaryPurpleDark,
-    onSecondaryContainer = TextPrimary,
+    secondary = MonoTextSecondary,
+    onSecondary = MonoBlack,
+    secondaryContainer = MonoSurfaceHigh,
+    onSecondaryContainer = MonoTextPrimary,
 
-    tertiary = TertiaryPurpleDark,             // Soft purple for highlights
-    onTertiary = TextPrimary,
-    tertiaryContainer = TertiaryPurpleDark,
-    onTertiaryContainer = TextPrimary,
+    tertiary = MonoTextMuted,
+    onTertiary = MonoBlack,
+    tertiaryContainer = MonoSurfaceHigh,
+    onTertiaryContainer = MonoTextPrimary,
 
-    background = BackgroundBlack,
-    onBackground = TextPrimary,
+    background = MonoBlack,
+    onBackground = MonoTextPrimary,
 
-    surface = SurfaceDarkGrey,
-    onSurface = TextPrimary,
-    surfaceVariant = CardBackground,
-    onSurfaceVariant = TextSecondary,
-
-    // Material 3 Expressive Surface Container Roles (Dark)
-    surfaceContainer = SurfaceDarkGrey,        // Base surface
-    surfaceContainerHigh = CardBackground,     // Cards
-    surfaceContainerHighest = androidx.compose.ui.graphics.Color(0xFF353535), // Modals/High emphasis
+    surface = MonoSurface,
+    onSurface = MonoTextPrimary,
+    surfaceVariant = MonoSurfaceHigh,
+    onSurfaceVariant = MonoTextSecondary,
+    surfaceContainer = MonoSurface,
+    surfaceContainerHigh = MonoSurfaceHigh,
+    surfaceContainerHighest = MonoSurfaceHighest,
 
     error = ErrorRed,
-    onError = TextPrimary,
+    onError = Color.White,
+    errorContainer = ErrorRedContainer,
+    onErrorContainer = Color.White,
 
-    outline = TextTertiary,
-    outlineVariant = TextDisabled
+    outline = MonoOutline,
+    outlineVariant = MonoOutlineSubtle
 )
 
 private val LightColorScheme = lightColorScheme(
-    primary = PrimaryBlueLight,              // Teal/cyan for light mode buttons
-    onPrimary = ColorLightSurface,           // White text on teal buttons
-    primaryContainer = TertiaryBlueLight.copy(alpha = 0.2f),  // Light teal container
-    onPrimaryContainer = ColorOnLightBackground,  // Dark text on light container
+    primary = PrimaryOrange,
+    onPrimary = Color.White,
+    primaryContainer = PrimaryOrangeContainer,
+    onPrimaryContainer = LightTextPrimary,
 
-    secondary = SecondaryBlueLight,          // Deeper teal for secondary elements
-    onSecondary = ColorLightSurface,         // White text
-    secondaryContainer = TertiaryBlueLight.copy(alpha = 0.15f),
-    onSecondaryContainer = ColorOnLightBackground,  // Dark text
+    secondary = LightTextSecondary,
+    onSecondary = Color.White,
+    secondaryContainer = LightSurfaceHighest,
+    onSecondaryContainer = LightTextPrimary,
 
-    tertiary = TertiaryBlueLight,            // Bright cyan for highlights
-    onTertiary = ColorLightSurface,          // White text
-    tertiaryContainer = TertiaryBlueLight.copy(alpha = 0.1f),
-    onTertiaryContainer = ColorOnLightBackground,  // Dark text
+    tertiary = PrimaryOrangeActive,
+    onTertiary = Color.White,
+    tertiaryContainer = PrimaryOrangeContainer,
+    onTertiaryContainer = LightTextPrimary,
 
-    background = ColorLightBackground,
-    onBackground = ColorOnLightBackground,
+    background = LightBackground,
+    onBackground = LightTextPrimary,
 
-    surface = ColorLightSurface,
-    onSurface = ColorOnLightSurface,
-    surfaceVariant = ColorLightSurfaceVariant,
-    onSurfaceVariant = ColorOnLightSurfaceVariant,
-
-    // Material 3 Expressive Surface Container Roles (Light)
-    surfaceContainer = ColorLightSurface,         // Base surface
-    surfaceContainerHigh = ColorLightSurfaceVariant, // Cards
-    surfaceContainerHighest = androidx.compose.ui.graphics.Color(0xFFE2E8F0), // Slate-200 for modals
+    surface = LightSurface,
+    onSurface = LightTextPrimary,
+    surfaceVariant = LightSurfaceHigh,
+    onSurfaceVariant = LightTextSecondary,
+    surfaceContainer = LightSurface,
+    surfaceContainerHigh = LightSurfaceHigh,
+    surfaceContainerHighest = LightSurfaceHighest,
 
     error = ErrorRed,
-    onError = ColorLightSurface,            // White text on red error
+    onError = Color.White,
+    errorContainer = ErrorRedContainerLight,
+    onErrorContainer = LightTextPrimary,
 
-    outline = ColorOnLightSurfaceVariant.copy(alpha = 0.6f),
-    outlineVariant = ColorOnLightSurfaceVariant.copy(alpha = 0.4f)
+    outline = LightOutline,
+    outlineVariant = LightOutlineSubtle
 )
+
+private val DarkAppStatusColors = AppStatusColors(
+    success = SuccessGreen,
+    onSuccess = MonoBlack,
+    successContainer = SuccessGreenContainer,
+    onSuccessContainer = Color.White,
+    warning = WarningAmber,
+    onWarning = MonoBlack,
+    warningContainer = WarningAmberContainer,
+    onWarningContainer = Color.White,
+    info = InfoBlue,
+    onInfo = Color.White,
+    infoContainer = InfoBlueContainer,
+    onInfoContainer = Color.White
+)
+
+private val LightAppStatusColors = AppStatusColors(
+    success = SuccessGreen,
+    onSuccess = Color.White,
+    successContainer = SuccessGreenContainerLight,
+    onSuccessContainer = SuccessGreenContainer,
+    warning = WarningAmber,
+    onWarning = LightTextPrimary,
+    warningContainer = WarningAmberContainerLight,
+    onWarningContainer = WarningAmberContainer,
+    info = InfoBlue,
+    onInfo = Color.White,
+    infoContainer = InfoBlueContainerLight,
+    onInfoContainer = InfoBlueContainer
+)
+
+private val DarkAppBrushes = AppBrushes(
+    screenBackground = Brush.verticalGradient(
+        listOf(MonoBlack, MonoSurface, MonoSurfaceHigh)
+    ),
+    primaryAccent = Brush.linearGradient(
+        listOf(MonoTextPrimary, MonoTextSecondary)
+    ),
+    celebration = Brush.linearGradient(
+        listOf(WarningAmber, PrimaryOrange)
+    )
+)
+
+private val LightAppBrushes = AppBrushes(
+    screenBackground = Brush.verticalGradient(
+        listOf(LightBackground, LightSurface, PrimaryOrangeContainer)
+    ),
+    primaryAccent = Brush.linearGradient(
+        listOf(PrimaryOrange, PrimaryOrangeActive)
+    ),
+    celebration = Brush.linearGradient(
+        listOf(WarningAmber, PrimaryOrange)
+    )
+)
+
+private val DarkAppChartColors = AppChartColors(
+    primary = PrimaryOrange,
+    secondary = WarningAmber,
+    tertiary = ChartGold,
+    positive = SuccessGreen,
+    warning = ChartCopper,
+    negative = ErrorRed,
+    neutral = ChartSlate,
+    comparison = ChartStone
+)
+
+private val LightAppChartColors = AppChartColors(
+    primary = PrimaryOrangeActive,
+    secondary = WarningAmber,
+    tertiary = ChartGoldDark,
+    positive = SuccessGreen,
+    warning = ChartCopperDark,
+    negative = ErrorRed,
+    neutral = ChartSlateDark,
+    comparison = ChartStoneDark
+)
+
+private val LocalAppStatusColors = staticCompositionLocalOf { DarkAppStatusColors }
+private val LocalAppBrushes = staticCompositionLocalOf { DarkAppBrushes }
+private val LocalAppChartColors = staticCompositionLocalOf { DarkAppChartColors }
+
+val MaterialTheme.appStatusColors: AppStatusColors
+    @Composable
+    @ReadOnlyComposable
+    get() = LocalAppStatusColors.current
+
+val MaterialTheme.appBrushes: AppBrushes
+    @Composable
+    @ReadOnlyComposable
+    get() = LocalAppBrushes.current
+
+val MaterialTheme.appChartColors: AppChartColors
+    @Composable
+    @ReadOnlyComposable
+    get() = LocalAppChartColors.current
 
 @Composable
 fun VitruvianProjectPhoenixTheme(
     themeMode: ThemeMode = ThemeMode.SYSTEM,
     content: @Composable () -> Unit
 ) {
-    val useDarkColors = when (themeMode) {
-        ThemeMode.SYSTEM -> isSystemInDarkTheme()
-        ThemeMode.LIGHT -> false
-        ThemeMode.DARK -> true
-    }
+    val useDarkColors = themeMode.resolveDarkTheme(isSystemInDarkTheme())
 
-    MaterialTheme(
-        colorScheme = if (useDarkColors) DarkColorScheme else LightColorScheme,
-        typography = Typography,
-        shapes = ExpressiveShapes, // Material 3 Expressive: More rounded shapes
-        content = content
-    )
+    CompositionLocalProvider(
+        LocalAppStatusColors provides if (useDarkColors) DarkAppStatusColors else LightAppStatusColors,
+        LocalAppBrushes provides if (useDarkColors) DarkAppBrushes else LightAppBrushes,
+        LocalAppChartColors provides if (useDarkColors) DarkAppChartColors else LightAppChartColors
+    ) {
+        MaterialTheme(
+            colorScheme = if (useDarkColors) DarkColorScheme else LightColorScheme,
+            typography = Typography,
+            shapes = ExpressiveShapes,
+            content = content
+        )
+    }
 }

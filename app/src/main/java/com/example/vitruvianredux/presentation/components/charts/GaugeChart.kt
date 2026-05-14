@@ -35,6 +35,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.material3.Icon
 import androidx.compose.foundation.layout.size
+import com.example.vitruvianredux.ui.theme.appChartColors
 
 /**
  * Material 3 Expressive Gauge Chart
@@ -67,9 +68,9 @@ fun GaugeChart(
 
     val percentage = (animatedProgress * 100).toInt()
     val gaugeColor = when {
-        animatedProgress >= 0.8f -> MaterialTheme.colorScheme.primary
-        animatedProgress >= 0.5f -> MaterialTheme.colorScheme.secondary
-        else -> MaterialTheme.colorScheme.tertiary
+        animatedProgress >= 0.8f -> MaterialTheme.appChartColors.positive
+        animatedProgress >= 0.5f -> MaterialTheme.appChartColors.secondary
+        else -> MaterialTheme.appChartColors.warning
     }
 
     val surfaceContainerHighestColor = MaterialTheme.colorScheme.surfaceContainerHighest

@@ -21,8 +21,6 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.scale
 import androidx.compose.ui.draw.shadow
-import androidx.compose.ui.graphics.Brush
-import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
@@ -32,6 +30,8 @@ import com.example.vitruvianredux.presentation.viewmodel.ProtocolTesterViewModel
 import com.example.vitruvianredux.presentation.viewmodel.ProtocolTesterViewModel.TestMode
 import com.example.vitruvianredux.presentation.viewmodel.ProtocolTesterViewModel.TestState
 import com.example.vitruvianredux.ui.theme.Spacing
+import com.example.vitruvianredux.ui.theme.appBrushes
+import com.example.vitruvianredux.ui.theme.appStatusColors
 import com.example.vitruvianredux.util.ProtocolTester.TestResult
 import com.example.vitruvianredux.util.ProtocolTester.ExerciseCyclePhaseResult
 
@@ -107,11 +107,11 @@ fun ProtocolTesterScreen(
             Card(
                 modifier = Modifier
                     .fillMaxWidth()
-                    .shadow(8.dp, RoundedCornerShape(20.dp)),
+                    .shadow(2.dp, RoundedCornerShape(12.dp)),
                 colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surfaceContainerHighest),
-                shape = RoundedCornerShape(20.dp),
-                elevation = CardDefaults.cardElevation(defaultElevation = 8.dp),
-                border = BorderStroke(2.dp, MaterialTheme.colorScheme.primary.copy(alpha = 0.2f))
+                shape = RoundedCornerShape(12.dp),
+                elevation = CardDefaults.cardElevation(defaultElevation = 2.dp),
+                border = BorderStroke(1.dp, MaterialTheme.colorScheme.primary.copy(alpha = 0.2f))
             ) {
                 Column(
                     modifier = Modifier
@@ -122,12 +122,10 @@ fun ProtocolTesterScreen(
                         Box(
                             modifier = Modifier
                                 .size(48.dp)
-                                .shadow(8.dp, RoundedCornerShape(20.dp))
+                                .shadow(2.dp, RoundedCornerShape(12.dp))
                                 .background(
-                                    Brush.linearGradient(
-                                        colors = listOf(Color(0xFF8B5CF6), Color(0xFF9333EA))
-                                    ),
-                                    RoundedCornerShape(20.dp)
+                                    MaterialTheme.appBrushes.primaryAccent,
+                                    RoundedCornerShape(12.dp)
                                 ),
                             contentAlignment = Alignment.Center
                         ) {
@@ -290,7 +288,7 @@ private fun IdleContent(onStartTesting: () -> Unit) {
             modifier = Modifier
                 .fillMaxWidth()
                 .height(56.dp),
-            shape = RoundedCornerShape(20.dp)
+            shape = RoundedCornerShape(12.dp)
         ) {
             Icon(Icons.Default.PlayArrow, contentDescription = null)
             Spacer(modifier = Modifier.width(8.dp))
@@ -821,7 +819,7 @@ private fun ResultCard(result: TestResult) {
                 if (result.success) Icons.Default.CheckCircle else Icons.Default.Cancel,
                 contentDescription = null,
                 tint = if (result.success)
-                    Color(0xFF22C55E)
+                    MaterialTheme.appStatusColors.success
                 else
                     MaterialTheme.colorScheme.error,
                 modifier = Modifier.size(24.dp)
@@ -893,7 +891,7 @@ private fun ExerciseCyclePhaseCard(result: ExerciseCyclePhaseResult) {
                     if (result.success) Icons.Default.CheckCircle else Icons.Default.Cancel,
                     contentDescription = null,
                     tint = if (result.success)
-                        Color(0xFF22C55E)
+                        MaterialTheme.appStatusColors.success
                     else
                         MaterialTheme.colorScheme.error,
                     modifier = Modifier.size(24.dp)

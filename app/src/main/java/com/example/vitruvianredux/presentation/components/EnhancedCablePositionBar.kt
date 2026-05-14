@@ -21,6 +21,7 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.drawscope.DrawScope
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
+import com.example.vitruvianredux.ui.theme.appStatusColors
 
 /**
  * Movement phase for the cable - determines indicator coloring
@@ -71,11 +72,10 @@ fun EnhancedCablePositionBar(
         }
     }
 
-    // Phase-reactive colors
-    val concentricColor = Color(0xFF00E676)  // Bright green
-    val eccentricColor = Color(0xFFFF7043)   // Orange-red
-    val staticColor = Color(0xFF90CAF9)      // Light blue
-    val inactiveColor = Color(0xFF616161)    // Grey
+    val concentricColor = MaterialTheme.appStatusColors.success
+    val eccentricColor = MaterialTheme.appStatusColors.warning
+    val staticColor = MaterialTheme.appStatusColors.info
+    val inactiveColor = MaterialTheme.colorScheme.outline
 
     // Animate color based on phase
     val activeColor by animateColorAsState(

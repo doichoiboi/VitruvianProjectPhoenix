@@ -1,7 +1,15 @@
 package com.example.vitruvianredux.presentation.screen
 
 import android.Manifest
-import android.os.Build
+import android.app.Activity
+import android.content.Context
+import android.content.ContextWrapper
+import android.content.Intent
+import android.content.pm.PackageManager
+import android.net.Uri
+import android.provider.Settings
+import androidx.activity.compose.rememberLauncherForActivityResult
+import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.layout.WindowInsets
@@ -17,12 +25,13 @@ import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.graphics.Brush
-import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.platform.LocalContext
+import androidx.core.app.ActivityCompat
+import androidx.core.content.ContextCompat
 import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
 import androidx.navigation.compose.rememberNavController
 import com.example.vitruvianredux.data.repository.ExerciseRepository
@@ -32,36 +41,23 @@ import com.example.vitruvianredux.presentation.chrome.MachineConnectionButton
 import com.example.vitruvianredux.presentation.navigation.AppNavigationHub
 import com.example.vitruvianredux.presentation.navigation.NavGraph
 import com.example.vitruvianredux.presentation.navigation.NavigationRoutes
+import com.example.vitruvianredux.presentation.permissions.BlePermissionPolicy
 import com.example.vitruvianredux.presentation.viewmodel.MainViewModel
 import com.example.vitruvianredux.presentation.viewmodel.ScannedDevice
 import com.example.vitruvianredux.ui.theme.*
-import com.google.accompanist.permissions.ExperimentalPermissionsApi
-import com.google.accompanist.permissions.MultiplePermissionsState
-import com.google.accompanist.permissions.rememberMultiplePermissionsState
-import com.example.vitruvianredux.presentation.viewmodel.ThemeViewModel
 
-@OptIn(ExperimentalPermissionsApi::class, ExperimentalMaterial3Api::class)
+@OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun EnhancedMainScreen(
+fun AppScaffold(
+    themeMode: ThemeMode,
+    onThemeModeChange: (ThemeMode) -> Unit,
     viewModel: MainViewModel = hiltViewModel(),
     exerciseRepository: ExerciseRepository = viewModel.exerciseRepository
 ) {
-    val connectionState by viewModel.connectionState.collectAsState()
-    val connectionLostDuringWorkout by viewModel.connectionLostDuringWorkout.collectAsState()
-    val isAutoConnecting by viewModel.isAutoConnecting.collectAsState()
-    val connectionError by viewModel.connectionError.collectAsState()
+    val uiState by viewModel.appScaffoldUiState.collectAsState()
 
-    val themeViewModel: ThemeViewModel = hiltViewModel()
-    val themeMode by themeViewModel.themeMode.collectAsState()
     val appChrome = remember { AppChromeController() }
     val chromeState by appChrome.state.collectAsState()
-
-    // Determine if we're in dark mode for TopAppBar color
-    val isDarkMode = when (themeMode) {
-        ThemeMode.SYSTEM -> androidx.compose.foundation.isSystemInDarkTheme()
-        ThemeMode.LIGHT -> false
-        ThemeMode.DARK -> true
-    }
 
     val navController = rememberNavController()
     var currentRoute by remember { mutableStateOf(NavigationRoutes.Home.route) }
@@ -73,24 +69,37 @@ fun EnhancedMainScreen(
         }
     }
     
-    // Request BLE permissions
-    // NOTE: Must be declared BEFORE shouldShowBottomBar which depends on permissionState
-    // On Android 12+ (API 31+), location is NOT needed because manifest uses neverForLocation flag
-    // On older Android, location IS required for BLE scanning
-    val permissions = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {
-        listOf(
-            Manifest.permission.BLUETOOTH_SCAN,
-            Manifest.permission.BLUETOOTH_CONNECT
-        )
-    } else {
-        listOf(
-            Manifest.permission.BLUETOOTH,
-            Manifest.permission.BLUETOOTH_ADMIN,
-            Manifest.permission.ACCESS_FINE_LOCATION
-        )
+    val context = LocalContext.current
+    val permissions = remember { BlePermissionPolicy.requiredPermissions() }
+    var grantedPermissions by remember(permissions) {
+        mutableStateOf(context.grantedPermissionsFrom(permissions))
+    }
+    var hasAttemptedPermissionRequest by remember { mutableStateOf(false) }
+    val deniedPermissions = permissions.filterNot { it in grantedPermissions }
+    val allPermissionsGranted = deniedPermissions.isEmpty()
+
+    fun refreshPermissionStatus() {
+        grantedPermissions = context.grantedPermissionsFrom(permissions)
     }
 
-    val permissionState = rememberMultiplePermissionsState(permissions)
+    val permissionLauncher = rememberLauncherForActivityResult(
+        ActivityResultContracts.RequestMultiplePermissions()
+    ) { results ->
+        grantedPermissions = permissions
+            .filter { permission ->
+                results[permission] ?: context.hasPermission(permission)
+            }
+            .toSet()
+    }
+    val settingsLauncher = rememberLauncherForActivityResult(
+        ActivityResultContracts.StartActivityForResult()
+    ) {
+        refreshPermissionStatus()
+    }
+
+    LaunchedEffect(context, permissions) {
+        refreshPermissionStatus()
+    }
 
     val isWorkoutsRoute = remember(currentRoute) {
         AppNavigationHub.isWorkoutSection(currentRoute)
@@ -108,12 +117,9 @@ fun EnhancedMainScreen(
 
     // Determine if we should show the BottomBar
     // Show only for main tabs AND when permissions are granted (NavGraph exists)
-    // Using derivedStateOf for proper reactivity when permission state changes
-    val shouldShowBottomBar by remember {
-        derivedStateOf {
-            permissionState.allPermissionsGranted &&
-                AppNavigationHub.isBottomBarDestination(currentRoute)
-        }
+    val shouldShowBottomBar = remember(currentRoute, allPermissionsGranted) {
+        allPermissionsGranted &&
+            AppNavigationHub.isBottomBarDestination(currentRoute)
     }
 
     val showBackButton = remember(currentRoute) {
@@ -143,15 +149,9 @@ fun EnhancedMainScreen(
                             // Subtitle - always show "Vitruvian Project Phoenix"
                             Text(
                                 text = "Vitruvian Project Phoenix",
-                                style = MaterialTheme.typography.labelSmall.copy(
-                                    brush = Brush.linearGradient(
-                                        colors = listOf(
-                                            Color(0xFFF97316), // Orange
-                                            Color(0xFFEF4444)  // Red
-                                        )
-                                    ),
-                                    fontWeight = FontWeight.Medium
-                                )
+                                style = MaterialTheme.typography.labelSmall,
+                                fontWeight = FontWeight.Medium,
+                                color = MaterialTheme.colorScheme.primary
                             )
                         }
                     },
@@ -173,9 +173,10 @@ fun EnhancedMainScreen(
                         }
                     },
                 colors = TopAppBarDefaults.topAppBarColors(
-                    containerColor = if (isDarkMode) TopAppBarDark else TopAppBarLight,
-                    titleContentColor = TextPrimary,
-                    actionIconContentColor = TextPrimary
+                    containerColor = MaterialTheme.colorScheme.surface,
+                    titleContentColor = MaterialTheme.colorScheme.onSurface,
+                    navigationIconContentColor = MaterialTheme.colorScheme.onSurface,
+                    actionIconContentColor = MaterialTheme.colorScheme.onSurface
                 ),
                 actions = {
                     // Dynamic Actions from Screens
@@ -184,13 +185,13 @@ fun EnhancedMainScreen(
                             Icon(
                                 imageVector = action.icon,
                                 contentDescription = action.description,
-                                tint = TextPrimary
+                                tint = MaterialTheme.colorScheme.onSurface
                             )
                         }
                     }
 
                     MachineConnectionButton(
-                        connectionState = connectionState,
+                        connectionState = uiState.connectionState,
                         onConnect = {
                             viewModel.ensureConnection(
                                 onConnected = {},
@@ -203,7 +204,7 @@ fun EnhancedMainScreen(
                     // Theme toggle
                     com.example.vitruvianredux.presentation.components.ThemeToggle(
                         mode = themeMode,
-                        onModeChange = { themeViewModel.setThemeMode(it) }
+                        onModeChange = onThemeModeChange
                     )
                 }
             )
@@ -212,7 +213,7 @@ fun EnhancedMainScreen(
         bottomBar = {
             if (shouldShowBottomBar) {
                 NavigationBar(
-                    containerColor = if (isDarkMode) Color(0xFF1C1B1F) else Color(0xFFF3F3F3),
+                    containerColor = MaterialTheme.colorScheme.surfaceContainer,
                     contentColor = MaterialTheme.colorScheme.onSurface,
                     modifier = Modifier.navigationBarsPadding()
                 ) {
@@ -311,9 +312,18 @@ fun EnhancedMainScreen(
             bottom = padding.calculateBottomPadding()
         )
 
-        if (!permissionState.allPermissionsGranted) {
+        if (!allPermissionsGranted) {
             PermissionRequestScreen(
-                permissionState = permissionState,
+                requiredPermissions = permissions,
+                deniedPermissions = deniedPermissions,
+                hasAttemptedRequest = hasAttemptedPermissionRequest,
+                onGrantPermissions = {
+                    hasAttemptedPermissionRequest = true
+                    permissionLauncher.launch(permissions.toTypedArray())
+                },
+                onOpenSettings = {
+                    settingsLauncher.launch(context.appSettingsIntent())
+                },
                 modifier = Modifier.padding(adjustedPadding)
             )
         } else {
@@ -328,7 +338,7 @@ fun EnhancedMainScreen(
     }
 
     // Show connection lost alert during workout (Issue #43)
-    if (connectionLostDuringWorkout) {
+    if (uiState.connectionLostDuringWorkout) {
         com.example.vitruvianredux.presentation.components.ConnectionLostDialog(
             onReconnect = {
                 viewModel.dismissConnectionLostAlert()
@@ -343,13 +353,13 @@ fun EnhancedMainScreen(
         )
     }
 
-    if (isAutoConnecting) {
+    if (uiState.isAutoConnecting) {
         com.example.vitruvianredux.presentation.components.ConnectingOverlay(
             onCancel = { viewModel.cancelAutoConnecting() }
         )
     }
 
-    connectionError?.let { error ->
+    uiState.connectionError?.let { error ->
         com.example.vitruvianredux.presentation.components.ConnectionErrorDialog(
             message = error,
             onDismiss = { viewModel.clearConnectionError() }
@@ -358,22 +368,24 @@ fun EnhancedMainScreen(
     }
 }
 
-@OptIn(ExperimentalPermissionsApi::class)
 @Composable
 fun PermissionRequestScreen(
-    permissionState: MultiplePermissionsState,
+    requiredPermissions: List<String>,
+    deniedPermissions: List<String>,
+    hasAttemptedRequest: Boolean,
+    onGrantPermissions: () -> Unit,
+    onOpenSettings: () -> Unit,
     modifier: Modifier = Modifier
 ) {
-    val context = androidx.compose.ui.platform.LocalContext.current
-
-    // Track if we've already attempted to request permissions
-    var hasAttemptedRequest by remember { mutableStateOf(false) }
-
-    // Check if any permission was permanently denied:
-    // - We've attempted to request AND shouldShowRationale is false AND permissions still not granted
+    val context = LocalContext.current
+    val requiresLocation = requiredPermissions.contains(Manifest.permission.ACCESS_FINE_LOCATION)
     val permanentlyDenied = hasAttemptedRequest &&
-        permissionState.revokedPermissions.isNotEmpty() &&
-        !permissionState.shouldShowRationale
+        deniedPermissions.isNotEmpty() &&
+        context.findActivity()?.let { activity ->
+            deniedPermissions.none { permission ->
+                ActivityCompat.shouldShowRequestPermissionRationale(activity, permission)
+            }
+        } == true
 
     Column(
         modifier = modifier
@@ -399,10 +411,10 @@ fun PermissionRequestScreen(
         Spacer(modifier = Modifier.height(Spacing.small))
         Text(
             buildString {
-                if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {
-                    append("This app needs Bluetooth permissions to connect to your Vitruvian machine.")
-                } else {
+                if (requiresLocation) {
                     append("This app needs Bluetooth and Location permissions to connect to your Vitruvian machine.")
+                } else {
+                    append("This app needs Bluetooth permissions to connect to your Vitruvian machine.")
                 }
                 if (permanentlyDenied) {
                     append("\n\nSome permissions were denied. Please grant them in Settings.")
@@ -415,10 +427,7 @@ fun PermissionRequestScreen(
         Spacer(modifier = Modifier.height(Spacing.large))
 
         // Always show the Grant permissions button - it will request or show rationale
-        Button(onClick = {
-            hasAttemptedRequest = true
-            permissionState.launchMultiplePermissionRequest()
-        }) {
+        Button(onClick = onGrantPermissions) {
             Icon(Icons.Default.Check, contentDescription = "Confirm")
             Spacer(modifier = Modifier.width(Spacing.small))
             Text("Grant permissions")
@@ -427,13 +436,7 @@ fun PermissionRequestScreen(
         // Also show Open Settings button if permissions were permanently denied
         if (permanentlyDenied) {
             Spacer(modifier = Modifier.height(Spacing.small))
-            OutlinedButton(onClick = {
-                val intent = android.content.Intent(
-                    android.provider.Settings.ACTION_APPLICATION_DETAILS_SETTINGS,
-                    android.net.Uri.fromParts("package", context.packageName, null)
-                )
-                context.startActivity(intent)
-            }) {
+            OutlinedButton(onClick = onOpenSettings) {
                 Icon(Icons.Default.Settings, contentDescription = "Settings")
                 Spacer(modifier = Modifier.width(Spacing.small))
                 Text("Open Settings")
@@ -441,6 +444,25 @@ fun PermissionRequestScreen(
         }
     }
 }
+
+private fun Context.hasPermission(permission: String): Boolean =
+    ContextCompat.checkSelfPermission(this, permission) == PackageManager.PERMISSION_GRANTED
+
+private fun Context.grantedPermissionsFrom(permissions: List<String>): Set<String> =
+    permissions.filter(::hasPermission).toSet()
+
+private tailrec fun Context.findActivity(): Activity? =
+    when (this) {
+        is Activity -> this
+        is ContextWrapper -> baseContext.findActivity()
+        else -> null
+    }
+
+private fun Context.appSettingsIntent(): Intent =
+    Intent(
+        Settings.ACTION_APPLICATION_DETAILS_SETTINGS,
+        Uri.fromParts("package", packageName, null)
+    )
 
 @Composable
 fun DeviceSelectorDialog(
@@ -486,7 +508,7 @@ fun DeviceSelectorDialog(
                                     .fillMaxWidth()
                                     .clickable { onDeviceSelected(device) },
                                 colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surfaceVariant),
-                                shape = RoundedCornerShape(20.dp) // Material 3 Expressive: More rounded (was 16dp)
+                                shape = RoundedCornerShape(12.dp)
                             ) {
                                 Row(
                                     modifier = Modifier

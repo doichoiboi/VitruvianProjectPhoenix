@@ -10,7 +10,6 @@ import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.ui.draw.scale
-import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Add
@@ -53,19 +52,13 @@ fun RoutineBuilderDialog(
     var showExercisePicker by remember { mutableStateOf(false) }
     var exerciseToEdit by remember { mutableStateOf<Pair<Int, RoutineExercise>?>(null) }
 
-    val backgroundGradient = if (themeMode == ThemeMode.DARK) {
-        Brush.verticalGradient(colors = listOf(Color(0xFF0F172A), Color(0xFF1E1B4B), Color(0xFF172554)))
-    } else {
-        Brush.verticalGradient(colors = listOf(Color(0xFFE0E7FF), Color(0xFFFCE7F3), Color(0xFFDDD6FE)))
-    }
-
     Dialog(onDismissRequest = onDismiss) {
         Surface(
             modifier = Modifier.fillMaxWidth().fillMaxHeight(0.9f),
-            shape = RoundedCornerShape(20.dp), // Material 3 Expressive: More rounded (was 16dp)
+            shape = RoundedCornerShape(12.dp),
             color = Color.Transparent
         ) {
-            Box(modifier = Modifier.fillMaxSize().background(backgroundGradient)) {
+            Box(modifier = Modifier.fillMaxSize().background(MaterialTheme.appBrushes.screenBackground)) {
                 Column(
                     modifier = Modifier.fillMaxSize().padding(Spacing.medium)
                 ) {
@@ -134,9 +127,9 @@ fun RoutineBuilderDialog(
                             Card(
                                 modifier = Modifier.fillMaxWidth().padding(vertical = Spacing.small),
                                 colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface),
-                                shape = RoundedCornerShape(20.dp), // Material 3 Expressive: More rounded (was 16dp)
-                                elevation = CardDefaults.cardElevation(defaultElevation = 8.dp), // Material 3 Expressive: Higher elevation (was 4dp)
-                                border = BorderStroke(1.dp, Color(0xFFF5F3FF))
+                                shape = RoundedCornerShape(12.dp),
+                                elevation = CardDefaults.cardElevation(defaultElevation = 2.dp),
+                                border = BorderStroke(1.dp, MaterialTheme.colorScheme.outlineVariant)
                             ) {
                                 Box(modifier = Modifier.fillMaxWidth().padding(Spacing.large), contentAlignment = Alignment.Center) {
                                     Text("No exercises added yet", color = MaterialTheme.colorScheme.onSurfaceVariant, style = MaterialTheme.typography.bodyMedium)
@@ -214,7 +207,7 @@ fun RoutineBuilderDialog(
                             },
                             modifier = Modifier.weight(1f).height(56.dp),
                             colors = ButtonDefaults.buttonColors(containerColor = MaterialTheme.colorScheme.primary),
-                            shape = RoundedCornerShape(20.dp) // Material 3 Expressive: More rounded (was 16dp)
+                            shape = RoundedCornerShape(12.dp)
                         ) {
                             Text("Save", style = MaterialTheme.typography.titleSmall, fontWeight = FontWeight.Bold)
                         }
@@ -307,9 +300,9 @@ fun ExerciseListItem(
     Card(
         modifier = Modifier.fillMaxWidth().scale(scale),
         colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface),
-        shape = RoundedCornerShape(20.dp), // Material 3 Expressive: More rounded (was 16dp)
-        elevation = CardDefaults.cardElevation(defaultElevation = 8.dp), // Material 3 Expressive: Higher elevation (was 4dp)
-        border = BorderStroke(1.dp, Color(0xFFF5F3FF))
+        shape = RoundedCornerShape(12.dp),
+        elevation = CardDefaults.cardElevation(defaultElevation = 2.dp),
+        border = BorderStroke(1.dp, MaterialTheme.colorScheme.outlineVariant)
     ) {
         Row(
             modifier = Modifier.fillMaxWidth().padding(Spacing.medium),

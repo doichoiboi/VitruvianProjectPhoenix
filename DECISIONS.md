@@ -459,3 +459,90 @@ parameter mapping fix.
 - `F-001` can now build rest countdown context from the tested display and
   progression policies instead of adding more parameter math to
   `MainViewModel`.
+
+---
+
+## Session 022 - 2026-05-14 - Visual System Reset
+
+### Decisions Made
+
+**Tone down the expressive visual layer before feature work**
+- Daniel agreed to reduce rounded shapes, heavy borders, oversized typography,
+  and one-off styling primitives before building more features.
+- Existing gradients stay for now because a better palette needs a separate
+  decision instead of a rushed color swap.
+- Added `R-009` as the active visual-system repair lane.
+
+**Use the theme as the visual source of truth**
+- Daniel rejected the old purple/blue/teal direction.
+- Dark mode now targets slick mono tones; light mode keeps a neutral base with
+  orange pop.
+- Presentation code should prefer `MaterialTheme.colorScheme`,
+  `MaterialTheme.appStatusColors`, `MaterialTheme.appBrushes`, and
+  `MaterialTheme.appChartColors` over local `Color(0x...)` constants or
+  screen-level dark/light palette branching.
+- Charts are allowed a richer muted data palette because series separation is
+  functional, but that palette still belongs in the theme.
+
+### Open Threads
+
+- Continue reducing direct presentation-layer color constants. Remaining
+  exceptions should be content-specific colors such as LED swatches,
+  rank/celebration accents, or diagnostic visualization colors.
+
+---
+
+## Session 023 - 2026-05-14 - App Root and Theme Ownership
+
+### Decisions Made
+
+**Pull root composition out of `MainActivity`**
+- `MainActivity` should stay lifecycle-focused: splash install, edge-to-edge
+  setup, and `setContent`.
+- Root Compose state, theme wrapping, large splash timing, system-bar
+  appearance, and keep-screen-on side effects now belong to the app composable.
+
+**Hoist theme through `MainViewModel`**
+- Theme mode is app-level state, not a second root view model.
+- `ThemeViewModel` was replaced by injectable `ThemeManager`, which owns theme
+  preference persistence.
+- `MainViewModel` exposes `themeMode` and `setThemeMode()`, so the root app and
+  top-bar theme toggle share the same state owner.
+
+**Name the main chrome by responsibility**
+- The old `EnhancedMainScreen` name did not describe the composable's role.
+- The composable is now `AppScaffold`: it owns scaffold chrome, permissions,
+  navigation host placement, and global connection overlays.
+- Machine connection chrome state is exposed as `AppScaffoldUiState` from
+  `MainViewModel`; Compose-local navigation, permissions, and app-bar controller
+  state remain local to the scaffold.
+
+### Open Threads
+
+- Continue collapsing root/app-wide state into explicit owners before adding
+  more feature behavior to screens.
+
+---
+
+## Session 024 - 2026-05-14 - Permission Gate and ViewModel Event Direction
+
+### Decisions Made
+
+**Remove Accompanist permissions**
+- The app shell now uses official Activity Result APIs for runtime permission
+  requests instead of Accompanist's experimental permissions API.
+- BLE permission lists are owned by a pure `BlePermissionPolicy`, so Android
+  version rules can be tested without Compose or a device.
+- Permission launcher/result state remains in `AppScaffold`; it is UI/platform
+  state and should not be pushed into `MainViewModel`.
+
+**Move ViewModels toward event handlers**
+- New ViewModel cleanup should prefer a single public event entry point per
+  screen or shell state owner, with a `when` over explicit events.
+- This should be introduced slice by slice after extracting pure policies and
+  adding focused regression tests. Do not big-bang rewrite `MainViewModel`.
+
+### Open Threads
+
+- Add the first small event reducer around app-shell connection actions before
+  attempting deeper workout-flow events.

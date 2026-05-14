@@ -12,6 +12,7 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import com.example.vitruvianredux.domain.model.SafetyEventSummary
 import com.example.vitruvianredux.ui.theme.Spacing
+import com.example.vitruvianredux.ui.theme.appStatusColors
 
 @Composable
 fun SafetyEventsCard(
@@ -54,7 +55,7 @@ fun SafetyEventsCard(
                 SafetyEventRow(
                     label = "Deload Warnings",
                     count = summary.deloadWarnings,
-                    color = Color(0xFFFF9800) // Orange
+                    color = MaterialTheme.appStatusColors.warning
                 )
             }
 
@@ -62,7 +63,7 @@ fun SafetyEventsCard(
                 SafetyEventRow(
                     label = "ROM Violations",
                     count = summary.romViolations,
-                    color = Color(0xFFF44336) // Red
+                    color = MaterialTheme.colorScheme.error
                 )
             }
 
@@ -70,7 +71,7 @@ fun SafetyEventsCard(
                 SafetyEventRow(
                     label = "Spotter Activations",
                     count = summary.spotterActivations,
-                    color = Color(0xFF2196F3) // Blue
+                    color = MaterialTheme.appStatusColors.info
                 )
             }
         }

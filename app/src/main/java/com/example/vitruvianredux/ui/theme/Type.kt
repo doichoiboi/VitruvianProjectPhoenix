@@ -6,53 +6,53 @@ import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.sp
 
-// Typography using Roboto (Android system font) - Material 3 Expressive (Larger, Bolder)
+// Typography using Roboto (Android system font), tuned for dense workout UI.
 val Typography = Typography(
-    // Display styles (large headers) - Expressive: Larger and bolder
+    // Display styles (large counters and rare hero numbers)
     displayLarge = TextStyle(
         fontFamily = FontFamily.Default,
         fontWeight = FontWeight.Bold,
-        fontSize = 64.sp,  // Expressive: Increased from 57sp
-        lineHeight = 72.sp, // Expressive: Increased from 64sp
-        letterSpacing = (-0.25).sp
+        fontSize = 57.sp,
+        lineHeight = 64.sp,
+        letterSpacing = 0.sp
     ),
     displayMedium = TextStyle(
         fontFamily = FontFamily.Default,
         fontWeight = FontWeight.Bold,
-        fontSize = 50.sp,  // Expressive: Increased from 45sp
-        lineHeight = 58.sp, // Expressive: Increased from 52sp
+        fontSize = 45.sp,
+        lineHeight = 52.sp,
         letterSpacing = 0.sp
     ),
 
-    // Headline styles (screen titles) - Expressive: Larger and bolder
+    // Headline styles (screen titles)
     headlineLarge = TextStyle(
         fontFamily = FontFamily.Default,
-        fontWeight = FontWeight.Bold,  // Expressive: Changed from SemiBold to Bold
-        fontSize = 36.sp,  // Expressive: Increased from 32sp
-        lineHeight = 44.sp, // Expressive: Increased from 40sp
+        fontWeight = FontWeight.SemiBold,
+        fontSize = 32.sp,
+        lineHeight = 40.sp,
         letterSpacing = 0.sp
     ),
     headlineMedium = TextStyle(
         fontFamily = FontFamily.Default,
-        fontWeight = FontWeight.Bold,  // Expressive: Changed from SemiBold to Bold
-        fontSize = 32.sp,  // Expressive: Increased from 28sp
-        lineHeight = 40.sp, // Expressive: Increased from 36sp
+        fontWeight = FontWeight.SemiBold,
+        fontSize = 28.sp,
+        lineHeight = 36.sp,
         letterSpacing = 0.sp
     ),
     headlineSmall = TextStyle(
         fontFamily = FontFamily.Default,
-        fontWeight = FontWeight.Bold,  // Expressive: Changed from SemiBold to Bold
-        fontSize = 28.sp,  // Expressive: Increased from 24sp
-        lineHeight = 36.sp, // Expressive: Increased from 32sp
+        fontWeight = FontWeight.SemiBold,
+        fontSize = 24.sp,
+        lineHeight = 32.sp,
         letterSpacing = 0.sp
     ),
 
-    // Title styles (card headers, section titles) - Expressive: Larger
+    // Title styles (card headers, section titles)
     titleLarge = TextStyle(
         fontFamily = FontFamily.Default,
-        fontWeight = FontWeight.Bold,  // Expressive: Changed from SemiBold to Bold
-        fontSize = 24.sp,  // Expressive: Increased from 22sp
-        lineHeight = 32.sp, // Expressive: Increased from 28sp
+        fontWeight = FontWeight.SemiBold,
+        fontSize = 20.sp,
+        lineHeight = 28.sp,
         letterSpacing = 0.sp
     ),
     titleMedium = TextStyle(
@@ -70,27 +70,27 @@ val Typography = Typography(
         letterSpacing = 0.1.sp
     ),
 
-    // Body styles (content text) - Expressive: Larger
+    // Body styles (content text)
     bodyLarge = TextStyle(
         fontFamily = FontFamily.Default,
         fontWeight = FontWeight.Normal,
-        fontSize = 18.sp,  // Expressive: Increased from 16sp
-        lineHeight = 26.sp, // Expressive: Increased from 24sp
-        letterSpacing = 0.5.sp
+        fontSize = 16.sp,
+        lineHeight = 24.sp,
+        letterSpacing = 0.sp
     ),
     bodyMedium = TextStyle(
         fontFamily = FontFamily.Default,
         fontWeight = FontWeight.Normal,
-        fontSize = 16.sp,  // Expressive: Increased from 14sp
-        lineHeight = 22.sp, // Expressive: Increased from 20sp
-        letterSpacing = 0.25.sp
+        fontSize = 14.sp,
+        lineHeight = 20.sp,
+        letterSpacing = 0.sp
     ),
     bodySmall = TextStyle(
         fontFamily = FontFamily.Default,
         fontWeight = FontWeight.Normal,
         fontSize = 12.sp,
         lineHeight = 16.sp,
-        letterSpacing = 0.4.sp
+        letterSpacing = 0.sp
     ),
 
     // Label styles (buttons, tabs, form labels)
@@ -106,13 +106,13 @@ val Typography = Typography(
         fontWeight = FontWeight.Medium,
         fontSize = 12.sp,
         lineHeight = 16.sp,
-        letterSpacing = 0.5.sp
+        letterSpacing = 0.sp
     ),
     labelSmall = TextStyle(
         fontFamily = FontFamily.Default,
         fontWeight = FontWeight.Medium,
         fontSize = 11.sp,
         lineHeight = 16.sp,
-        letterSpacing = 0.5.sp
+        letterSpacing = 0.sp
     )
 )

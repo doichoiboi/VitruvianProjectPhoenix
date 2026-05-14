@@ -22,8 +22,6 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.scale
 import androidx.compose.ui.draw.shadow
-import androidx.compose.ui.graphics.Brush
-import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import com.example.vitruvianredux.data.repository.ExerciseRepository
@@ -32,6 +30,7 @@ import com.example.vitruvianredux.domain.model.WeightUnit
 import com.example.vitruvianredux.domain.model.WorkoutSession
 import com.example.vitruvianredux.presentation.viewmodel.HistoryItem
 import com.example.vitruvianredux.ui.theme.Spacing
+import com.example.vitruvianredux.ui.theme.appBrushes
 import com.example.vitruvianredux.presentation.components.*
 import com.example.vitruvianredux.util.CsvExporter
 import kotlinx.coroutines.Dispatchers
@@ -70,43 +69,24 @@ fun AnalyticsScreen(
         // Update occurs when user swipes
     }
 
-    val backgroundGradient = if (themeMode == ThemeMode.DARK) {
-        Brush.verticalGradient(
-            colors = listOf(
-                Color(0xFF0F172A), // slate-900
-                Color(0xFF1E1B4B), // indigo-950
-                Color(0xFF172554)  // blue-950
-            )
-        )
-    } else {
-        Brush.verticalGradient(
-            colors = listOf(
-                Color(0xFFE0E7FF), // indigo-200 - soft lavender
-                Color(0xFFFCE7F3), // pink-100 - soft pink
-                Color(0xFFDDD6FE)  // violet-200 - soft violet
-            )
-        )
-    }
-
     Box(
         modifier = modifier
             .fillMaxSize()
-            .background(backgroundGradient)
+            .background(MaterialTheme.appBrushes.screenBackground)
     ) {
         Column(
             modifier = Modifier
                 .fillMaxSize()
         ) {
-            // Tab Row with gradient indicator and swipe support - Material 3 Expressive
             PrimaryTabRow(
                 selectedTabIndex = pagerState.currentPage,
-                containerColor = MaterialTheme.colorScheme.surfaceContainerHighest, // Material 3 Expressive: Higher contrast
+                containerColor = MaterialTheme.colorScheme.surfaceContainerHighest,
                 contentColor = MaterialTheme.colorScheme.onSurface, // Use theme-aware color instead of hard-coded primary
                 indicator = {
                     TabRowDefaults.PrimaryIndicator(
                         modifier = Modifier
                             .tabIndicatorOffset(pagerState.currentPage)
-                            .height(8.dp), // Material 3 Expressive: Thicker indicator
+                            .height(8.dp),
                         color = MaterialTheme.colorScheme.primary
                     )
                 }
@@ -221,24 +201,22 @@ fun AnalyticsScreen(
             }
         }
         }
-
-        // Export FAB - Material 3 Expressive
         FloatingActionButton(
             onClick = { showExportMenu = true },
             modifier = Modifier
                 .align(Alignment.BottomEnd)
                 .padding(Spacing.large),
             containerColor = MaterialTheme.colorScheme.primary,
-            shape = RoundedCornerShape(28.dp), // Material 3 Expressive: Very rounded FAB
+            shape = RoundedCornerShape(16.dp),
             elevation = FloatingActionButtonDefaults.elevation(
-                defaultElevation = 8.dp, // Material 3 Expressive: Higher elevation
+                defaultElevation = 2.dp,
                 pressedElevation = 4.dp
             )
         ) {
             Icon(
                 Icons.Default.Share,
                 contentDescription = "Export data",
-                modifier = Modifier.size(28.dp) // Material 3 Expressive: Larger icon (was default)
+                modifier = Modifier.size(28.dp)
             )
         }
     }
@@ -251,8 +229,6 @@ fun AnalyticsScreen(
             text = {
                 Column(verticalArrangement = Arrangement.spacedBy(Spacing.small)) {
                     Text("Choose what to export:", style = MaterialTheme.typography.bodyMedium)
-
-                    // Export Personal Records button - Material 3 Expressive
                     Button(
                         onClick = {
                             scope.launch {
@@ -288,23 +264,21 @@ fun AnalyticsScreen(
                         },
                         modifier = Modifier
                             .fillMaxWidth()
-                            .height(56.dp), // Material 3 Expressive: Taller button
-                        shape = RoundedCornerShape(20.dp), // Material 3 Expressive: More rounded
+                            .height(56.dp),
+                        shape = RoundedCornerShape(12.dp),
                         elevation = ButtonDefaults.buttonElevation(
                             defaultElevation = 4.dp,
                             pressedElevation = 2.dp
                         )
                     ) {
-                        Icon(Icons.Default.Star, contentDescription = "Personal record", modifier = Modifier.size(24.dp)) // Material 3 Expressive: Larger icon
+                        Icon(Icons.Default.Star, contentDescription = "Personal record", modifier = Modifier.size(24.dp))
                         Spacer(modifier = Modifier.width(Spacing.small))
                         Text(
                             "Export Personal Records",
-                            style = MaterialTheme.typography.titleLarge, // Material 3 Expressive: Larger text
+                            style = MaterialTheme.typography.titleLarge,
                             fontWeight = FontWeight.Bold
                         )
                     }
-
-                    // Export Workout History button - Material 3 Expressive
                     Button(
                         onClick = {
                             scope.launch {
@@ -342,23 +316,21 @@ fun AnalyticsScreen(
                         },
                         modifier = Modifier
                             .fillMaxWidth()
-                            .height(56.dp), // Material 3 Expressive: Taller button
-                        shape = RoundedCornerShape(20.dp), // Material 3 Expressive: More rounded
+                            .height(56.dp),
+                        shape = RoundedCornerShape(12.dp),
                         elevation = ButtonDefaults.buttonElevation(
                             defaultElevation = 4.dp,
                             pressedElevation = 2.dp
                         )
                     ) {
-                        Icon(Icons.AutoMirrored.Filled.List, contentDescription = "Export all workouts", modifier = Modifier.size(24.dp)) // Material 3 Expressive: Larger icon
+                        Icon(Icons.AutoMirrored.Filled.List, contentDescription = "Export all workouts", modifier = Modifier.size(24.dp))
                         Spacer(modifier = Modifier.width(Spacing.small))
                         Text(
                             "Export All Workouts",
-                            style = MaterialTheme.typography.titleLarge, // Material 3 Expressive: Larger text
+                            style = MaterialTheme.typography.titleLarge,
                             fontWeight = FontWeight.Bold
                         )
                     }
-
-                    // Export PR Progression button - Material 3 Expressive
                     Button(
                         onClick = {
                             scope.launch {
@@ -394,18 +366,18 @@ fun AnalyticsScreen(
                         },
                         modifier = Modifier
                             .fillMaxWidth()
-                            .height(56.dp), // Material 3 Expressive: Taller button
-                        shape = RoundedCornerShape(20.dp), // Material 3 Expressive: More rounded
+                            .height(56.dp),
+                        shape = RoundedCornerShape(12.dp),
                         elevation = ButtonDefaults.buttonElevation(
                             defaultElevation = 4.dp,
                             pressedElevation = 2.dp
                         )
                     ) {
-                        Icon(Icons.Default.Info, contentDescription = "Information", modifier = Modifier.size(24.dp)) // Material 3 Expressive: Larger icon
+                        Icon(Icons.Default.Info, contentDescription = "Information", modifier = Modifier.size(24.dp))
                         Spacer(modifier = Modifier.width(Spacing.small))
                         Text(
                             "Export PR Progression",
-                            style = MaterialTheme.typography.titleLarge, // Material 3 Expressive: Larger text
+                            style = MaterialTheme.typography.titleLarge,
                             fontWeight = FontWeight.Bold
                         )
                     }
@@ -414,43 +386,41 @@ fun AnalyticsScreen(
             confirmButton = {
                 TextButton(
                     onClick = { showExportMenu = false },
-                    modifier = Modifier.height(56.dp), // Material 3 Expressive: Taller button
-                    shape = RoundedCornerShape(20.dp) // Material 3 Expressive: More rounded
+                    modifier = Modifier.height(56.dp),
+                    shape = RoundedCornerShape(12.dp)
                 ) {
                     Text(
                         "Cancel",
-                        style = MaterialTheme.typography.titleMedium, // Material 3 Expressive: Larger text
+                        style = MaterialTheme.typography.titleMedium,
                         fontWeight = FontWeight.Bold
                     )
                 }
             },
-            containerColor = MaterialTheme.colorScheme.surfaceContainerHighest, // Material 3 Expressive: Higher contrast
-            shape = RoundedCornerShape(28.dp) // Material 3 Expressive: Very rounded for dialogs
+            containerColor = MaterialTheme.colorScheme.surfaceContainerHighest,
+            shape = RoundedCornerShape(16.dp)
         )
     }
-
-    // Export success/error message - Material 3 Expressive
     exportMessage?.let { message ->
         AlertDialog(
             onDismissRequest = { exportMessage = null },
             title = { 
                 Text(
                     "Export",
-                    style = MaterialTheme.typography.headlineSmall, // Material 3 Expressive: Larger
+                    style = MaterialTheme.typography.headlineSmall,
                     fontWeight = FontWeight.Bold
                 ) 
             },
             text = { 
                 Text(
                     message,
-                    style = MaterialTheme.typography.bodyLarge // Material 3 Expressive: Larger
+                    style = MaterialTheme.typography.bodyLarge
                 ) 
             },
             confirmButton = {
                 Button(
                     onClick = { exportMessage = null },
-                    modifier = Modifier.height(56.dp), // Material 3 Expressive: Taller button
-                    shape = RoundedCornerShape(20.dp), // Material 3 Expressive: More rounded
+                    modifier = Modifier.height(56.dp),
+                    shape = RoundedCornerShape(12.dp),
                     elevation = ButtonDefaults.buttonElevation(
                         defaultElevation = 4.dp,
                         pressedElevation = 2.dp
@@ -458,13 +428,13 @@ fun AnalyticsScreen(
                 ) {
                     Text(
                         "OK",
-                        style = MaterialTheme.typography.titleLarge, // Material 3 Expressive: Larger text
+                        style = MaterialTheme.typography.titleLarge,
                         fontWeight = FontWeight.Bold
                     )
                 }
             },
-            containerColor = MaterialTheme.colorScheme.surfaceContainerHighest, // Material 3 Expressive: Higher contrast
-            shape = RoundedCornerShape(28.dp) // Material 3 Expressive: Very rounded for dialogs
+            containerColor = MaterialTheme.colorScheme.surfaceContainerHighest,
+            shape = RoundedCornerShape(16.dp)
         )
     }
 }
@@ -542,11 +512,11 @@ fun DashboardTab(
                 Card(
                     modifier = Modifier
                         .fillMaxWidth()
-                        .shadow(8.dp, RoundedCornerShape(20.dp)),
+                        .shadow(2.dp, RoundedCornerShape(12.dp)),
                     colors = CardDefaults.cardColors(
                         containerColor = MaterialTheme.colorScheme.tertiaryContainer
                     ),
-                    shape = RoundedCornerShape(20.dp)
+                    shape = RoundedCornerShape(12.dp)
                 ) {
                     Row(
                         modifier = Modifier
@@ -559,7 +529,7 @@ fun DashboardTab(
                             Icon(
                                 Icons.Default.LocalFireDepartment,
                                 contentDescription = null,
-                                tint = Color(0xFFFF6B00),
+                                tint = MaterialTheme.colorScheme.tertiary,
                                 modifier = Modifier.size(40.dp)
                             )
                             Spacer(modifier = Modifier.width(12.dp))
@@ -613,11 +583,11 @@ fun DashboardTab(
                 Card(
                     modifier = Modifier
                         .fillMaxWidth()
-                        .shadow(8.dp, RoundedCornerShape(20.dp)),
+                        .shadow(2.dp, RoundedCornerShape(12.dp)),
                     colors = CardDefaults.cardColors(
                         containerColor = MaterialTheme.colorScheme.surfaceContainerHighest
                     ),
-                    shape = RoundedCornerShape(20.dp)
+                    shape = RoundedCornerShape(12.dp)
                 ) {
                     Column(
                         modifier = Modifier
@@ -662,11 +632,11 @@ fun StatCard(
 ) {
     Card(
         modifier = modifier
-            .shadow(8.dp, RoundedCornerShape(20.dp)), // Material 3 Expressive: More shadow, more rounded
-        colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surfaceContainerHighest), // Material 3 Expressive: Higher contrast
-        shape = RoundedCornerShape(20.dp), // Material 3 Expressive: More rounded (was 16dp)
-        elevation = CardDefaults.cardElevation(defaultElevation = 8.dp), // Material 3 Expressive: Higher elevation (was 4dp)
-        border = BorderStroke(2.dp, MaterialTheme.colorScheme.primary.copy(alpha = 0.2f)) // Material 3 Expressive: Thicker border (was 1dp)
+            .shadow(2.dp, RoundedCornerShape(12.dp)),
+        colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surfaceContainerHighest),
+        shape = RoundedCornerShape(12.dp),
+        elevation = CardDefaults.cardElevation(defaultElevation = 2.dp),
+        border = BorderStroke(1.dp, MaterialTheme.colorScheme.primary.copy(alpha = 0.2f))
     ) {
         Column(
             modifier = Modifier
@@ -678,18 +648,18 @@ fun StatCard(
                 icon,
                 contentDescription = "Personal record",
                 tint = MaterialTheme.colorScheme.primary,
-                modifier = Modifier.size(40.dp) // Material 3 Expressive: Larger icon (was 32dp)
+                modifier = Modifier.size(40.dp)
             )
             Spacer(modifier = Modifier.height(Spacing.small))
             Text(
                 value,
-                style = MaterialTheme.typography.headlineLarge, // Material 3 Expressive: Larger (was headlineMedium)
+                style = MaterialTheme.typography.headlineLarge,
                 fontWeight = FontWeight.Bold,
                 color = MaterialTheme.colorScheme.onSurface
             )
             Text(
                 label,
-                style = MaterialTheme.typography.bodyMedium, // Material 3 Expressive: Larger (was bodySmall)
+                style = MaterialTheme.typography.bodyMedium,
                 color = MaterialTheme.colorScheme.onSurfaceVariant,
                 textAlign = androidx.compose.ui.text.style.TextAlign.Center
             )
@@ -710,10 +680,10 @@ fun PersonalRecordCard(
 ) {
     var isPressed by remember { mutableStateOf(false) }
     val scale by animateFloatAsState(
-        targetValue = if (isPressed) 0.95f else 1f, // Material 3 Expressive: More scale (was 0.98f)
+        targetValue = if (isPressed) 0.95f else 1f,
         animationSpec = spring(
-            dampingRatio = Spring.DampingRatioLowBouncy, // Material 3 Expressive: More bouncy (was MediumBouncy)
-            stiffness = Spring.StiffnessLow // Material 3 Expressive: Springy feel (was 400f)
+            dampingRatio = Spring.DampingRatioLowBouncy,
+            stiffness = Spring.StiffnessLow
         ),
         label = "scale"
     )
@@ -723,13 +693,13 @@ fun PersonalRecordCard(
         modifier = Modifier
             .fillMaxWidth()
             .scale(scale)
-            .shadow(8.dp, RoundedCornerShape(20.dp)), // Material 3 Expressive: More shadow, more rounded
+            .shadow(2.dp, RoundedCornerShape(12.dp)),
         colors = CardDefaults.cardColors(
-            containerColor = MaterialTheme.colorScheme.surfaceContainerHighest // Material 3 Expressive: Higher contrast
+            containerColor = MaterialTheme.colorScheme.surfaceContainerHighest
         ),
-        shape = RoundedCornerShape(20.dp), // Material 3 Expressive: More rounded (was 16dp)
-        elevation = CardDefaults.cardElevation(defaultElevation = 8.dp), // Material 3 Expressive: Higher elevation (was 4dp)
-        border = BorderStroke(2.dp, MaterialTheme.colorScheme.primary.copy(alpha = 0.2f)) // Material 3 Expressive: Thicker border (was 1dp)
+        shape = RoundedCornerShape(12.dp),
+        elevation = CardDefaults.cardElevation(defaultElevation = 2.dp),
+        border = BorderStroke(1.dp, MaterialTheme.colorScheme.primary.copy(alpha = 0.2f))
     ) {
         Row(
             modifier = Modifier
@@ -742,19 +712,18 @@ fun PersonalRecordCard(
                 verticalAlignment = Alignment.CenterVertically,
                 modifier = Modifier.weight(1f)
             ) {
-                // Rank badge - Material 3 Expressive
                 Surface(
                     color = when (rank) {
                         1 -> MaterialTheme.colorScheme.tertiary
                         2, 3 -> MaterialTheme.colorScheme.secondary
                         else -> MaterialTheme.colorScheme.primaryContainer
                     },
-                    shape = RoundedCornerShape(12.dp) // Material 3 Expressive: More rounded (was 8dp)
+                    shape = RoundedCornerShape(12.dp)
                 ) {
                     Text(
                         "#$rank",
-                        modifier = Modifier.padding(horizontal = 12.dp, vertical = 6.dp), // Material 3 Expressive: More padding
-                        style = MaterialTheme.typography.labelLarge, // Material 3 Expressive: Larger (was labelMedium)
+                        modifier = Modifier.padding(horizontal = 12.dp, vertical = 6.dp),
+                        style = MaterialTheme.typography.labelLarge,
                         fontWeight = FontWeight.Bold,
                         color = when (rank) {
                             1 -> MaterialTheme.colorScheme.onTertiary
@@ -769,13 +738,13 @@ fun PersonalRecordCard(
                 Column {
                     Text(
                         exerciseName,
-                        style = MaterialTheme.typography.titleLarge, // Material 3 Expressive: Larger (was titleMedium)
+                        style = MaterialTheme.typography.titleLarge,
                         fontWeight = FontWeight.Bold
                     )
                     Text(
                         "${formatWeight(pr.weightPerCableKg, weightUnit)} per cable",
                         style = MaterialTheme.typography.bodyLarge,
-                        fontWeight = FontWeight.Medium, // Material 3 Expressive: Bolder
+                        fontWeight = FontWeight.Medium,
                         color = MaterialTheme.colorScheme.primary
                     )
                     Row(
@@ -807,7 +776,7 @@ fun PersonalRecordCard(
                     Icons.Default.Star,
                     contentDescription = "Top record",
                     tint = MaterialTheme.colorScheme.primary,
-                    modifier = Modifier.size(40.dp) // Material 3 Expressive: Larger icon (was 32dp)
+                    modifier = Modifier.size(40.dp)
                 )
             }
         }
@@ -933,11 +902,11 @@ fun ExerciseProgressionCard(
     Card(
         modifier = Modifier
             .fillMaxWidth()
-            .shadow(8.dp, RoundedCornerShape(20.dp)), // Material 3 Expressive: More shadow, more rounded
-        colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surfaceContainerHighest), // Material 3 Expressive: Higher contrast
-        shape = RoundedCornerShape(20.dp), // Material 3 Expressive: More rounded (was 16dp)
-        elevation = CardDefaults.cardElevation(defaultElevation = 8.dp), // Material 3 Expressive: Higher elevation (was 4dp)
-        border = BorderStroke(2.dp, MaterialTheme.colorScheme.primary.copy(alpha = 0.2f)) // Material 3 Expressive: Thicker border (was 1dp)
+            .shadow(2.dp, RoundedCornerShape(12.dp)),
+        colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surfaceContainerHighest),
+        shape = RoundedCornerShape(12.dp),
+        elevation = CardDefaults.cardElevation(defaultElevation = 2.dp),
+        border = BorderStroke(1.dp, MaterialTheme.colorScheme.primary.copy(alpha = 0.2f))
     ) {
         Column(
             modifier = Modifier
@@ -951,21 +920,20 @@ fun ExerciseProgressionCard(
             ) {
                 Text(
                     exerciseName,
-                    style = MaterialTheme.typography.titleLarge, // Material 3 Expressive: Larger (was titleMedium)
+                    style = MaterialTheme.typography.titleLarge,
                     fontWeight = FontWeight.Bold,
                     modifier = Modifier.weight(1f)
                 )
-                // Toggle button for chart view - Material 3 Expressive
                 if (prs.size >= 2) {
                     IconButton(
                         onClick = { showChart = !showChart },
-                        modifier = Modifier.size(48.dp) // Material 3 Expressive: Larger button (was default)
+                        modifier = Modifier.size(48.dp)
                     ) {
                         Icon(
                             imageVector = if (showChart) Icons.AutoMirrored.Filled.List else Icons.Default.Info,
                             contentDescription = if (showChart) "Show list" else "Show chart",
                             tint = MaterialTheme.colorScheme.primary,
-                            modifier = Modifier.size(28.dp) // Material 3 Expressive: Larger icon (was default)
+                            modifier = Modifier.size(28.dp)
                         )
                     }
                 }
@@ -991,37 +959,32 @@ fun ExerciseProgressionCard(
                         .padding(vertical = Spacing.extraSmall),
                     verticalAlignment = Alignment.CenterVertically
                 ) {
-                    // Timeline indicator - Material 3 Expressive
                     Surface(
                         color = if (index == 0) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.secondary,
-                        shape = RoundedCornerShape(6.dp), // Material 3 Expressive: More rounded (was 4dp)
-                        modifier = Modifier.size(12.dp) // Material 3 Expressive: Larger indicator (was 8dp)
+                        shape = RoundedCornerShape(6.dp),
+                        modifier = Modifier.size(12.dp)
                     ) {}
 
                     Spacer(modifier = Modifier.width(Spacing.small))
-
-                    // PR details - Material 3 Expressive
                     Column(modifier = Modifier.weight(1f)) {
                         Text(
                             "${formatWeight(pr.weightPerCableKg, weightUnit)}/cable",
-                            style = MaterialTheme.typography.bodyLarge, // Material 3 Expressive: Larger (was bodyMedium)
-                            fontWeight = if (index == 0) FontWeight.Bold else FontWeight.Medium, // Material 3 Expressive: Bolder
+                            style = MaterialTheme.typography.bodyLarge,
+                            fontWeight = if (index == 0) FontWeight.Bold else FontWeight.Medium,
                             color = if (index == 0) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.onSurface
                         )
                         Row {
                             Text(
                                 "${pr.reps} reps • ${pr.workoutMode}",
-                                style = MaterialTheme.typography.bodyMedium, // Material 3 Expressive: Larger (was bodySmall)
+                                style = MaterialTheme.typography.bodyMedium,
                                 color = MaterialTheme.colorScheme.onSurfaceVariant
                             )
                         }
                     }
-
-                    // Date - Material 3 Expressive
                     Text(
                         java.text.SimpleDateFormat("MMM d", java.util.Locale.getDefault()).format(pr.timestamp),
-                        style = MaterialTheme.typography.bodyMedium, // Material 3 Expressive: Larger (was bodySmall)
-                        fontWeight = FontWeight.Medium, // Material 3 Expressive: Bolder
+                        style = MaterialTheme.typography.bodyMedium,
+                        fontWeight = FontWeight.Medium,
                         color = MaterialTheme.colorScheme.onSurfaceVariant
                     )
                 }
@@ -1040,13 +1003,13 @@ fun ExerciseProgressionCard(
                             Icon(
                                 Icons.Default.KeyboardArrowUp,
                                 contentDescription = "Improvement",
-                                tint = MaterialTheme.colorScheme.primary, // Material 3 Expressive: Use theme color
-                                modifier = Modifier.size(20.dp) // Material 3 Expressive: Larger icon (was 16dp)
+                                tint = MaterialTheme.colorScheme.primary,
+                                modifier = Modifier.size(20.dp)
                             )
                             Text(
                                 "+$improvement%",
-                                style = MaterialTheme.typography.bodyMedium, // Material 3 Expressive: Larger (was bodySmall)
-                                color = MaterialTheme.colorScheme.primary, // Material 3 Expressive: Use theme color
+                                style = MaterialTheme.typography.bodyMedium,
+                                color = MaterialTheme.colorScheme.primary,
                                 fontWeight = FontWeight.Bold
                             )
                         }

@@ -3,7 +3,6 @@ package com.example.vitruvianredux.presentation.screen
 import androidx.compose.animation.core.*
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.background
-import androidx.compose.foundation.isSystemInDarkTheme
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.rememberScrollState
@@ -20,7 +19,6 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.scale
 import androidx.compose.ui.draw.shadow
 import androidx.compose.ui.graphics.Brush
-import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
@@ -29,6 +27,7 @@ import com.example.vitruvianredux.domain.model.Routine
 import com.example.vitruvianredux.domain.model.WeightUnit
 import com.example.vitruvianredux.ui.theme.Spacing
 import com.example.vitruvianredux.ui.theme.ThemeMode
+import com.example.vitruvianredux.ui.theme.appBrushes
 import java.time.LocalDate
 import androidx.compose.foundation.lazy.grid.GridCells
 import androidx.compose.foundation.lazy.grid.GridItemSpan
@@ -56,31 +55,6 @@ fun HomeScreen(
     onNavigateToWeeklyPrograms: () -> Unit,
     modifier: Modifier = Modifier
 ) {
-    // Determine actual theme (matching Theme.kt logic)
-    val useDarkColors = when (themeMode) {
-        ThemeMode.SYSTEM -> isSystemInDarkTheme()
-        ThemeMode.LIGHT -> false
-        ThemeMode.DARK -> true
-    }
-
-    val backgroundGradient = if (useDarkColors) {
-        Brush.verticalGradient(
-            colors = listOf(
-                Color(0xFF0F172A), // slate-900
-                Color(0xFF1E1B4B), // indigo-950
-                Color(0xFF172554)  // blue-950
-            )
-        )
-    } else {
-        Brush.verticalGradient(
-            colors = listOf(
-                Color(0xFFE0E7FF), // indigo-200 - soft lavender
-                Color(0xFFFCE7F3), // pink-100 - soft pink
-                Color(0xFFDDD6FE)  // violet-200 - soft violet
-            )
-        )
-    }
-
     // Detect orientation for grid layout
     val configuration = LocalConfiguration.current
     val isLandscape = configuration.orientation == Configuration.ORIENTATION_LANDSCAPE
@@ -89,7 +63,7 @@ fun HomeScreen(
     Box(
         modifier = modifier
             .fillMaxSize()
-            .background(backgroundGradient)
+            .background(MaterialTheme.appBrushes.screenBackground)
     ) {
         LazyVerticalGrid(
             columns = GridCells.Fixed(gridColumns),
@@ -118,9 +92,7 @@ fun HomeScreen(
                     title = "Just Lift",
                     description = "Quick setup, start lifting immediately",
                     icon = Icons.Default.FitnessCenter,
-                    gradient = Brush.linearGradient(
-                        colors = listOf(Color(0xFF9333EA), Color(0xFF7E22CE)) // purple-500 to purple-700
-                    ),
+                    gradient = MaterialTheme.appBrushes.primaryAccent,
                     onClick = onNavigateToJustLift
                 )
             }
@@ -130,9 +102,7 @@ fun HomeScreen(
                     title = "Single Exercise",
                     description = "Perform a single customized exercise",
                     icon = Icons.Default.PlayArrow,
-                    gradient = Brush.linearGradient(
-                        colors = listOf(Color(0xFF8B5CF6), Color(0xFF9333EA)) // violet-500 to purple-600
-                    ),
+                    gradient = MaterialTheme.appBrushes.primaryAccent,
                     onClick = onNavigateToSingleExercise
                 )
             }
@@ -142,9 +112,7 @@ fun HomeScreen(
                     title = "Daily Routines",
                     description = "Build multi-exercise workouts",
                     icon = Icons.Default.CalendarToday,
-                    gradient = Brush.linearGradient(
-                        colors = listOf(Color(0xFF6366F1), Color(0xFF8B5CF6)) // indigo-500 to violet-600
-                    ),
+                    gradient = MaterialTheme.appBrushes.primaryAccent,
                     onClick = onNavigateToDailyRoutines
                 )
             }
@@ -154,9 +122,7 @@ fun HomeScreen(
                     title = "Weekly Programs",
                     description = "Build a structured schedule of routines",
                     icon = Icons.Default.DateRange,
-                    gradient = Brush.linearGradient(
-                        colors = listOf(Color(0xFF3B82F6), Color(0xFF6366F1)) // blue-500 to indigo-600
-                    ),
+                    gradient = MaterialTheme.appBrushes.primaryAccent,
                     onClick = onNavigateToWeeklyPrograms
                 )
             }
@@ -181,10 +147,10 @@ fun WorkoutCard(
 ) {
     var isPressed by remember { mutableStateOf(false) }
     val scale by animateFloatAsState(
-        targetValue = if (isPressed) 0.95f else 1f, // Material 3 Expressive: More scale (was 0.97f)
+        targetValue = if (isPressed) 0.95f else 1f,
         animationSpec = spring(
-            dampingRatio = Spring.DampingRatioLowBouncy, // Material 3 Expressive: More bouncy (was MediumBouncy)
-            stiffness = Spring.StiffnessLow // Material 3 Expressive: Lower stiffness for springy feel (was 400f)
+            dampingRatio = Spring.DampingRatioLowBouncy,
+            stiffness = Spring.StiffnessLow
         ),
         label = "scale"
     )
@@ -197,35 +163,34 @@ fun WorkoutCard(
         modifier = Modifier
             .fillMaxWidth()
             .scale(scale),
-        shape = RoundedCornerShape(20.dp), // Material 3 Expressive: More rounded (was 16dp)
+        shape = RoundedCornerShape(12.dp),
         colors = CardDefaults.cardColors(
             containerColor = MaterialTheme.colorScheme.surfaceContainerHighest // Expressive: Higher contrast
         ),
         elevation = CardDefaults.cardElevation(
-            defaultElevation = if (isPressed) 4.dp else 8.dp // Material 3 Expressive: Higher elevation (was 2/4dp)
+            defaultElevation = if (isPressed) 4.dp else 8.dp
         ),
-        border = BorderStroke(2.dp, Color(0xFFF5F3FF)) // Material 3 Expressive: Thicker border (was 1dp)
+        border = BorderStroke(1.dp, MaterialTheme.colorScheme.outlineVariant)
     ) {
         Column(
             modifier = Modifier
                 .fillMaxWidth()
-                .padding(20.dp), // Material 3 Expressive: More padding (was 16dp)
+                .padding(20.dp),
             verticalArrangement = Arrangement.spacedBy(16.dp),
             horizontalAlignment = Alignment.CenterHorizontally
         ) {
-            // Material 3 Expressive: Larger Gradient Icon Container (72dp)
             Box(
                 modifier = Modifier
-                    .size(72.dp) // Material 3 Expressive: Larger (was 64dp)
-                    .shadow(8.dp, RoundedCornerShape(20.dp)) // Material 3 Expressive: More shadow, more rounded (was 16dp)
-                    .background(gradient, RoundedCornerShape(20.dp)), // Material 3 Expressive: More rounded (was 16dp)
+                    .size(72.dp)
+                    .shadow(2.dp, RoundedCornerShape(12.dp))
+                    .background(gradient, RoundedCornerShape(12.dp)),
                 contentAlignment = Alignment.Center
             ) {
                 Icon(
                     imageVector = icon,
                     contentDescription = "Select $title workout",
                     tint = MaterialTheme.colorScheme.onPrimary,
-                    modifier = Modifier.size(36.dp) // Material 3 Expressive: Larger icon (was 32dp)
+                    modifier = Modifier.size(36.dp)
                 )
             }
 
@@ -289,9 +254,9 @@ fun HomeActiveProgramCard(
     Card(
         modifier = Modifier.fillMaxWidth(),
         colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surfaceContainerHighest),
-        shape = RoundedCornerShape(20.dp),
-        elevation = CardDefaults.cardElevation(defaultElevation = 8.dp),
-        border = BorderStroke(2.dp, Color(0xFFF5F3FF))
+        shape = RoundedCornerShape(12.dp),
+        elevation = CardDefaults.cardElevation(defaultElevation = 2.dp),
+        border = BorderStroke(1.dp, MaterialTheme.colorScheme.outlineVariant)
     ) {
         Column(
             modifier = Modifier
@@ -388,7 +353,7 @@ fun HomeActiveProgramCard(
                         modifier = Modifier
                             .fillMaxWidth()
                             .height(56.dp),
-                        shape = RoundedCornerShape(20.dp),
+                        shape = RoundedCornerShape(12.dp),
                         colors = ButtonDefaults.buttonColors(
                             containerColor = MaterialTheme.colorScheme.primary
                         ),

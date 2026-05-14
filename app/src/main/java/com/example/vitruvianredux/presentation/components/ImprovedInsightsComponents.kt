@@ -19,6 +19,14 @@ import timber.log.Timber
  * Improved insights components utilizing the chart library
  */
 
+private data class VolumeIntensityChartData(
+    val volumeTrend: List<Pair<String, Float>>,
+    val intensityTrend: List<Pair<String, Float>>,
+    val latestVolume: Float,
+    val latestIntensity: Float,
+    val unitLabel: String
+)
+
 @Composable
 fun MuscleBalanceRadarCard(
     personalRecords: List<PersonalRecord>,
@@ -76,7 +84,7 @@ fun MuscleBalanceRadarCard(
     Card(
         modifier = modifier.fillMaxWidth(),
         colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surfaceContainerHighest),
-        shape = RoundedCornerShape(20.dp)
+        shape = RoundedCornerShape(12.dp)
     ) {
         Column(modifier = Modifier.padding(16.dp)) {
             Text(
@@ -126,7 +134,7 @@ fun ConsistencyGaugeCard(
     Card(
         modifier = modifier.fillMaxWidth(),
         colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surfaceContainerHighest),
-        shape = RoundedCornerShape(20.dp)
+        shape = RoundedCornerShape(12.dp)
     ) {
         Column(modifier = Modifier.padding(16.dp)) {
             Text(
@@ -159,37 +167,53 @@ fun VolumeVsIntensityCard(
     modifier: Modifier = Modifier
 ) {
     // Prepare data for the last 7 sessions
-    val (columnData, lineData) = remember(workoutSessions, weightUnit) {
-        val sortedSessions = workoutSessions.sortedBy { it.timestamp }.takeLast(7)
+    val chartData = remember(workoutSessions, weightUnit) {
+        val sortedSessions = workoutSessions
+            .filter { it.totalReps > 0 && it.weightPerCableKg > 0f }
+            .sortedBy { it.timestamp }
+            .takeLast(7)
         
         if (sortedSessions.isEmpty()) {
-            Pair(emptyList<Pair<String, Float>>(), emptyList<Pair<String, Float>>())
+            VolumeIntensityChartData(
+                volumeTrend = emptyList(),
+                intensityTrend = emptyList(),
+                latestVolume = 0f,
+                latestIntensity = 0f,
+                unitLabel = if (weightUnit == WeightUnit.KG) "kg" else "lb"
+            )
         } else {
-            val columns = sortedSessions.mapIndexed { index, session ->
+            val unitMultiplier = if (weightUnit == WeightUnit.LB) 2.20462f else 1f
+            val unitLabel = if (weightUnit == WeightUnit.KG) "kg" else "lb"
+
+            val rawVolume = sortedSessions.mapIndexed { index, session ->
                 val label = "S${index + 1}"
-                // Volume = weight * reps (approximate)
-                val volume = (session.weightPerCableKg * 2 * session.totalReps).toFloat()
-                // Convert to lbs if needed
-                val adjustedVolume = if (weightUnit == WeightUnit.LB) volume * 2.20462f else volume
-                label to adjustedVolume
+                val volume = session.weightPerCableKg * 2 * session.totalReps * unitMultiplier
+                label to volume
             }
             
-            val lines = sortedSessions.mapIndexed { index, session ->
+            val rawIntensity = sortedSessions.mapIndexed { index, session ->
                 val label = "S${index + 1}"
-                val maxWeight = session.weightPerCableKg * 2 // Total weight
-                // Convert to lbs if needed
-                val adjustedWeight = if (weightUnit == WeightUnit.LB) maxWeight * 2.20462f else maxWeight
-                label to adjustedWeight
+                val maxWeight = session.weightPerCableKg * 2 * unitMultiplier
+                label to maxWeight
             }
-            
-            Pair(columns, lines)
+
+            val maxVolume = rawVolume.maxOfOrNull { it.second }?.coerceAtLeast(1f) ?: 1f
+            val maxIntensity = rawIntensity.maxOfOrNull { it.second }?.coerceAtLeast(1f) ?: 1f
+
+            VolumeIntensityChartData(
+                volumeTrend = rawVolume.map { (label, value) -> label to (value / maxVolume * 100f) },
+                intensityTrend = rawIntensity.map { (label, value) -> label to (value / maxIntensity * 100f) },
+                latestVolume = rawVolume.last().second,
+                latestIntensity = rawIntensity.last().second,
+                unitLabel = unitLabel
+            )
         }
     }
 
     Card(
         modifier = modifier.fillMaxWidth(),
         colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surfaceContainerHighest),
-        shape = RoundedCornerShape(20.dp)
+        shape = RoundedCornerShape(12.dp)
     ) {
         Column(modifier = Modifier.padding(16.dp)) {
             Text(
@@ -198,21 +222,55 @@ fun VolumeVsIntensityCard(
                 fontWeight = FontWeight.Bold
             )
             Text(
-                "Last 7 sessions",
+                "Last 7 completed sessions",
+                style = MaterialTheme.typography.bodySmall,
+                color = MaterialTheme.colorScheme.onSurfaceVariant
+            )
+            Text(
+                "Relative trend: each metric is scaled to its own recent peak.",
                 style = MaterialTheme.typography.bodySmall,
                 color = MaterialTheme.colorScheme.onSurfaceVariant
             )
             
             Spacer(modifier = Modifier.height(16.dp))
             
-            if (columnData.isNotEmpty()) {
+            if (chartData.volumeTrend.isNotEmpty()) {
                 ComboChart(
-                    columnData = columnData,
-                    lineData = lineData,
-                    columnLabel = "Volume (${if (weightUnit == WeightUnit.KG) "kg" else "lb"})",
-                    lineLabel = "Max Weight",
+                    columnData = chartData.volumeTrend,
+                    lineData = chartData.intensityTrend,
+                    columnLabel = "Volume trend",
+                    lineLabel = "Intensity trend",
                     modifier = Modifier.height(300.dp)
                 )
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalArrangement = Arrangement.SpaceBetween
+                ) {
+                    Column {
+                        Text(
+                            "Latest volume",
+                            style = MaterialTheme.typography.labelSmall,
+                            color = MaterialTheme.colorScheme.onSurfaceVariant
+                        )
+                        Text(
+                            "${"%.0f".format(chartData.latestVolume)} ${chartData.unitLabel}",
+                            style = MaterialTheme.typography.titleSmall,
+                            fontWeight = FontWeight.Bold
+                        )
+                    }
+                    Column {
+                        Text(
+                            "Latest intensity",
+                            style = MaterialTheme.typography.labelSmall,
+                            color = MaterialTheme.colorScheme.onSurfaceVariant
+                        )
+                        Text(
+                            "${"%.1f".format(chartData.latestIntensity)} ${chartData.unitLabel}",
+                            style = MaterialTheme.typography.titleSmall,
+                            fontWeight = FontWeight.Bold
+                        )
+                    }
+                }
             } else {
                 Text(
                     "No workout data available yet.",
@@ -241,7 +299,7 @@ fun WorkoutModeDistributionCard(
     Card(
         modifier = modifier.fillMaxWidth(),
         colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surfaceContainerHighest),
-        shape = RoundedCornerShape(20.dp)
+        shape = RoundedCornerShape(12.dp)
     ) {
         Column(modifier = Modifier.padding(16.dp)) {
             Text(
@@ -285,7 +343,7 @@ fun TotalVolumeCard(
     Card(
         modifier = modifier.fillMaxWidth(),
         colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surfaceContainerHighest),
-        shape = RoundedCornerShape(20.dp)
+        shape = RoundedCornerShape(12.dp)
     ) {
         Column(modifier = Modifier.padding(16.dp)) {
             Text(

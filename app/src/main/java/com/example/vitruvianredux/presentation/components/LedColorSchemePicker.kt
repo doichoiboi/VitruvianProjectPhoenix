@@ -166,11 +166,11 @@ fun LedColorSchemeCard(
     Card(
         modifier = modifier
             .fillMaxWidth()
-            .shadow(8.dp, RoundedCornerShape(20.dp)),
+            .shadow(2.dp, RoundedCornerShape(12.dp)),
         colors = CardDefaults.cardColors(
             containerColor = MaterialTheme.colorScheme.surfaceContainerHighest
         ),
-        shape = RoundedCornerShape(20.dp)
+        shape = RoundedCornerShape(12.dp)
     ) {
         Column(
             modifier = Modifier
@@ -197,12 +197,12 @@ fun LedColorSchemeCard(
                 Box(
                     modifier = Modifier
                         .size(48.dp)
-                        .shadow(8.dp, RoundedCornerShape(16.dp))
+                        .shadow(2.dp, RoundedCornerShape(16.dp))
                         .background(
                             Brush.linearGradient(
                                 colors = listOf(
-                                    Color(0xFF3B82F6).copy(alpha = glowAlpha),
-                                    Color(0xFF8B5CF6).copy(alpha = glowAlpha)
+                                    MaterialTheme.colorScheme.primary.copy(alpha = glowAlpha),
+                                    MaterialTheme.colorScheme.tertiary.copy(alpha = glowAlpha)
                                 )
                             ),
                             RoundedCornerShape(16.dp)

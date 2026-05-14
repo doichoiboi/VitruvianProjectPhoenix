@@ -22,8 +22,6 @@ import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.scale
-import androidx.compose.ui.graphics.Brush
-import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
@@ -38,6 +36,8 @@ import com.example.vitruvianredux.presentation.workout.JustLiftParameterPolicy
 import com.example.vitruvianredux.presentation.workout.JustLiftRestElapsedFormatter
 import com.example.vitruvianredux.presentation.workout.JustLiftRestElapsedStatePolicy
 import com.example.vitruvianredux.ui.theme.Spacing
+import com.example.vitruvianredux.ui.theme.appBrushes
+import com.example.vitruvianredux.ui.theme.appStatusColors
 import kotlinx.coroutines.delay
 import timber.log.Timber
 
@@ -131,19 +131,10 @@ fun JustLiftScreen(
     Scaffold(
         // No local topBar needed
     ) { padding ->
-        // Use Material Theme colors for dynamic background
-        val backgroundGradient = Brush.verticalGradient(
-            colors = listOf(
-                MaterialTheme.colorScheme.surface,
-                MaterialTheme.colorScheme.surfaceContainer,
-                MaterialTheme.colorScheme.primaryContainer.copy(alpha = 0.3f)
-            )
-        )
-
         Box(
             modifier = Modifier
                 .fillMaxSize()
-                .background(backgroundGradient)
+                .background(MaterialTheme.appBrushes.screenBackground)
         ) {
             Column(
                 modifier = Modifier
@@ -177,8 +168,8 @@ fun JustLiftScreen(
                     onClick = { isModePressed = true },
                     modifier = Modifier.fillMaxWidth().scale(modeScale),
                     colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surfaceContainerHighest),
-                    elevation = CardDefaults.cardElevation(defaultElevation = if (isModePressed) 8.dp else 12.dp),
-                    border = BorderStroke(2.dp, MaterialTheme.colorScheme.outlineVariant)
+                    elevation = CardDefaults.cardElevation(defaultElevation = if (isModePressed) 1.dp else 2.dp),
+                    border = BorderStroke(1.dp, MaterialTheme.colorScheme.outlineVariant)
                 ) {
                     Column(
                         modifier = Modifier
@@ -241,13 +232,12 @@ fun JustLiftScreen(
                 // OLD SCHOOL & PUMP: Weight per cable, Progression/Regression, Rest Time
                 val isOldSchoolOrPump = selectedMode is WorkoutMode.OldSchool || selectedMode is WorkoutMode.Pump
                 if (isOldSchoolOrPump) {
-                    // Weight per Cable Card - Material 3 Expressive
                     ExpressiveCard(
                         onClick = {},
                         enabled = false, // Static card
                         modifier = Modifier.fillMaxWidth(),
                         colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surfaceContainerHighest),
-                        border = BorderStroke(2.dp, MaterialTheme.colorScheme.outlineVariant)
+                        border = BorderStroke(1.dp, MaterialTheme.colorScheme.outlineVariant)
                     ) {
                         Column(
                             modifier = Modifier
@@ -272,14 +262,12 @@ fun JustLiftScreen(
                             )
                         }
                     }
-
-                    // Weight Change Per Rep Card - Material 3 Expressive
                     ExpressiveCard(
                         onClick = {},
                         enabled = false,
                         modifier = Modifier.fillMaxWidth(),
                         colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surfaceContainerHighest),
-                        border = BorderStroke(2.dp, MaterialTheme.colorScheme.outlineVariant)
+                        border = BorderStroke(1.dp, MaterialTheme.colorScheme.outlineVariant)
                     ) {
                         Column(
                             modifier = Modifier
@@ -321,7 +309,7 @@ fun JustLiftScreen(
                         enabled = false,
                         modifier = Modifier.fillMaxWidth(),
                         colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surfaceContainerHighest),
-                        border = BorderStroke(2.dp, MaterialTheme.colorScheme.outlineVariant)
+                        border = BorderStroke(1.dp, MaterialTheme.colorScheme.outlineVariant)
                     ) {
                         Column(
                             modifier = Modifier
@@ -392,7 +380,7 @@ fun JustLiftScreen(
                         enabled = false,
                         modifier = Modifier.fillMaxWidth(),
                         colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surfaceContainerHighest),
-                        border = BorderStroke(2.dp, MaterialTheme.colorScheme.outlineVariant)
+                        border = BorderStroke(1.dp, MaterialTheme.colorScheme.outlineVariant)
                     ) {
                         Column(
                             modifier = Modifier
@@ -478,8 +466,8 @@ fun ActiveStatusCard(
                 MaterialTheme.colorScheme.primaryContainer.copy(alpha = 0.9f)
             else MaterialTheme.colorScheme.surfaceVariant
         ),
-        shape = RoundedCornerShape(20.dp),
-        elevation = CardDefaults.cardElevation(defaultElevation = 8.dp)
+        shape = RoundedCornerShape(12.dp),
+        elevation = CardDefaults.cardElevation(defaultElevation = 2.dp)
     ) {
         Column(
             modifier = Modifier
@@ -507,10 +495,15 @@ fun ActiveStatusCard(
                     Box(
                         modifier = Modifier
                             .size(12.dp)
-                            .background(Color.Green.copy(alpha = alpha), CircleShape)
+                            .background(MaterialTheme.appStatusColors.success.copy(alpha = alpha), CircleShape)
                     )
                     Spacer(Modifier.width(4.dp))
-                    Text("LIVE", style = MaterialTheme.typography.labelSmall, color = Color.Green, fontWeight = FontWeight.Bold)
+                    Text(
+                        "LIVE",
+                        style = MaterialTheme.typography.labelSmall,
+                        color = MaterialTheme.appStatusColors.success,
+                        fontWeight = FontWeight.Bold
+                    )
                 }
             }
 
@@ -574,7 +567,7 @@ fun ActiveStatusCard(
                     modifier = Modifier
                         .fillMaxWidth()
                         .height(56.dp),
-                    shape = RoundedCornerShape(20.dp),
+                    shape = RoundedCornerShape(12.dp),
                     colors = ButtonDefaults.buttonColors(
                         containerColor = MaterialTheme.colorScheme.error
                     ),
@@ -644,9 +637,9 @@ fun AutoStartStopCard(
                     else -> MaterialTheme.colorScheme.tertiaryContainer // More visible than secondaryContainer
                 }
             ),
-            shape = RoundedCornerShape(20.dp), // Material 3 Expressive: More rounded (was 16dp)
-            elevation = CardDefaults.cardElevation(defaultElevation = 8.dp), // Material 3 Expressive: Higher elevation (was 4dp)
-            border = BorderStroke(2.dp, if (isIdle) MaterialTheme.colorScheme.tertiary else MaterialTheme.colorScheme.outline)
+            shape = RoundedCornerShape(12.dp),
+            elevation = CardDefaults.cardElevation(defaultElevation = 2.dp),
+            border = BorderStroke(1.dp, if (isIdle) MaterialTheme.colorScheme.tertiary else MaterialTheme.colorScheme.outline)
         ) {
             Column(
                 modifier = Modifier

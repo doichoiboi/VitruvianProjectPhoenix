@@ -2,7 +2,6 @@ package com.example.vitruvianredux.presentation.screen
 
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
-import androidx.compose.foundation.isSystemInDarkTheme
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.itemsIndexed
@@ -22,6 +21,7 @@ import androidx.compose.ui.zIndex
 import com.example.vitruvianredux.domain.model.Routine
 import com.example.vitruvianredux.ui.theme.Spacing
 import com.example.vitruvianredux.ui.theme.ThemeMode
+import com.example.vitruvianredux.ui.theme.appBrushes
 import java.time.DayOfWeek
 import java.time.format.TextStyle
 import java.util.*
@@ -43,33 +43,6 @@ fun ProgramBuilderScreen(
     var showRoutinePicker by remember { mutableStateOf(false) }
     var selectedDay by remember { mutableStateOf<DayOfWeek?>(null) }
 
-    // No local Scaffold needed - utilizing Global Smart Scaffold
-    
-    // Determine actual theme (matching Theme.kt logic)
-    val useDarkColors = when (themeMode) {
-        com.example.vitruvianredux.ui.theme.ThemeMode.SYSTEM -> isSystemInDarkTheme()
-        com.example.vitruvianredux.ui.theme.ThemeMode.LIGHT -> false
-        com.example.vitruvianredux.ui.theme.ThemeMode.DARK -> true
-    }
-
-    val backgroundGradient = if (useDarkColors) {
-        Brush.verticalGradient(
-            colors = listOf(
-                Color(0xFF0F172A), // slate-900
-                Color(0xFF1E1B4B), // indigo-950
-                Color(0xFF172554)  // blue-950
-            )
-        )
-    } else {
-        Brush.verticalGradient(
-            colors = listOf(
-                Color(0xFFE0E7FF), // soft indigo
-                Color(0xFFEDE9FE), // soft violet
-                Color(0xFFDFF6FF)  // soft sky blue
-            )
-        )
-    }
-
     // Track scroll state to show scroll indicator
     val listState = rememberLazyListState()
 
@@ -89,7 +62,7 @@ fun ProgramBuilderScreen(
     Box(
         modifier = Modifier
             .fillMaxSize()
-            .background(backgroundGradient)
+            .background(MaterialTheme.appBrushes.screenBackground)
     ) {
         LazyColumn(
             state = listState,
@@ -118,7 +91,7 @@ fun ProgramBuilderScreen(
             item {
                 Text(
                     "Schedule workouts for each day",
-                    style = MaterialTheme.typography.titleLarge, // Material 3 Expressive: Larger (was titleMedium)
+                    style = MaterialTheme.typography.titleLarge,
                     fontWeight = FontWeight.Bold
                 )
             }
@@ -142,14 +115,12 @@ fun ProgramBuilderScreen(
 
             item {
                 Spacer(modifier = Modifier.height(Spacing.medium))
-
-                // Summary card - Material 3 Expressive
                 Card(
                     modifier = Modifier.fillMaxWidth(),
-                    colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surfaceContainerHighest), // Material 3 Expressive: Higher contrast
-                    shape = RoundedCornerShape(20.dp), // Material 3 Expressive: More rounded (was 16dp)
-                    elevation = CardDefaults.cardElevation(defaultElevation = 8.dp), // Material 3 Expressive: Higher elevation (was 4dp)
-                    border = androidx.compose.foundation.BorderStroke(2.dp, MaterialTheme.colorScheme.primary.copy(alpha = 0.2f)) // Material 3 Expressive: Thicker border (was 1dp)
+                    colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surfaceContainerHighest),
+                    shape = RoundedCornerShape(12.dp),
+                    elevation = CardDefaults.cardElevation(defaultElevation = 2.dp),
+                    border = androidx.compose.foundation.BorderStroke(1.dp, MaterialTheme.colorScheme.primary.copy(alpha = 0.2f))
                 ) {
                     Column(
                         modifier = Modifier
@@ -158,7 +129,7 @@ fun ProgramBuilderScreen(
                     ) {
                         Text(
                             "Program Summary",
-                            style = MaterialTheme.typography.titleLarge, // Material 3 Expressive: Larger (was titleMedium)
+                            style = MaterialTheme.typography.titleLarge,
                             fontWeight = FontWeight.Bold,
                             color = MaterialTheme.colorScheme.onSurface
                         )
@@ -169,7 +140,7 @@ fun ProgramBuilderScreen(
 
                         Text(
                             "$workoutDays workout days, $restDays rest days",
-                            style = MaterialTheme.typography.bodyLarge, // Material 3 Expressive: Larger (was bodyMedium)
+                            style = MaterialTheme.typography.bodyLarge,
                             color = MaterialTheme.colorScheme.onSurface
                         )
                     }
@@ -179,7 +150,7 @@ fun ProgramBuilderScreen(
 
         // Scroll indicator - gradient fade at bottom when more content is available
         if (canScrollDown) {
-            val bottomColor = if (useDarkColors) Color(0xFF172554) else Color(0xFFDFF6FF)
+            val bottomColor = MaterialTheme.colorScheme.background
             Box(
                 modifier = Modifier
                     .fillMaxWidth()
@@ -201,7 +172,7 @@ fun ProgramBuilderScreen(
                     modifier = Modifier
                         .align(Alignment.BottomCenter)
                         .padding(bottom = 12.dp),
-                    shape = RoundedCornerShape(20.dp),
+                    shape = RoundedCornerShape(12.dp),
                     color = MaterialTheme.colorScheme.primary.copy(alpha = 0.15f)
                 ) {
                     Icon(
@@ -215,15 +186,13 @@ fun ProgramBuilderScreen(
                 }
             }
         }
-        
-        // Routine picker dialog - Material 3 Expressive
         if (showRoutinePicker && selectedDay != null) {
             AlertDialog(
                 onDismissRequest = { showRoutinePicker = false },
                 title = { 
                     Text(
                         "Select Routine for ${selectedDay!!.getDisplayName(TextStyle.FULL, Locale.getDefault())}",
-                        style = MaterialTheme.typography.headlineSmall, // Material 3 Expressive: Larger
+                        style = MaterialTheme.typography.headlineSmall,
                         fontWeight = FontWeight.Bold
                     ) 
                 },
@@ -236,7 +205,7 @@ fun ProgramBuilderScreen(
                             item {
                                 Text(
                                     "No routines available. Create a routine first.",
-                                    style = MaterialTheme.typography.bodyLarge, // Material 3 Expressive: Larger (was bodyMedium)
+                                    style = MaterialTheme.typography.bodyLarge,
                                     color = MaterialTheme.colorScheme.onSurfaceVariant
                                 )
                             }
@@ -251,8 +220,8 @@ fun ProgramBuilderScreen(
                                             })
                                             showRoutinePicker = false
                                         },
-                                    colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surfaceContainerHighest), // Material 3 Expressive: Higher contrast
-                                    shape = RoundedCornerShape(20.dp) // Material 3 Expressive: More rounded (was 12dp)
+                                    colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surfaceContainerHighest),
+                                    shape = RoundedCornerShape(12.dp)
                                 ) {
                                     Column(
                                         modifier = Modifier
@@ -261,12 +230,12 @@ fun ProgramBuilderScreen(
                                     ) {
                                         Text(
                                             routine.name,
-                                            style = MaterialTheme.typography.titleMedium, // Material 3 Expressive: Larger (was bodyLarge)
-                                            fontWeight = FontWeight.Bold // Material 3 Expressive: Bolder (was Medium)
+                                            style = MaterialTheme.typography.titleMedium,
+                                            fontWeight = FontWeight.Bold
                                         )
                                         Text(
                                             "${routine.exercises.size} exercises",
-                                            style = MaterialTheme.typography.bodyMedium, // Material 3 Expressive: Larger (was bodySmall)
+                                            style = MaterialTheme.typography.bodyMedium,
                                             color = MaterialTheme.colorScheme.onSurfaceVariant
                                         )
                                     }
@@ -279,18 +248,18 @@ fun ProgramBuilderScreen(
                 dismissButton = {
                     TextButton(
                         onClick = { showRoutinePicker = false },
-                        modifier = Modifier.height(56.dp), // Material 3 Expressive: Taller button
-                        shape = RoundedCornerShape(20.dp) // Material 3 Expressive: More rounded
+                        modifier = Modifier.height(56.dp),
+                        shape = RoundedCornerShape(12.dp)
                     ) {
                         Text(
                             "Cancel",
-                            style = MaterialTheme.typography.titleMedium, // Material 3 Expressive: Larger text
+                            style = MaterialTheme.typography.titleMedium,
                             fontWeight = FontWeight.Bold
                         )
                     }
                 },
-                containerColor = MaterialTheme.colorScheme.surfaceContainerHighest, // Material 3 Expressive: Higher contrast
-                shape = RoundedCornerShape(28.dp) // Material 3 Expressive: Very rounded for dialogs
+                containerColor = MaterialTheme.colorScheme.surfaceContainerHighest,
+                shape = RoundedCornerShape(16.dp)
             )
         }
 
@@ -313,13 +282,13 @@ fun DayRoutineCard(
             .clickable(onClick = onSelectRoutine),
         colors = CardDefaults.cardColors(
             containerColor = if (routine != null) {
-                MaterialTheme.colorScheme.primaryContainer // Material 3 Expressive: Use primary container when routine assigned
+                MaterialTheme.colorScheme.primaryContainer
             } else {
-                MaterialTheme.colorScheme.surfaceContainerHighest // Material 3 Expressive: Higher contrast
+                MaterialTheme.colorScheme.surfaceContainerHighest
             }
         ),
-        shape = RoundedCornerShape(20.dp), // Material 3 Expressive: More rounded (was 16dp)
-        elevation = CardDefaults.cardElevation(defaultElevation = 8.dp), // Material 3 Expressive: Higher elevation (was 4dp)
+        shape = RoundedCornerShape(12.dp),
+        elevation = CardDefaults.cardElevation(defaultElevation = 2.dp),
         border = androidx.compose.foundation.BorderStroke(
             2.dp,
             if (routine != null) {
@@ -327,19 +296,19 @@ fun DayRoutineCard(
             } else {
                 MaterialTheme.colorScheme.primary.copy(alpha = 0.2f)
             }
-        ) // Material 3 Expressive: Thicker border (was 1dp)
+        )
     ) {
         Row(
             modifier = Modifier
                 .fillMaxWidth()
-                .padding(20.dp), // Material 3 Expressive: More padding (was Spacing.medium)
+                .padding(20.dp),
             horizontalArrangement = Arrangement.SpaceBetween,
             verticalAlignment = Alignment.CenterVertically
         ) {
             Column(modifier = Modifier.weight(1f)) {
                 Text(
                     day.getDisplayName(TextStyle.FULL, Locale.getDefault()),
-                    style = MaterialTheme.typography.titleLarge, // Material 3 Expressive: Larger (was titleMedium)
+                    style = MaterialTheme.typography.titleLarge,
                     fontWeight = FontWeight.Bold
                 )
 
@@ -347,18 +316,18 @@ fun DayRoutineCard(
                     Spacer(modifier = Modifier.height(Spacing.extraSmall))
                     Text(
                         routine.name,
-                        style = MaterialTheme.typography.bodyLarge // Material 3 Expressive: Larger (was bodyMedium)
+                        style = MaterialTheme.typography.bodyLarge
                     )
                     Text(
                         "${routine.exercises.size} exercises",
-                        style = MaterialTheme.typography.bodyMedium, // Material 3 Expressive: Larger (was bodySmall)
+                        style = MaterialTheme.typography.bodyMedium,
                         color = MaterialTheme.colorScheme.onSurfaceVariant
                     )
                 } else {
                     Spacer(modifier = Modifier.height(Spacing.extraSmall))
                     Text(
                         "Rest day",
-                        style = MaterialTheme.typography.bodyLarge, // Material 3 Expressive: Larger (was bodyMedium)
+                        style = MaterialTheme.typography.bodyLarge,
                         color = MaterialTheme.colorScheme.onSurfaceVariant
                     )
                 }

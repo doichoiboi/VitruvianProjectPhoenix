@@ -171,9 +171,6 @@ dependencies {
     // Logging - Timber
     implementation(libs.timber)
 
-    // Accompanist - Permissions
-    implementation(libs.accompanist.permissions)
-
     // Coil - Image Loading
     implementation(libs.coil.compose)
 

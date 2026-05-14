@@ -9,6 +9,7 @@
 | ID | Title | Owner | File / Note |
 |---|---|---|---|
 | R-007 | Reduce MainViewModel Fan-Out | Spanner -> Sightline | `repairs/R007_MainViewModelFanout.md`; route boundaries extracted through active workout; active route navigation state/timing, active/rest display policies, next-set parameter progression, AMRAP manual-save/progression/empty-start guarding, Just Lift next-start parameter mapping, and rest-elapsed state/formatting now have focused JVM coverage; full Compose route harness remains deferred before deeper semantic workout changes |
+| R-009 | Visual System Refresh | Sightline -> Spanner | `repairs/R009_VisualSystemRefresh.md`; first pass reduces bubbly shapes, thick borders, heavy shadows, and oversized type while keeping existing gradients until a better palette is chosen |
 
 ---
 

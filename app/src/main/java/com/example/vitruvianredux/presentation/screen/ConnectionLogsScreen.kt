@@ -24,6 +24,7 @@ import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
 import com.example.vitruvianredux.data.local.ConnectionLogEntity
 import com.example.vitruvianredux.presentation.viewmodel.ConnectionLogsViewModel
 import com.example.vitruvianredux.presentation.viewmodel.LogStats
+import com.example.vitruvianredux.ui.theme.appStatusColors
 import kotlinx.coroutines.launch
 import java.io.File
 import java.text.SimpleDateFormat
@@ -277,7 +278,7 @@ private fun LogStatsCard(stats: LogStats) {
         ) {
             StatItem(label = "Total", value = stats.total.toString())
             StatItem(label = "Errors", value = stats.errors.toString(), color = MaterialTheme.colorScheme.error)
-            StatItem(label = "Warnings", value = stats.warnings.toString(), color = Color(0xFFFF9800))
+            StatItem(label = "Warnings", value = stats.warnings.toString(), color = MaterialTheme.appStatusColors.warning)
             StatItem(label = "Info", value = stats.info.toString())
         }
     }
@@ -307,7 +308,7 @@ private fun LogEntryCard(log: ConnectionLogEntity) {
 
     val levelColor = when (log.level) {
         "ERROR" -> MaterialTheme.colorScheme.error
-        "WARNING" -> Color(0xFFFF9800)
+        "WARNING" -> MaterialTheme.appStatusColors.warning
         "INFO" -> MaterialTheme.colorScheme.primary
         "DEBUG" -> MaterialTheme.colorScheme.onSurfaceVariant
         else -> MaterialTheme.colorScheme.onSurface

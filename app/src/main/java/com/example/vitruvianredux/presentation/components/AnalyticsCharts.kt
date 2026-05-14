@@ -3,8 +3,6 @@
 package com.example.vitruvianredux.presentation.components
 
 import android.graphics.Typeface
-import androidx.core.graphics.toColorInt
-import androidx.compose.foundation.isSystemInDarkTheme
 import androidx.compose.foundation.layout.height
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.runtime.Composable
@@ -17,6 +15,7 @@ import androidx.compose.ui.viewinterop.AndroidView
 import com.example.vitruvianredux.domain.model.PersonalRecord
 import com.example.vitruvianredux.domain.model.WeightUnit
 import com.example.vitruvianredux.domain.model.WorkoutSession
+import com.example.vitruvianredux.ui.theme.appChartColors
 import com.github.mikephil.charting.charts.PieChart
 import com.github.mikephil.charting.data.PieData
 import com.github.mikephil.charting.data.PieDataSet
@@ -58,7 +57,7 @@ fun WeightProgressionChart(
     modifier: Modifier = Modifier
 ) {
     val modelProducer = remember { CartesianChartModelProducer() }
-    val primaryColor = MaterialTheme.colorScheme.primary
+    val chartColor = MaterialTheme.appChartColors.primary
     
     // Process Data
     val sortedPRs = remember(prs) { prs.sortedBy { it.timestamp } }
@@ -90,9 +89,9 @@ fun WeightProgressionChart(
                 rememberLineCartesianLayer(
                     lineProvider = LineCartesianLayer.LineProvider.series(
                         LineCartesianLayer.Line(
-                            fill = LineCartesianLayer.LineFill.single(fill(primaryColor)),
+                            fill = LineCartesianLayer.LineFill.single(fill(chartColor)),
                             areaFill = LineCartesianLayer.AreaFill.single(
-                                fill(primaryColor.copy(alpha = 0.2f))
+                                fill(chartColor.copy(alpha = 0.2f))
                             ),
                             pointConnector = LineCartesianLayer.PointConnector.cubic(curvature = 0.2f)
                         )
@@ -126,7 +125,7 @@ fun VolumeTrendChart(
     modifier: Modifier = Modifier
 ) {
     val modelProducer = remember { CartesianChartModelProducer() }
-    val primaryColor = MaterialTheme.colorScheme.tertiary
+    val chartColor = MaterialTheme.appChartColors.secondary
 
     // Group by Date
     LaunchedEffect(workoutSessions) {
@@ -174,7 +173,7 @@ fun VolumeTrendChart(
                 rememberColumnCartesianLayer(
                     columnProvider = ColumnCartesianLayer.ColumnProvider.series(
                         rememberLineComponent(
-                            fill(primaryColor),
+                            fill(chartColor),
                             12.dp
                         )
                     )
@@ -199,8 +198,8 @@ fun MuscleGroupDistributionChart(
     muscleGroupCounts: Map<String, Int>,
     modifier: Modifier = Modifier
 ) {
-    val isDark = isSystemInDarkTheme()
-    val textColor = if (isDark) android.graphics.Color.WHITE else android.graphics.Color.BLACK
+    val textColor = MaterialTheme.colorScheme.onSurface.toArgb()
+    val chartColors = MaterialTheme.appChartColors.series.map { it.toArgb() }
 
     AndroidView(
         factory = { context ->
@@ -247,20 +246,8 @@ fun MuscleGroupDistributionChart(
                 PieEntry(percentage, group)
             }
 
-            // Vibrant colors for distribution
-            val colors = listOf(
-                "#9333EA".toColorInt(), // Purple
-                "#3B82F6".toColorInt(), // Blue
-                "#10B981".toColorInt(), // Green
-                "#F59E0B".toColorInt(), // Orange
-                "#EF4444".toColorInt(), // Red
-                "#8B5CF6".toColorInt(), // Violet
-                "#EC4899".toColorInt(), // Pink
-                "#14B8A6".toColorInt()  // Teal
-            )
-
             val dataSet = PieDataSet(entries, "").apply {
-                this.colors = colors.take(entries.size)
+                this.colors = chartColors.take(entries.size)
                 sliceSpace = 2f
                 selectionShift = 8f
                 valueTextSize = 14f
@@ -309,7 +296,7 @@ fun WorkoutModeDistributionChart(
                 rememberColumnCartesianLayer(
                     columnProvider = ColumnCartesianLayer.ColumnProvider.series(
                         rememberLineComponent(
-                            fill(MaterialTheme.colorScheme.secondary),
+                            fill(MaterialTheme.appChartColors.tertiary),
                             20.dp
                         )
                     )
