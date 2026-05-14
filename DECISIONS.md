@@ -27,7 +27,7 @@
 ### Open Threads
 
 - First technical orientation repair should inspect architecture, BLE boundaries, build flavors, and test commands.
-- Version metadata needs review: README says `0.6.0-beta`, Gradle production says `1.1.0`, and beta flavor says `0.6.2-beta`.
+- Version metadata decision: current public/review lane is beta `0.6.2-beta`; Gradle production `1.1.0` remains unreleased metadata until Daniel explicitly promotes a production release.
 - Legal/release wording should preserve the non-affiliation disclaimer and owner-rescue framing.
 
 ---
@@ -304,3 +304,20 @@ parameter mapping fix.
 
 - Hardware smoke should specifically try a short set with `stopAtTop=true` and
   confirm the machine releases at the contracted/top position.
+
+---
+
+## Session 014 - 2026-05-13 - Beta Version Lane
+
+### Decisions Made
+
+**Keep the public/review lane on beta**
+- Daniel chose to keep the current public/review app lane as beta.
+- The documented current lane is now the beta flavor `0.6.2-beta`.
+- Gradle production `1.1.0` remains unreleased metadata until Daniel explicitly
+  promotes a production release.
+
+### Open Threads
+
+- Before production distribution, choose a production version/name intentionally
+  and update Gradle, README, release notes, and APK naming together.

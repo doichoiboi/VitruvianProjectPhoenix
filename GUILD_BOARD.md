@@ -18,7 +18,7 @@
 |---|---|---|---|
 | R-001 | Inventory the Rig | Spanner | First orientation pass: architecture map, build variants, BLE control surface, test entry points |
 | R-002 | Load Test the Build | Spanner | Run the local build/test/lint path and document the reliable verification command set |
-| R-003 | True the Manual | Ledger | Reconcile README status/version with Gradle production and beta flavor versions |
+| R-003 | True the Manual | Ledger | Current public/review lane documented as beta `0.6.2-beta`; production `1.1.0` remains unreleased metadata until Daniel promotes a production release |
 | R-004 | Check the Labels | Tag -> Ledger | Confirm license, affiliation disclaimer, permissions language, and release-risk wording |
 | R-005 | Rebadge the Build | Pulse -> Tag + Ledger | Plan the app rename/rebrand while preserving clear attribution to the original project and developer |
 
@@ -28,7 +28,6 @@
 
 | ID | Title | Owner | Note |
 |---|---|---|---|
-| B-001 | Version drift between README and Gradle | Ledger -> Spanner | README says `0.6.0-beta`; Gradle production says `1.1.0`; beta flavor says `0.6.2-beta`. Confirm intended public version before release notes or APK distribution. |
 
 ---
 
@@ -52,3 +51,4 @@
 | B-004 | Data import transaction protection | Root -> Sightline | Backup import now runs in a Room transaction and can restore missing child rows for existing parent records during retry. |
 | B-003 | AMRAP manual-save coverage | Sightline -> Spanner | `MainViewModelWorkoutFlowTest` now proves manual AMRAP stop saves actual working reps instead of the zero target placeholder and shows the set summary with the measured rep count. |
 | B-002 | `stopAtTop` modern rep counting | Spanner -> Sightline | `RepCounterFromMachineTest` now proves modern packets stop at the final top movement when `stopAtTop=true`, count the target rep, and suppress duplicate completion when bottom confirmation later arrives. |
+| B-001 | Version drift between README and Gradle | Ledger -> Spanner | Public/review lane is beta `0.6.2-beta`; production `1.1.0` metadata is documented as unreleased until Daniel chooses a production promotion. |

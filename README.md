@@ -41,7 +41,7 @@ Vitruvian Project Phoenix is a native Android control app for Vitruvian Trainer 
 - Daniel plans to rework and rename the app. Do not treat "Vitruvian Project Phoenix" as the final product name.
 - Preserve clear credit that the original work came from another developer/project. Rebrand work must not imply Daniel authored the original codebase from scratch.
 - Local control and owner rescue value are the core purpose. Avoid changes that make the app dependent on fragile external services unless Daniel explicitly chooses that path.
-- Current metadata needs review: README status says `0.6.0-beta`, Gradle production version says `1.1.0`, and beta flavor says `0.6.2-beta`.
+- Current public/review lane is the beta flavor: `0.6.2-beta`. The production flavor still carries `1.1.0` metadata, but that is not the chosen release lane until Daniel explicitly promotes a production release.
 
 ---
 
