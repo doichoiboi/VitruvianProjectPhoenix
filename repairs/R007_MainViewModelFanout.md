@@ -483,3 +483,21 @@ Pin route/display state before the next refactor cleanup:
 Validation: `:app:testProductionDebugUnitTest --tests
 com.example.vitruvianredux.presentation.workout.ActiveWorkoutDisplayPolicyTest`
 passes.
+
+## Rest Timer Display Policy
+
+Start the critical rest/progression cleanup before building `F-001`:
+
+- `RestTimerDisplayPolicy` now owns the pure mapping from routine/set progress
+  to `WorkoutState.Resting` display state.
+- `MainViewModel.startRestTimer()` delegates tick-state and expired-state
+  rendering to that policy while preserving existing behavior.
+- Focused JVM tests cover same-exercise next-set text, next-exercise preview,
+  final routine completion text, single-exercise set count during countdown,
+  and the existing single-exercise expired zero-set display.
+- This creates the correct owner for future rest countdown context such as
+  previous-set reps and upcoming equipment/setup preview.
+
+Validation: `:app:testProductionDebugUnitTest --tests
+com.example.vitruvianredux.presentation.workout.RestTimerDisplayPolicyTest`
+passes.

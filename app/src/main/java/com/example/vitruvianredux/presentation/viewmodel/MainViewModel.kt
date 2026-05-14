@@ -16,6 +16,7 @@ import com.example.vitruvianredux.domain.workout.WorkoutEngine
 import com.example.vitruvianredux.domain.workout.WorkoutEngineAction
 import com.example.vitruvianredux.domain.weight.WeightFormatter
 import com.example.vitruvianredux.presentation.workout.JustLiftRestElapsedStatePolicy
+import com.example.vitruvianredux.presentation.workout.RestTimerDisplayPolicy
 import com.example.vitruvianredux.service.WorkoutForegroundService
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.Job
@@ -1780,38 +1781,13 @@ class MainViewModel @Inject constructor(
             Timber.d("???????????????????????????????????????????????????")
 
             for (i in restDuration downTo 1) {
-                val nextName = if (isSingleExercise) {
-                    "Next Set"
-                } else {
-                    val isLastSet = _currentSetIndex.value >= (currentExercise?.setReps?.size ?: 0) - 1
-                    val nextExercise = routine?.exercises?.getOrNull(_currentExerciseIndex.value + 1)
-                    if (isLastSet) {
-                        nextExercise?.exercise?.name ?: "Workout Complete"
-                    } else {
-                        "Set ${_currentSetIndex.value + 2} of ${currentExercise?.exercise?.name}"
-                    }
-                }
-
-                _workoutState.value = if (isSingleExercise) {
-                    // For single exercise temp routines, show proper set count
-                    WorkoutState.Resting(
-                        restSecondsRemaining = i,
-                        nextExerciseName = nextName,
-                        isLastExercise = false,
-                        currentSet = _currentSetIndex.value + 1,
-                        totalSets = currentExercise?.setReps?.size ?: 0
-                    )
-                } else {
-                    val isLastSet = _currentSetIndex.value >= (currentExercise?.setReps?.size ?: 0) - 1
-                    val nextExercise = routine?.exercises?.getOrNull(_currentExerciseIndex.value + 1)
-                    WorkoutState.Resting(
-                        restSecondsRemaining = i,
-                        nextExerciseName = nextName,
-                        isLastExercise = isLastSet && nextExercise == null,
-                        currentSet = _currentSetIndex.value + 1,
-                        totalSets = currentExercise?.setReps?.size ?: 0
-                    )
-                }
+                _workoutState.value = RestTimerDisplayPolicy.buildTickState(
+                    restSecondsRemaining = i,
+                    routine = routine,
+                    currentExerciseIndex = _currentExerciseIndex.value,
+                    currentSetIndex = _currentSetIndex.value,
+                    isSingleExercise = isSingleExercise
+                )
 
                 // Play "rest ending" sound at 5 seconds remaining
                 if (i == 5) {
@@ -1873,38 +1849,12 @@ class MainViewModel @Inject constructor(
                 // User will see "Start Next Set" button in UI
                 Timber.d("Autoplay disabled - staying in resting state")
 
-                // Recalculate next exercise info after loop ends
-                val nextNameFinal = if (isSingleExercise) {
-                    "Next Set"
-                } else {
-                    val isLastSet = _currentSetIndex.value >= (currentExercise?.setReps?.size ?: 0) - 1
-                    val nextExercise = routine?.exercises?.getOrNull(_currentExerciseIndex.value + 1)
-                    if (isLastSet) {
-                        nextExercise?.exercise?.name ?: "Workout Complete"
-                    } else {
-                        "Set ${_currentSetIndex.value + 2} of ${currentExercise?.exercise?.name}"
-                    }
-                }
-
-                _workoutState.value = if (isSingleExercise) {
-                    WorkoutState.Resting(
-                        restSecondsRemaining = 0,
-                        nextExerciseName = nextNameFinal,
-                        isLastExercise = false,
-                        currentSet = 0,
-                        totalSets = 0
-                    )
-                } else {
-                    val isLastSet = _currentSetIndex.value >= (currentExercise?.setReps?.size ?: 0) - 1
-                    val nextExercise = routine?.exercises?.getOrNull(_currentExerciseIndex.value + 1)
-                    WorkoutState.Resting(
-                        restSecondsRemaining = 0,
-                        nextExerciseName = nextNameFinal,
-                        isLastExercise = isLastSet && nextExercise == null,
-                        currentSet = _currentSetIndex.value + 1,
-                        totalSets = currentExercise?.setReps?.size ?: 0
-                    )
-                }
+                _workoutState.value = RestTimerDisplayPolicy.buildExpiredState(
+                    routine = routine,
+                    currentExerciseIndex = _currentExerciseIndex.value,
+                    currentSetIndex = _currentSetIndex.value,
+                    isSingleExercise = isSingleExercise
+                )
             }
         }
     }

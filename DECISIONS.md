@@ -418,3 +418,22 @@ parameter mapping fix.
 
 - A full Compose route harness is still deferred; the current slice covers the
   route/display decision layer that caused the recent blank-route bug.
+
+---
+
+## Session 020 - 2026-05-14 - Rest Timer Display Policy
+
+### Decisions Made
+
+**Move rest-screen display state out of `MainViewModel`**
+- Added `RestTimerDisplayPolicy` as the pure owner for building
+  `WorkoutState.Resting` display state from routine/set progress.
+- `MainViewModel.startRestTimer()` now delegates rest tick and expired display
+  state to the policy without changing timer/autoplay behavior.
+- This is the load-bearing cleanup before `F-001`: previous-set reps and
+  upcoming exercise/equipment preview now have a natural tested owner.
+
+### Open Threads
+
+- Next cleanup should separate next-set parameter progression from
+  `MainViewModel` before adding richer rest-screen context.
