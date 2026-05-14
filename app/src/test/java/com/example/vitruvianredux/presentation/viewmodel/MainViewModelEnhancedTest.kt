@@ -315,6 +315,36 @@ class MainViewModelEnhancedTest {
         assertThat(newViewModel.userPreferences.value.weightUnit).isEqualTo(WeightUnit.LB)
     }
 
+    // ========== Event Entry Tests ==========
+
+    @Test
+    fun `onEvent ThemeModeSelected delegates to theme manager`() = runTest {
+        viewModel.onEvent(MainViewModelEvent.ThemeModeSelected(ThemeMode.DARK))
+
+        coVerify { themeManager.setThemeMode(ThemeMode.DARK) }
+    }
+
+    @Test
+    fun `onEvent DeviceConnectionRequested delegates to BLE repository`() = runTest {
+        coEvery { bleRepository.connectToDevice("device-1") } returns Result.failure(
+            IllegalStateException("test failure")
+        )
+
+        viewModel.onEvent(MainViewModelEvent.DeviceConnectionRequested("device-1"))
+
+        coVerify { bleRepository.connectToDevice("device-1") }
+    }
+
+    @Test
+    fun `onEvent DisconnectRequested disconnects and resets workout surface`() = runTest {
+        viewModel.onEvent(MainViewModelEvent.DisconnectRequested)
+
+        coVerify { bleRepository.disconnect() }
+        verify { repCounter.reset() }
+        assertThat(viewModel.workoutState.value).isEqualTo(WorkoutState.Idle)
+        assertThat(viewModel.currentMetric.value).isNull()
+    }
+
     // ========== Single Exercise Mode Bug Tests ==========
 
     @Test

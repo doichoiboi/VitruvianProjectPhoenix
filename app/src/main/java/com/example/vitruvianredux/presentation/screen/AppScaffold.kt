@@ -43,6 +43,7 @@ import com.example.vitruvianredux.presentation.navigation.NavGraph
 import com.example.vitruvianredux.presentation.navigation.NavigationRoutes
 import com.example.vitruvianredux.presentation.permissions.BlePermissionPolicy
 import com.example.vitruvianredux.presentation.viewmodel.MainViewModel
+import com.example.vitruvianredux.presentation.viewmodel.MainViewModelEvent
 import com.example.vitruvianredux.presentation.viewmodel.ScannedDevice
 import com.example.vitruvianredux.ui.theme.*
 
@@ -198,7 +199,7 @@ fun AppScaffold(
                                 onFailed = {}
                             )
                         },
-                        onDisconnect = { viewModel.disconnect() }
+                        onDisconnect = { viewModel.onEvent(MainViewModelEvent.DisconnectRequested) }
                     )
 
                     // Theme toggle
@@ -341,28 +342,28 @@ fun AppScaffold(
     if (uiState.connectionLostDuringWorkout) {
         com.example.vitruvianredux.presentation.components.ConnectionLostDialog(
             onReconnect = {
-                viewModel.dismissConnectionLostAlert()
+                viewModel.onEvent(MainViewModelEvent.ConnectionLostAlertDismissed)
                 viewModel.ensureConnection(
                     onConnected = {},
                     onFailed = {}
                 )
             },
             onDismiss = {
-                viewModel.dismissConnectionLostAlert()
+                viewModel.onEvent(MainViewModelEvent.ConnectionLostAlertDismissed)
             }
         )
     }
 
     if (uiState.isAutoConnecting) {
         com.example.vitruvianredux.presentation.components.ConnectingOverlay(
-            onCancel = { viewModel.cancelAutoConnecting() }
+            onCancel = { viewModel.onEvent(MainViewModelEvent.AutoConnectCancelled) }
         )
     }
 
     uiState.connectionError?.let { error ->
         com.example.vitruvianredux.presentation.components.ConnectionErrorDialog(
             message = error,
-            onDismiss = { viewModel.clearConnectionError() }
+            onDismiss = { viewModel.onEvent(MainViewModelEvent.ConnectionErrorDismissed) }
         )
     }
     }

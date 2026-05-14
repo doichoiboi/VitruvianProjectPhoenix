@@ -21,6 +21,7 @@ import com.example.vitruvianredux.domain.model.WorkoutState
 import com.example.vitruvianredux.presentation.screen.AppScaffold
 import com.example.vitruvianredux.presentation.screen.LargeSplashScreen
 import com.example.vitruvianredux.presentation.viewmodel.MainViewModel
+import com.example.vitruvianredux.presentation.viewmodel.MainViewModelEvent
 import com.example.vitruvianredux.ui.theme.VitruvianProjectPhoenixTheme
 import com.example.vitruvianredux.ui.theme.resolveDarkTheme
 import kotlinx.coroutines.delay
@@ -84,7 +85,9 @@ fun App(
                 AppScaffold(
                     viewModel = mainViewModel,
                     themeMode = themeMode,
-                    onThemeModeChange = mainViewModel::setThemeMode
+                    onThemeModeChange = {
+                        mainViewModel.onEvent(MainViewModelEvent.ThemeModeSelected(it))
+                    }
                 )
             }
         }

@@ -546,3 +546,25 @@ parameter mapping fix.
 
 - Add the first small event reducer around app-shell connection actions before
   attempting deeper workout-flow events.
+
+---
+
+## Session 025 - 2026-05-14 - MainViewModel Event Reducer
+
+### Decisions Made
+
+**Introduce events as a migration path, not a rewrite**
+- `MainViewModelEvent` is the first typed event contract for app-shell actions.
+- `MainViewModel.onEvent(event)` owns the `when` dispatch for low-risk actions:
+  theme mode changes, device connection requests, machine disconnect,
+  auto-connect cancellation, connection error dismissal, and connection-lost
+  alert dismissal.
+- Existing public methods stay as compatibility wrappers while screens migrate
+  slice by slice.
+
+### Open Threads
+
+- Do not move workout execution events until the specific workout behavior has
+  focused regression coverage.
+- The current `ensureConnection` callback contract should get its own cleanup
+  before being hidden behind a broad event.

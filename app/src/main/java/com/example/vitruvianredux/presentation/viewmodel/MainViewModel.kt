@@ -165,7 +165,22 @@ class MainViewModel @Inject constructor(
     val themeMode: StateFlow<ThemeMode> = themeManager.themeMode
         .stateIn(viewModelScope, SharingStarted.Eagerly, ThemeMode.SYSTEM)
 
+    fun onEvent(event: MainViewModelEvent) {
+        when (event) {
+            is MainViewModelEvent.ThemeModeSelected -> setThemeModeInternal(event.mode)
+            is MainViewModelEvent.DeviceConnectionRequested -> connectToDeviceInternal(event.deviceAddress)
+            MainViewModelEvent.DisconnectRequested -> disconnectInternal()
+            MainViewModelEvent.AutoConnectCancelled -> cancelAutoConnectingInternal()
+            MainViewModelEvent.ConnectionErrorDismissed -> clearConnectionErrorInternal()
+            MainViewModelEvent.ConnectionLostAlertDismissed -> dismissConnectionLostAlertInternal()
+        }
+    }
+
     fun setThemeMode(mode: ThemeMode) {
+        onEvent(MainViewModelEvent.ThemeModeSelected(mode))
+    }
+
+    private fun setThemeModeInternal(mode: ThemeMode) {
         viewModelScope.launch {
             themeManager.setThemeMode(mode)
         }
@@ -1027,6 +1042,10 @@ class MainViewModel @Inject constructor(
     }
 
     fun connectToDevice(deviceAddress: String) {
+        onEvent(MainViewModelEvent.DeviceConnectionRequested(deviceAddress))
+    }
+
+    private fun connectToDeviceInternal(deviceAddress: String) {
         viewModelScope.launch {
             val result = bleRepository.connectToDevice(deviceAddress)
             if (result.isFailure) {
@@ -1142,6 +1161,10 @@ class MainViewModel @Inject constructor(
     }
 
     fun clearConnectionError() {
+        onEvent(MainViewModelEvent.ConnectionErrorDismissed)
+    }
+
+    private fun clearConnectionErrorInternal() {
         _connectionError.value = null
     }
 
@@ -1150,6 +1173,10 @@ class MainViewModel @Inject constructor(
      * Cancels the connection coroutine, which triggers cleanup in the exception handler.
      */
     fun cancelAutoConnecting() {
+        onEvent(MainViewModelEvent.AutoConnectCancelled)
+    }
+
+    private fun cancelAutoConnectingInternal() {
         Timber.d("🔴 cancelAutoConnecting() called - User cancelled connection")
         Timber.d("🔴 connectionJob exists: ${connectionJob != null}, isActive: ${connectionJob?.isActive}")
 
@@ -1173,12 +1200,20 @@ class MainViewModel @Inject constructor(
     }
 
     fun dismissConnectionLostAlert() {
+        onEvent(MainViewModelEvent.ConnectionLostAlertDismissed)
+    }
+
+    private fun dismissConnectionLostAlertInternal() {
         _connectionLostDuringWorkout.value = false
     }
 
     // Device selection dialog removed in favor of auto-connect flow
 
     fun disconnect() {
+        onEvent(MainViewModelEvent.DisconnectRequested)
+    }
+
+    private fun disconnectInternal() {
         viewModelScope.launch {
             bleRepository.disconnect()
             _workoutState.value = WorkoutState.Idle
