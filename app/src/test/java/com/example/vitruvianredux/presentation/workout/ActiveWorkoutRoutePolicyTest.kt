@@ -153,4 +153,19 @@ class ActiveWorkoutRoutePolicyTest {
         assertTrue(firstDecision.navigateUp)
         assertFalse(secondDecision.navigateUp)
     }
+
+    @Test
+    fun `completed reset request clears dialogs and navigates once`() {
+        val decision = ActiveWorkoutRoutePolicy.onCompletedResetRequested(
+            navigationState = ActiveWorkoutRouteNavigationState(showExitConfirmation = true)
+        )
+        val secondDecision = ActiveWorkoutRoutePolicy.onCompletedResetRequested(
+            navigationState = decision.navigationState
+        )
+
+        assertFalse(decision.navigationState.showExitConfirmation)
+        assertTrue(decision.navigationState.hasNavigatedAway)
+        assertTrue(decision.navigateUp)
+        assertFalse(secondDecision.navigateUp)
+    }
 }

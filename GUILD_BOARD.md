@@ -8,7 +8,7 @@
 
 | ID | Title | Owner | File / Note |
 |---|---|---|---|
-| R-007 | Reduce MainViewModel Fan-Out | Spanner -> Sightline | `repairs/R007_MainViewModelFanout.md`; route boundaries extracted through active workout; active route navigation state/timing, AMRAP manual-save persistence, Just Lift next-start parameter mapping, and rest-elapsed state/formatting now have focused JVM coverage; full Compose route harness remains deferred before deeper semantic workout changes |
+| R-007 | Reduce MainViewModel Fan-Out | Spanner -> Sightline | `repairs/R007_MainViewModelFanout.md`; route boundaries extracted through active workout; active route navigation state/timing, AMRAP manual-save, multi-set progression, and empty-start guarding, Just Lift next-start parameter mapping, and rest-elapsed state/formatting now have focused JVM coverage; full Compose route harness remains deferred before deeper semantic workout changes |
 
 ---
 
@@ -28,6 +28,7 @@
 
 | ID | Title | Owner | Note |
 |---|---|---|---|
+| B-005 | AMRAP next-set resistance did not load | Spanner -> Sightline | Daniel hit this during hardware smoke on a last AMRAP set: UI showed warmup `0/3`, resistance did not seem to load, and the app moved to Continue. App-side false completion is now guarded; root no-load cause needs focused retest/log inspection. |
 
 ---
 
@@ -52,3 +53,4 @@
 | B-003 | AMRAP manual-save coverage | Sightline -> Spanner | `MainViewModelWorkoutFlowTest` now proves manual AMRAP stop saves actual working reps instead of the zero target placeholder and shows the set summary with the measured rep count. |
 | B-002 | `stopAtTop` modern rep counting | Spanner -> Sightline | `RepCounterFromMachineTest` now proves modern packets stop at the final top movement when `stopAtTop=true`, count the target rep, and suppress duplicate completion when bottom confirmation later arrives. |
 | B-001 | Version drift between README and Gradle | Ledger -> Spanner | Public/review lane is beta `0.6.2-beta`; production `1.1.0` metadata is documented as unreleased until Daniel chooses a production promotion. |
+| B-006 | Active workout completion reset blank route | Spanner -> Sightline | `ActiveWorkoutRoutePolicy` now treats completed-state reset as a one-shot route exit, so the Active Workout route cannot reset to hidden Idle content and leave a blank/dim workout surface. |

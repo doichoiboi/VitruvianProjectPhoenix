@@ -73,7 +73,29 @@ For each pass, add a short note with:
 - [ ] Confirm the saved history/session shows the actual completed reps, not
       the AMRAP `0` target placeholder.
 
+### AMRAP Multi-Set And Empty-Start Guard
+
+- [ ] Start a two-set AMRAP routine.
+- [ ] Finish the first set manually and continue to rest.
+- [ ] Start the second set.
+- [ ] Confirm resistance loads normally before beginning reps.
+- [ ] If resistance does not load and the screen still shows warmup, such as
+      `0/3`, confirm the app does not auto-complete into a set summary.
+- [ ] Finish the second set manually after actual reps and confirm Continue
+      completes the routine.
+- [ ] If the completed screen shows a `Start New Workout` button, tap it and
+      confirm the app leaves the active workout screen instead of showing a
+      blank/dim workout surface.
+
 ## Result Notes
 
 - 2026-05-12: Daniel ran a general hardware smoke after the route cleanup and
   reported the flow seemed fine. Specific cases above still need a focused pass.
+- 2026-05-13: Daniel hit an AMRAP multi-set smoke issue on the last set: the
+  screen showed warmup `0/3`, resistance did not seem to load, then the app
+  showed Continue and completing Continue ended the routine. Added a JVM guard
+  so AMRAP auto-stop cannot treat an incomplete warmup as a completed set; the
+  machine no-load/start cause still needs a focused retest.
+- 2026-05-13: Daniel confirmed the empty-start guard seemed to work, then found
+  the completed route could reset into a blank/dim active-workout surface after
+  tapping a completion button. Active-workout reset now exits the route.

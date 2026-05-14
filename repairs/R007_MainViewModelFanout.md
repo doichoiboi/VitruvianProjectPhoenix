@@ -416,6 +416,16 @@ Close B-003 before deeper active-workout execution changes:
   instead of the `0` AMRAP target placeholder.
 - The manual-stop path must also show `WorkoutState.SetSummary` with the same
   measured rep count.
+- Follow-up coverage now walks a two-set AMRAP routine through manual stop,
+  summary continue, rest, skip-rest next-set start, and final completion.
+- The multi-set test verifies the next set preserves the AMRAP contract
+  (`isAMRAP=true`, `reps=0`), applies per-set weight, and saves actual working
+  reps for both completed sets.
+- Daniel's hardware smoke found that a failed/empty AMRAP start could land on
+  Continue while the UI still showed warmup `0/3`.
+- `MainViewModel` now blocks AMRAP auto-stop until warmup is complete, or until
+  the set has actual working reps when warmup is disabled. This prevents
+  stalled/no-load telemetry from being saved as a completed AMRAP set.
 
 Validation: `:app:testProductionDebugUnitTest --tests
 com.example.vitruvianredux.presentation.viewmodel.MainViewModelWorkoutFlowTest`
@@ -436,3 +446,22 @@ Close B-002 before deeper active-workout execution changes:
 
 Validation: `:app:testProductionDebugUnitTest --tests
 com.example.vitruvianredux.domain.usecase.RepCounterFromMachineTest` passes.
+
+## Active Workout Completion Reset Guard
+
+Close B-006 from Daniel's AMRAP hardware smoke:
+
+- The completed active-workout card can show `Start New Workout`.
+- In the active-workout route, setup content is intentionally hidden because
+  setup belongs to the previous route.
+- Calling `resetForNewWorkout()` from that button could leave the route in
+  hidden Idle content, producing a blank/dim workout surface that required
+  extra back presses.
+- `ActiveWorkoutRoutePolicy` now owns a completed-reset decision that clears
+  dialogs, marks navigation as consumed, and exits the route once.
+- `ActiveWorkoutRoute` still resets the ViewModel, but now also navigates away
+  from the active-workout route.
+
+Validation: `:app:testProductionDebugUnitTest --tests
+com.example.vitruvianredux.presentation.workout.ActiveWorkoutRoutePolicyTest`
+passes.

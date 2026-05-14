@@ -746,6 +746,15 @@ class MainViewModel @Inject constructor(
         val hasMeaningful = repCounter.hasMeaningfulRange()
         val params = _workoutParameters.value
 
+        if (params.isAMRAP && !isAmrapAutoStopEligible(params)) {
+            if (autoStopStartTime != null || stallDetectionStartTime != null) {
+                Timber.d("AMRAP auto-stop blocked until warmup completes")
+            }
+            stallDetectionStartTime = null
+            resetAutoStopTimer()
+            return
+        }
+
         // Diagnostic: Log when checkAutoStop is called for Just Lift mode
         if (params.isJustLift && autoStopStartTime == null && stallDetectionStartTime == null) {
             Timber.d("🎯 Just Lift auto-stop check: hasMeaningful=$hasMeaningful, " +
@@ -923,6 +932,11 @@ class MainViewModel @Inject constructor(
         if (!autoStopTriggered.get()) {
             _autoStopState.value = AutoStopUiState()
         }
+    }
+
+    private fun isAmrapAutoStopEligible(params: WorkoutParameters): Boolean {
+        val reps = _repCount.value
+        return params.warmupReps <= 0 || reps.isWarmupComplete || reps.workingReps > 0
     }
 
     private fun collectMetricForHistory(metric: WorkoutMetric) {

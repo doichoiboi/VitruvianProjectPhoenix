@@ -111,6 +111,35 @@ class MainViewModelWorkoutFlowTest {
         }
     }
 
+    private fun amrapRoutine(
+        setReps: List<Int?> = listOf(null),
+        setWeightsPerCableKg: List<Float> = emptyList(),
+        setRestSeconds: List<Int> = emptyList()
+    ) = Routine(
+        id = "routine-amrap",
+        name = "AMRAP Routine",
+        exercises = listOf(
+            RoutineExercise(
+                id = "routine-exercise-amrap",
+                exercise = Exercise(
+                    id = "bench",
+                    name = "Bench Press",
+                    muscleGroup = "Chest",
+                    equipment = "Vitruvian",
+                    defaultCableConfig = CableConfiguration.DOUBLE
+                ),
+                cableConfig = CableConfiguration.DOUBLE,
+                orderIndex = 0,
+                setReps = setReps,
+                weightPerCableKg = 25f,
+                setWeightsPerCableKg = setWeightsPerCableKg,
+                setRestSeconds = setRestSeconds,
+                isAMRAP = true,
+                workoutType = WorkoutType.Program(ProgramMode.OldSchool)
+            )
+        )
+    )
+
     @Test
     fun `workout flow - starts countdown then becomes active`() = runTest {
         // Start workout
@@ -157,28 +186,7 @@ class MainViewModelWorkoutFlowTest {
         coEvery { workoutRepository.saveSession(capture(savedSession)) } returns Result.success(Unit)
         coEvery { workoutRepository.updatePersonalRecordsIfNeeded(any(), any(), any(), any()) } returns emptyList()
 
-        val routine = Routine(
-            id = "routine-amrap",
-            name = "AMRAP Routine",
-            exercises = listOf(
-                RoutineExercise(
-                    id = "routine-exercise-amrap",
-                    exercise = Exercise(
-                        id = "bench",
-                        name = "Bench Press",
-                        muscleGroup = "Chest",
-                        equipment = "Vitruvian",
-                        defaultCableConfig = CableConfiguration.DOUBLE
-                    ),
-                    cableConfig = CableConfiguration.DOUBLE,
-                    orderIndex = 0,
-                    setReps = listOf(null),
-                    weightPerCableKg = 25f,
-                    isAMRAP = true,
-                    workoutType = WorkoutType.Program(ProgramMode.OldSchool)
-                )
-            )
-        )
+        val routine = amrapRoutine()
 
         viewModel.loadRoutine(routine)
         advanceUntilIdle()
@@ -212,6 +220,131 @@ class MainViewModelWorkoutFlowTest {
         assertEquals("Bench Press", savedSession.captured.exerciseName)
         coVerify { bleRepository.stopWorkout() }
         coVerify { workoutRepository.saveSession(any()) }
+    }
+
+    @Test
+    fun `amrap multi-set progression keeps next set amrap and saves actual reps per set`() = runTest {
+        val savedSessions = mutableListOf<WorkoutSession>()
+        coEvery { workoutRepository.saveSession(capture(savedSessions)) } returns Result.success(Unit)
+        coEvery { workoutRepository.updatePersonalRecordsIfNeeded(any(), any(), any(), any()) } returns emptyList()
+
+        val routine = amrapRoutine(
+            setReps = listOf(null, null),
+            setWeightsPerCableKg = listOf(25f, 30f),
+            setRestSeconds = listOf(30, 30)
+        )
+
+        viewModel.loadRoutine(routine)
+        advanceUntilIdle()
+
+        viewModel.startWorkout(skipCountdown = true)
+        advanceUntilIdle()
+
+        assertTrue(viewModel.workoutParameters.value.isAMRAP)
+        assertEquals(0, viewModel.workoutParameters.value.reps)
+        assertEquals(25f, viewModel.workoutParameters.value.weightPerCableKg)
+        assertIs<WorkoutState.Active>(viewModel.workoutState.value)
+
+        setRepCount(
+            RepCount(
+                warmupReps = 3,
+                workingReps = 12,
+                totalReps = 12,
+                isWarmupComplete = true
+            )
+        )
+
+        viewModel.stopWorkout()
+        advanceUntilIdle()
+
+        val firstSummary = assertIs<WorkoutState.SetSummary>(viewModel.workoutState.value)
+        assertEquals(12, firstSummary.repCount)
+        assertEquals(1, savedSessions.size)
+        assertEquals(0, savedSessions[0].reps)
+        assertEquals(12, savedSessions[0].workingReps)
+
+        viewModel.proceedFromSummary()
+        runCurrent()
+
+        val rest = assertIs<WorkoutState.Resting>(viewModel.workoutState.value)
+        assertEquals(30, rest.restSecondsRemaining)
+        assertEquals("Set 2 of Bench Press", rest.nextExerciseName)
+        assertEquals(1, rest.currentSet)
+        assertEquals(2, rest.totalSets)
+
+        viewModel.skipRest()
+        advanceUntilIdle()
+
+        assertIs<WorkoutState.Active>(viewModel.workoutState.value)
+        assertTrue(viewModel.workoutParameters.value.isAMRAP)
+        assertEquals(0, viewModel.workoutParameters.value.reps)
+        assertEquals(30f, viewModel.workoutParameters.value.weightPerCableKg)
+
+        setRepCount(
+            RepCount(
+                warmupReps = 3,
+                workingReps = 9,
+                totalReps = 9,
+                isWarmupComplete = true
+            )
+        )
+
+        viewModel.stopWorkout()
+        advanceUntilIdle()
+
+        val secondSummary = assertIs<WorkoutState.SetSummary>(viewModel.workoutState.value)
+        assertEquals(9, secondSummary.repCount)
+        assertEquals(2, savedSessions.size)
+        assertEquals(0, savedSessions[1].reps)
+        assertEquals(9, savedSessions[1].workingReps)
+
+        viewModel.proceedFromSummary()
+        advanceUntilIdle()
+
+        assertIs<WorkoutState.Completed>(viewModel.workoutState.value)
+        coVerify(exactly = 2) { workoutRepository.saveSession(any()) }
+        coVerify(exactly = 2) { bleRepository.stopWorkout() }
+    }
+
+    @Test
+    fun `amrap auto-stop does not complete a set before warmup completes`() = runTest {
+        val routine = amrapRoutine(setReps = listOf(null, null))
+
+        viewModel.loadRoutine(routine)
+        advanceUntilIdle()
+
+        viewModel.startWorkout(skipCountdown = true)
+        advanceUntilIdle()
+
+        assertTrue(viewModel.workoutParameters.value.isAMRAP)
+        assertIs<WorkoutState.Active>(viewModel.workoutState.value)
+
+        setRepCount(
+            RepCount(
+                warmupReps = 0,
+                workingReps = 0,
+                totalReps = 0,
+                isWarmupComplete = false
+            )
+        )
+        setViewModelField("stallDetectionStartTime", System.currentTimeMillis() - 5_500L)
+
+        val monitorSharedFlow = bleRepository.monitorData as kotlinx.coroutines.flow.MutableSharedFlow<WorkoutMetric>
+        monitorSharedFlow.emit(
+            WorkoutMetric(
+                loadA = 0f,
+                loadB = 0f,
+                positionA = 100f,
+                positionB = 100f,
+                velocityA = 0.0,
+                velocityB = 0.0
+            )
+        )
+        runCurrent()
+
+        assertIs<WorkoutState.Active>(viewModel.workoutState.value)
+        coVerify(exactly = 0) { bleRepository.stopWorkout() }
+        coVerify(exactly = 0) { workoutRepository.saveSession(any()) }
     }
 
     @Test

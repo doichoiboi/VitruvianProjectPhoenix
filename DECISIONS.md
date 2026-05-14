@@ -280,9 +280,8 @@ parameter mapping fix.
 
 ### Open Threads
 
-- Deeper active-workout execution cleanup can now lean on this AMRAP persistence
-  guard, but multi-set AMRAP progression still deserves focused coverage before
-  changing rest/advance behavior.
+- Closed by Session 015: multi-set AMRAP progression now has focused coverage
+  before deeper rest/advance cleanup.
 
 ---
 
@@ -321,3 +320,63 @@ parameter mapping fix.
 
 - Before production distribution, choose a production version/name intentionally
   and update Gradle, README, release notes, and APK naming together.
+
+---
+
+## Session 015 - 2026-05-13 - AMRAP Multi-Set Progression Coverage
+
+### Decisions Made
+
+**Pin AMRAP rest/advance behavior before semantic cleanup**
+- `MainViewModelWorkoutFlowTest` now covers a two-set AMRAP routine from first
+  manual stop through set summary, rest, skip-rest next-set start, second manual
+  stop, and routine completion.
+- The next AMRAP set must preserve `isAMRAP=true` and the `0` target reps
+  placeholder while applying the configured per-set weight.
+- Each completed set must save actual `workingReps` while keeping `reps` as the
+  AMRAP target placeholder.
+
+### Open Threads
+
+- A full Compose route harness is still deferred before claiming end-to-end
+  display/navigation coverage for active workout flows.
+
+---
+
+## Session 016 - 2026-05-13 - AMRAP Empty-Start Guard
+
+### Decisions Made
+
+**Do not auto-complete AMRAP before warmup completes**
+- Daniel's hardware smoke found a last-set AMRAP path where the UI showed
+  warmup `0/3`, resistance did not appear to load, and the app moved to
+  Continue/summary anyway.
+- `MainViewModel` now treats AMRAP auto-stop as ineligible until warmup has
+  completed, or until actual working reps exist when warmup is disabled.
+- `MainViewModelWorkoutFlowTest` now covers stalled AMRAP telemetry before
+  warmup completion and verifies it stays Active without saving or stopping.
+
+### Open Threads
+
+- The app-side false completion is guarded, but the hardware start/no-load
+  cause still needs focused retest and possibly BLE command/log inspection.
+
+---
+
+## Session 017 - 2026-05-13 - Active Completion Reset Exit
+
+### Decisions Made
+
+**Do not let completed reset leave Active Workout mounted empty**
+- Daniel's hardware smoke found that after a completed AMRAP flow, tapping a
+  completion button could leave a dim/blank active-workout surface that needed
+  extra back presses.
+- Root cause: the active-workout route hides setup cards, but the completed
+  card's reset action put the ViewModel back into Idle.
+- `ActiveWorkoutRoutePolicy` now treats completed reset as a one-shot route
+  exit, and `ActiveWorkoutRoute` resets the ViewModel before navigating away.
+
+### Open Threads
+
+- Retest the completed AMRAP route button on hardware to confirm one tap exits
+  cleanly.

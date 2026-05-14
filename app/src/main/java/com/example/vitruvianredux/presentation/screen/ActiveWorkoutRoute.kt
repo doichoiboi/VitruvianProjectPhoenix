@@ -155,7 +155,14 @@ fun ActiveWorkoutRoute(
         },
         onSkipRest = viewModel::skipRest,
         onProceedFromSummary = viewModel::proceedFromSummary,
-        onResetForNewWorkout = viewModel::resetForNewWorkout,
+        onResetForNewWorkout = {
+            val decision = ActiveWorkoutRoutePolicy.onCompletedResetRequested(navigationState)
+            navigationState = decision.navigationState
+            viewModel.resetForNewWorkout()
+            if (decision.navigateUp) {
+                navController.navigateUp()
+            }
+        },
         onStartNextExercise = viewModel::advanceToNextExercise,
         onUpdateParameters = viewModel::updateWorkoutParameters
     )

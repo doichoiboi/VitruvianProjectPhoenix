@@ -89,4 +89,19 @@ object ActiveWorkoutRoutePolicy {
                 navigateUp = true
             )
         }
+
+    fun onCompletedResetRequested(
+        navigationState: ActiveWorkoutRouteNavigationState
+    ): ActiveWorkoutRouteNavigationDecision =
+        if (navigationState.hasNavigatedAway) {
+            ActiveWorkoutRouteNavigationDecision(navigationState = navigationState)
+        } else {
+            ActiveWorkoutRouteNavigationDecision(
+                navigationState = navigationState.copy(
+                    showExitConfirmation = false,
+                    hasNavigatedAway = true
+                ),
+                navigateUp = true
+            )
+        }
 }
